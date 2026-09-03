@@ -106,6 +106,7 @@ The `core` package is plain Java and must not import `android.*`. Keeping the ma
 ## Design decisions
 
 - [ADR 0001: Use Java with XML layouts](docs/adr/0001-language-and-ui-toolkit.md) records the choice of Java, XML layouts, multiple activities, and a framework-independent core.
+- [ADR 0002: Define question value domain and identity](docs/adr/0002-question-value-domain-and-identity.md) records why questions require positive true values and use stable IDs for equality.
 
 Further decisions are recorded in [`docs/adr/`](docs/adr/) as the implementation develops.
 

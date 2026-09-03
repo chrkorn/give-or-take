@@ -16,3 +16,9 @@
 
 ## 2026-09-03 — Public README
 - Added setup, test, architecture, attribution, and licence information for repository visitors.
+
+## 2026-09-03 — Question domain model
+- Added an immutable `Question` built through named fields, with validation for required text,
+  positive finite true values, and difficulty levels from 1 to 5.
+- Defined equality by stable question ID so corrected content remains linked to earlier data.
+- Added JVM tests for construction, every validation boundary, and equality semantics.
