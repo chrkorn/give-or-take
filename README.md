@@ -18,12 +18,17 @@ Screenshots will be added as the user interface is completed.
 
 ## Building and running
 
-The project is under development. To build the current version, install:
+The project is under development. To build the current version you need:
 
 - Android Studio Quail 4 (2026.1.4) or later
-- JDK 17 for Gradle; the application source targets Java 11
-- Android SDK Platform 37
+- Android SDK Platform 37, with the SDK location made available to Gradle (see below)
 - An emulator or Android device running API level 26 or later
+
+You do not need to install a JDK yourself. The build pins its own toolchain
+(Adoptium 17, declared in `gradle/gradle-daemon-jvm.properties`) and Gradle
+downloads it on first run. The application source is compiled against Java 11.
+The Gradle wrapper is committed, so no separate Gradle installation is needed
+either.
 
 Clone the repository and enter its directory:
 
@@ -31,6 +36,30 @@ Clone the repository and enter its directory:
 git clone https://github.com/chrkorn/give-or-take.git
 cd give-or-take
 ```
+
+### Pointing the build at your Android SDK
+
+Gradle needs to know where your Android SDK lives. The file that normally
+carries this, `local.properties`, is machine-specific and deliberately not
+committed, so a fresh clone does not have one. Choose either option:
+
+- **Open the project in Android Studio first.** Select *Open*, choose the
+  cloned `give-or-take` directory, and let the Gradle sync finish. Android
+  Studio writes `local.properties` for you, after which the commands below
+  work in a terminal.
+- **Or set the location yourself**, from the repository root:
+
+  ```shell
+  export ANDROID_HOME=/path/to/your/Android/sdk
+  ```
+
+  On macOS the default path is `~/Library/Android/sdk`; on Linux it is
+  `~/Android/Sdk`. Alternatively, create a `local.properties` file in the
+  repository root containing `sdk.dir=/path/to/your/Android/sdk`.
+
+Without one of these, the build stops with `SDK location not found`.
+
+### Building
 
 Build a debug APK and run the local unit tests:
 
@@ -61,7 +90,9 @@ In Android Studio, individual tests can also be run from the gutter beside a tes
 
 ## Project structure
 
-Application code is organised below the package root in `app/src/main/java/`:
+Application code lives below the package root in `app/src/main/java/`. The
+packages below are the target layout; the repository currently holds the
+project skeleton, and they are created as the implementation proceeds.
 
 ```text
 de/christiankorn/giveortake/
@@ -84,4 +115,11 @@ The question source, author or publisher, retrieval date, permitted use, and lic
 
 ## Licence
 
-Any person or organization is free to use this in any way they like.
+Released under the MIT Licence. You may use, copy, modify, merge, publish,
+distribute, sublicense, and sell copies of this software, for any purpose,
+including commercially, provided the copyright notice and permission notice
+are retained. The software comes with no warranty. See [LICENSE](LICENSE) for
+the full text.
+
+This covers the source code in this repository. Any question data shipped with
+the app carries its own licence, recorded in the section above.

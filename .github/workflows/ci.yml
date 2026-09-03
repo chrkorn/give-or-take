@@ -29,6 +29,9 @@ jobs:
         continue-on-error: true
         run: ./gradlew lint
 
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
       - name: Run unit tests
         run: ./gradlew test --stacktrace
 
