@@ -13,3 +13,6 @@
 ## 2026-09-03 — CI
 - GitHub Actions running ./gradlew test on every push; verified it actually fails when a test fails.
 - Instrumented tests deliberately excluded from CI (needs an emulator, too slow and flaky); they run locally before tags.
+
+## 2026-09-03 — Public README
+- Added setup, test, architecture, attribution, and licence information for repository visitors.
