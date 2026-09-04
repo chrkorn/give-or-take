@@ -36,3 +36,12 @@
   metric for point estimates.
 - Added independently calculated comparison values for absolute, percentage, log-relative,
   and ratio error to supply expected values for the scoring tests.
+
+## 2026-09-04 — Point-estimate scoring implementation
+- Added a scoring-policy interface and immutable result type that preserve precise raw error while
+  exposing whole-number points for the user interface.
+- Implemented log-relative scoring and an exponential points mapping where points equal 100 divided
+  by the multiplicative error factor, rounded to the nearest whole point.
+- Added JVM tests for the reference examples, exact answers, factor symmetry, factor-of-ten error,
+  points mapping, result invariants, and unsupported guess types.
+- Recorded the points-mapping decision and its trade-offs in ADR 0005.
