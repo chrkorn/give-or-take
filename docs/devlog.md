@@ -30,3 +30,9 @@
   point scoring and the positive question-value domain.
 - Added JVM tests for valid construction, invalid values and bounds, inclusive containment, and
   scale-independent width.
+
+## 2026-09-04 — Point-estimate scoring decision
+- Recorded the choice of log-relative error as the scale-free, multiplicatively symmetric
+  metric for point estimates.
+- Added independently calculated comparison values for absolute, percentage, log-relative,
+  and ratio error to supply expected values for the scoring tests.
