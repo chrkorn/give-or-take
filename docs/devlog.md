@@ -22,3 +22,11 @@
   positive finite true values, and difficulty levels from 1 to 5.
 - Defined equality by stable question ID so corrected content remains linked to earlier data.
 - Added JVM tests for construction, every validation boundary, and equality semantics.
+
+## 2026-09-04 — Guess domain model
+- Chose separate `PointGuess` and `IntervalGuess` types behind a common `Guess` interface so
+  fields that do not belong to an answer form cannot coexist.
+- Used multiplicative interval width to keep confidence ranges consistent with log-relative
+  point scoring and the positive question-value domain.
+- Added JVM tests for valid construction, invalid values and bounds, inclusive containment, and
+  scale-independent width.
