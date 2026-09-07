@@ -45,3 +45,7 @@
 - Added JVM tests for the reference examples, exact answers, factor symmetry, factor-of-ten error,
   points mapping, result invariants, and unsupported guess types.
 - Recorded the points-mapping decision and its trade-offs in ADR 0005.
+
+## 2026-09-07 - Numerical robustness improvement
+- Changed score calculation to be more robust, e.g. for tiny true values.
+- Amended ADR accordingly.

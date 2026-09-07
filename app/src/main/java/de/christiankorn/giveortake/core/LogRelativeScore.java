@@ -3,7 +3,7 @@ package de.christiankorn.giveortake.core;
 /**
  * Scores point estimates using their multiplicative distance from the true value.
  *
- * <p>The raw error is {@code abs(log10(guess / trueValue))}. Points decay exponentially at
+ * <p>The raw error is {@code abs(log10(guess) - log10(trueValue))}. Points decay exponentially at
  * {@code 100 * exp(-ln(10) * error)}, which is equivalent to dividing 100 by the factor by
  * which the estimate is wrong. The result is rounded to the nearest whole point.</p>
  */
@@ -32,8 +32,15 @@ public final class LogRelativeScore implements ScoringPolicy {
         }
 
         PointGuess pointGuess = (PointGuess) guess;
-        double ratio = pointGuess.getValue() / question.getTrueValue();
-        double rawError = Math.abs(Math.log10(ratio));
+
+        // Subtracting logarithms is algebraically identical to log10(guess / trueValue) but is
+        // numerically robust. Forming the ratio first overflows to infinity, or underflows to
+        // zero, whenever the two finite positive values are far enough apart -- for example a
+        // guess of Double.MAX_VALUE against a true value of Double.MIN_VALUE. The logarithm of
+        // such a ratio is infinite, which the Score constructor then rejects with a message that
+        // says nothing about the real cause. Working in the exponent domain cannot overflow for
+        // any finite positive inputs, which the domain invariants already guarantee.
+        double rawError = Math.abs(Math.log10(pointGuess.getValue()) - Math.log10(question.getTrueValue()));
         double unroundedPoints = 100.0 * Math.exp(-POINT_DECAY_RATE * rawError);
 
         // Whole points keep the displayed result and accumulated session total easy to explain.

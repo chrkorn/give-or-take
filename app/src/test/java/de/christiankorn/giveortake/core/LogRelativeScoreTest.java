@@ -73,6 +73,64 @@ public class LogRelativeScoreTest {
     }
 
     /**
+     * Verifies that extreme but valid magnitudes stay finite.
+     *
+     * <p>These inputs satisfy every domain invariant: both values are finite and strictly
+     * positive. Computing {@code guess / trueValue} first would nevertheless overflow to
+     * infinity or underflow to zero, producing an infinite error that {@link Score} rejects.
+     * The difference-of-logarithms form used by {@link LogRelativeScore} is algebraically
+     * identical and cannot overflow. See ADR 0004.</p>
+     */
+    @Test
+    public void score_forExtremeMagnitudes_staysFiniteAndAwardsNoPoints() {
+        // guess / trueValue would overflow to positive infinity.
+        Score overflowing = scoringPolicy.score(
+                questionWithTrueValue(Double.MIN_VALUE),
+                new PointGuess(Double.MAX_VALUE)
+        );
+
+        // guess / trueValue would underflow to zero.
+        Score underflowing = scoringPolicy.score(
+                questionWithTrueValue(Double.MAX_VALUE),
+                new PointGuess(Double.MIN_VALUE)
+        );
+
+        // A subnormal guess against an ordinary true value would also underflow.
+        Score subnormalGuess = scoringPolicy.score(
+                questionWithTrueValue(346.0),
+                new PointGuess(Double.MIN_VALUE)
+        );
+
+        assertEquals(631.561, overflowing.getRawError(), THREE_DECIMAL_PLACES);
+        assertEquals(631.561, underflowing.getRawError(), THREE_DECIMAL_PLACES);
+        assertEquals(325.845, subnormalGuess.getRawError(), THREE_DECIMAL_PLACES);
+        assertEquals(0, overflowing.getPoints());
+        assertEquals(0, underflowing.getPoints());
+        assertEquals(0, subnormalGuess.getPoints());
+    }
+
+    /**
+     * Verifies that the two algebraically equivalent forms agree where both are defined.
+     *
+     * <p>Guards against the difference-of-logarithms form drifting from the ratio form for
+     * ordinary inputs while fixing its behaviour at the extremes.</p>
+     */
+    @Test
+    public void score_forOrdinaryMagnitudes_matchesTheRatioForm() {
+        double trueValue = 346.0;
+        double[] guesses = {35.0, 173.0, 300.0, 346.0, 400.0, 692.0, 3460.0, 1.0e-6, 1.0e12};
+
+        for (double guess : guesses) {
+            double ratioForm = Math.abs(Math.log10(guess / trueValue));
+            double actual = scoringPolicy
+                    .score(questionWithTrueValue(trueValue), new PointGuess(guess))
+                    .getRawError();
+
+            assertEquals("guess " + guess, ratioForm, actual, PRECISE_COMPARISON);
+        }
+    }
+
+    /**
      * Verifies that this point-estimate policy clearly rejects interval answers.
      */
     @Test

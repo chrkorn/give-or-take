@@ -54,10 +54,12 @@ Taking the absolute value discards direction: the score does not say whether an 
 too high or too low. The feedback screen must recover that information separately by
 comparing the guess with the true value.
 
-This ADR does not decide the mapping from raw error to a user-facing 0–100 points value;
-that remains open for the next step. It also does not decide how scoring handles guesses of
-zero or negative values. The positive-value invariant constrains the true value, not user
-input, so non-positive guesses require a separate explicit decision.
+The metric is computed as `|log10(guess) - log10(trueValue)|` rather than by forming the
+ratio first. The two forms are algebraically identical, but `guess / trueValue` overflows to
+infinity, or underflows to zero, when two finite positive values are far enough apart. The
+logarithm of such a ratio is infinite, which the `Score` constructor rejects with a message
+that describes the symptom rather than the cause. Subtracting logarithms works in the
+exponent domain and cannot overflow for any inputs the domain invariants permit.
 
 ## Alternatives considered
 
@@ -70,3 +72,29 @@ overestimates receive different errors.
 **Ratio error** is rejected as the stored metric because, although symmetric and scale-free,
 its multiplicative form does not average across a session as naturally as the additive log
 form.
+
+## Amendments
+
+**2026-09-07 — deferred questions resolved.** As originally accepted, this ADR left two
+questions open. Both are now settled.
+
+The mapping from raw error to a user-facing 0–100 points value is decided in
+[ADR 0005](0005-map-log-relative-error-to-points.md).
+
+Guesses of zero or negative values are rejected at the domain boundary rather than handled
+by the scoring policy: the `PointGuess` constructor requires a finite value greater than
+zero, mirroring the invariant `Question` places on the true value. The scoring policy
+therefore performs no value validation of its own and relies on the invariant.
+
+This means a non-positive estimate is treated as malformed input rather than as a very poor
+answer, and the user interface must prevent its submission rather than scoring it. That is a
+deliberate trade-off. For some questions zero is a coherent, merely very wrong answer, and
+rejecting it removes an answer the user might sincerely wish to give. It is accepted here
+because the alternative — defining a finite maximum error for an input the metric cannot
+represent — introduces a discontinuity into an otherwise continuous scale, and because the
+question bank is curated to quantities for which zero is not a plausible estimate.
+
+**2026-09-07 — numerical form corrected.** The implementation originally formed the ratio
+before taking the logarithm. Extreme-magnitude testing showed this produces an infinite raw
+error for valid inputs. The Consequences section above now records the difference-of-
+logarithms form, and `LogRelativeScoreTest` covers the failing cases.
