@@ -55,3 +55,9 @@
   to repeat wrong answers.
 - Chose provisional global factor thresholds for `CORRECT`, `CLOSE`, and `WRONG`, while recording
   the case for later empirical calibration.
+
+## 2026-09-07 — Correctness-band implementation
+- Added a plain-Java classifier for the three correctness bands defined in ADR 0006, with named
+  default thresholds and constructor injection for later tuning.
+- Added JVM tests for each band, both inclusive boundaries, exact and very large errors, injected
+  thresholds, and invalid error values.
