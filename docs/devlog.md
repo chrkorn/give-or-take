@@ -49,3 +49,9 @@
 ## 2026-09-07 - Numerical robustness improvement
 - Changed score calculation to be more robust, e.g. for tiny true values.
 - Amended ADR accordingly.
+
+## 2026-09-07 — Correctness-band decision
+- Added ADR 0006 to reconcile continuous estimation scores with the specification's requirement
+  to repeat wrong answers.
+- Chose provisional global factor thresholds for `CORRECT`, `CLOSE`, and `WRONG`, while recording
+  the case for later empirical calibration.
