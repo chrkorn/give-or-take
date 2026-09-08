@@ -61,3 +61,9 @@
   default thresholds and constructor injection for later tuning.
 - Added JVM tests for each band, both inclusive boundaries, exact and very large errors, injected
   thresholds, and invalid error values.
+
+## 2026-09-08 — Interval-scoring decision
+- Added ADR 0007 describing a proper interval score on log-transformed values for 90% confidence
+  ranges, while retaining empirical coverage as a separate calibration statistic.
+- Recorded the unbounded-loss and centrality objections, the later CRPS extension, and the primary
+  references.
