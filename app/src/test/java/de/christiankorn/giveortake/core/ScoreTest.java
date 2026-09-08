@@ -3,7 +3,9 @@ package de.christiankorn.giveortake.core;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the invariants and exposed values of {@link Score}.
@@ -17,7 +19,22 @@ public class ScoreTest {
         Score score = new Score(0.301, 50);
 
         assertEquals(0.301, score.getRawError(), 0.0);
+        assertTrue(score.hasPoints());
         assertEquals(50, score.getPoints());
+    }
+
+    /**
+     * Verifies that a policy may preserve a raw value before a points mapping is selected.
+     */
+    @Test
+    public void constructor_withoutPoints_exposesOnlyRawValue() {
+        Score score = new Score(0.125);
+
+        assertEquals(0.125, score.getRawError(), 0.0);
+        assertFalse(score.hasPoints());
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, score::getPoints);
+        assertEquals("this score has no user-facing points mapping", exception.getMessage());
     }
 
     /**

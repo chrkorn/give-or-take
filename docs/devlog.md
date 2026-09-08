@@ -67,3 +67,12 @@
   ranges, while retaining empirical coverage as a separate calibration statistic.
 - Recorded the unbounded-loss and centrality objections, the later CRPS extension, and the primary
   references.
+
+## 2026-09-08 — Interval-scoring implementation
+- Added the log interval scoring policy with a default or constructor-injected nominal confidence
+  level, logarithmic width cost, and proportional penalties for misses on either side.
+- Kept interval loss raw, as required by ADR 0007, by allowing scoring results to omit a deferred
+  user-facing points mapping without changing existing point-score callers.
+- Added JVM tests for gameability, balanced width and miss costs, inclusive bounds, multiplicative
+  symmetry, degenerate and invalid intervals, confidence injection, extreme values, and policy
+  boundary errors.

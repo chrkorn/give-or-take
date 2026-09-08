@@ -5,7 +5,7 @@ package de.christiankorn.giveortake.core;
  */
 public interface ScoringPolicy {
     /**
-     * Calculates the raw error and user-facing points for a guess.
+     * Calculates the policy's raw value and any policy-defined user-facing points for a guess.
      *
      * @param question the question containing the authoritative value
      * @param guess the answer to evaluate
