@@ -99,6 +99,42 @@ public class IntervalScoreTest {
     }
 
     /**
+     * A very narrow interval containing the truth must retain its small positive width: it is
+     * more informative than a wider hit, but it is not the zero-width perfect forecast.
+     */
+    @Test
+    public void score_forExtremelyNarrowHit_preservesSmallPositiveWidth() {
+        double lowerBound = 1.0;
+        double upperBound = lowerBound + 1.0e-9;
+        Question question = questionWithTrueValue(lowerBound + 0.5e-9);
+
+        Score score = scoringPolicy.score(
+                question,
+                new IntervalGuess(lowerBound, upperBound)
+        );
+        double expectedWidth = Math.log10(upperBound) - Math.log10(lowerBound);
+
+        assertTrue(score.getRawError() > 0.0);
+        assertTrue(Double.isFinite(score.getRawError()));
+        assertEquals(expectedWidth, score.getRawError(), 0.0);
+    }
+
+    /**
+     * A zero-width interval away from the truth must still be penalised: zero width removes only
+     * the sharpness cost and cannot excuse a forecast that misses the true value.
+     */
+    @Test
+    public void score_forDegenerateIntervalMissingTruth_chargesMissPenalty() {
+        Score score = scoringPolicy.score(
+                questionWithTrueValue(100.0),
+                new IntervalGuess(10.0, 10.0)
+        );
+
+        assertEquals(20.0, score.getRawError(), PRECISE_COMPARISON);
+        assertTrue(Double.isFinite(score.getRawError()));
+    }
+
+    /**
      * Verifies ADR 0007's decision to reject bounds outside the positive logarithmic domain.
      */
     @Test
@@ -114,6 +150,69 @@ public class IntervalScoreTest {
 
         assertEquals("lowerBound must be greater than zero", zeroException.getMessage());
         assertEquals("lowerBound must be greater than zero", negativeException.getMessage());
+    }
+
+    /**
+     * Zero truth must be rejected by the question model because a logarithmic score has no
+     * defined value at zero; silently manufacturing a score would hide a domain error.
+     */
+    @Test
+    public void score_forZeroTruth_isRejectedByQuestion() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> questionWithTrueValue(0.0)
+        );
+
+        assertEquals("trueValue must be greater than zero", exception.getMessage());
+    }
+
+    /**
+     * Every non-finite bound must be rejected at construction because logarithms of NaN or
+     * infinities cannot produce the finite loss promised by the scoring API.
+     */
+    @Test
+    public void score_forNonFiniteBounds_isRejectedByIntervalGuess() {
+        double[] nonFiniteValues = {
+                Double.NaN,
+                Double.POSITIVE_INFINITY,
+                Double.NEGATIVE_INFINITY
+        };
+
+        for (double nonFiniteValue : nonFiniteValues) {
+            IllegalArgumentException lowerException = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new IntervalGuess(nonFiniteValue, 400.0)
+            );
+            IllegalArgumentException upperException = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new IntervalGuess(300.0, nonFiniteValue)
+            );
+
+            assertEquals("lowerBound must be finite", lowerException.getMessage());
+            assertEquals("upperBound must be finite", upperException.getMessage());
+        }
+    }
+
+    /**
+     * Every non-finite truth must be rejected by the question model because otherwise NaN or an
+     * infinite logarithm could leak into the interval loss.
+     */
+    @Test
+    public void score_forNonFiniteTruth_isRejectedByQuestion() {
+        double[] nonFiniteValues = {
+                Double.NaN,
+                Double.POSITIVE_INFINITY,
+                Double.NEGATIVE_INFINITY
+        };
+
+        for (double nonFiniteValue : nonFiniteValues) {
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> questionWithTrueValue(nonFiniteValue)
+            );
+
+            assertEquals("trueValue must be finite", exception.getMessage());
+        }
     }
 
     /**
@@ -218,6 +317,45 @@ public class IntervalScoreTest {
         );
 
         assertTrue(Double.isFinite(score.getRawError()));
+        assertFalse(Double.isNaN(score.getRawError()));
+    }
+
+    /**
+     * A miss near Double.MAX_VALUE must remain finite because subtracting finite logarithms avoids
+     * overflowing the ratios or distances that a direct calculation could create.
+     */
+    @Test
+    public void score_forTruthNearDoubleMaximum_avoidsIntermediateOverflow() {
+        double truth = Double.MAX_VALUE;
+        double lowerBound = truth / 4.0;
+        double upperBound = truth / 2.0;
+
+        Score score = scoringPolicy.score(
+                questionWithTrueValue(truth),
+                new IntervalGuess(lowerBound, upperBound)
+        );
+        double expectedLoss = Math.log10(upperBound) - Math.log10(lowerBound)
+                + 20.0 * (Math.log10(truth) - Math.log10(upperBound));
+
+        assertTrue(Double.isFinite(score.getRawError()));
+        assertFalse(Double.isNaN(score.getRawError()));
+        assertEquals(expectedLoss, score.getRawError(), PRECISE_COMPARISON);
+    }
+
+    /**
+     * Equal extreme inputs must produce exactly zero rather than NaN: using finite logarithms and
+     * subtraction avoids undefined forms such as zero divided by zero or infinity minus infinity.
+     */
+    @Test
+    public void score_forDegenerateIntervalAtDoubleMaximum_hasZeroFiniteLoss() {
+        Score score = scoringPolicy.score(
+                questionWithTrueValue(Double.MAX_VALUE),
+                new IntervalGuess(Double.MAX_VALUE, Double.MAX_VALUE)
+        );
+
+        assertEquals(0.0, score.getRawError(), 0.0);
+        assertTrue(Double.isFinite(score.getRawError()));
+        assertFalse(Double.isNaN(score.getRawError()));
     }
 
     private static Question questionWithTrueValue(double trueValue) {

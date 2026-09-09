@@ -76,3 +76,9 @@
 - Added JVM tests for gameability, balanced width and miss costs, inclusive bounds, multiplicative
   symmetry, degenerate and invalid intervals, confidence injection, extreme values, and policy
   boundary errors.
+
+## 2026-09-09 — Interval-scoring edge cases
+- Added JVM tests for extremely narrow and zero-width intervals, rejected zero and non-finite
+  inputs, and arithmetic near `Double.MAX_VALUE`.
+- Verified that the model rejects values outside the logarithmic domain and that valid extreme
+  inputs cannot leak `NaN` or infinity into a score.
