@@ -82,3 +82,13 @@
   inputs, and arithmetic near `Double.MAX_VALUE`.
 - Verified that the model rejects values outside the logarithmic domain and that valid extreme
   inputs cannot leak `NaN` or infinity into a score.
+
+## 2026-09-09 — Calibration tracking
+- Added a pure-Java accumulator that keeps empirical coverage, the explicitly signed
+  nominal-minus-empirical coverage gap, sample size, and mean logarithmic interval width separate
+  from the proper per-answer interval score.
+- Used 50 interval answers as a documented interpretation threshold: at 90% nominal coverage this
+  gives five expected misses, while remaining an honest rule of thumb rather than a precision
+  guarantee.
+- Added JVM tests for obvious hit sequences, wide but uninformative intervals, empty and one-answer
+  samples, the interpretation threshold, and malformed widths.
