@@ -92,3 +92,11 @@
   guarantee.
 - Added JVM tests for obvious hit sequences, wide but uninformative intervals, empty and one-answer
   samples, the interpretation threshold, and malformed widths.
+
+## 2026-09-09 — Training strategy
+- Chose an in-session repeat delay of two intervening questions for answers classified as `WRONG`,
+  retaining the no-immediate-repeat rule at short-session boundaries.
+- Added a deterministic pure-Java scheduler that receives its question pool and `Random` source,
+  limits the initial schedule to available distinct questions, and exposes explicit completion.
+- Added JVM tests for session length, repeat position, adjacency, undersized and empty pools,
+  correctness-band behaviour, deterministic ordering, and lifecycle misuse.
