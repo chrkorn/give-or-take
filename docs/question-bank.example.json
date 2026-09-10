@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "metadata": {
+    "generationDate": "2026-09-10",
+    "sourceDatasets": [
+      "Example geographical reference dataset"
+    ],
+    "licence": "Example only — replace with the applicable dataset licence"
+  },
+  "questions": [
+    {
+      "id": "geography-river-thames-length",
+      "prompt": "How long is the River Thames?",
+      "trueValue": 346.0,
+      "unit": "km",
+      "category": "geography",
+      "sourceUrl": "https://example.org/river-thames",
+      "sourceLabel": "Example geographical reference",
+      "difficulty": 2
+    },
+    {
+      "id": "science-speed-of-sound-air",
+      "prompt": "Approximately how fast does sound travel through dry air at 20 °C?",
+      "trueValue": 343.0,
+      "unit": "m/s",
+      "category": "science",
+      "sourceUrl": "https://example.org/speed-of-sound",
+      "sourceLabel": "Example scientific reference",
+      "difficulty": 3
+    }
+  ]
+}

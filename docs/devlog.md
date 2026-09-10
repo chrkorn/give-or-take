@@ -112,3 +112,12 @@
   losses, preserve an existing record on exact ties, and contain no persistence logic.
 - Added JVM tests for advancement boundaries, failed advancement, permanent unlocking, mixed-score
   aggregation, zero-answer sessions, strict record updates, ties, and score direction.
+
+## 2026-09-10 — Versioned question-bank loading
+- Defined a documented version-1 JSON format with provenance metadata and an exact generated-data
+  example.
+- Added Gson as the single JSON dependency and kept Android asset access outside the core boundary.
+- Implemented strict, whole-file validation with path-specific errors, duplicate-ID detection, and
+  immutable question results.
+- Added JVM tests for valid and empty banks, malformed data, schema errors, duplicate and unknown
+  fields, and a 1,000-question performance sanity check.
