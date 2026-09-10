@@ -100,3 +100,15 @@
   limits the initial schedule to available distinct questions, and exposes explicit completion.
 - Added JVM tests for session length, repeat position, adjacency, undersized and empty pools,
   correctness-band behaviour, deterministic ordering, and lifecycle misuse.
+
+## 2026-09-10 — Curriculum levels, session results, and high scores
+- Defined point estimation and 90 percent confidence intervals as two permanent curriculum stages,
+  keeping authored question difficulty independent and deferring CRPS until a separate decision.
+- Added the approved advancement rule: at least ten point-estimate answers averaging at least 70
+  points unlock confidence intervals, with no later level loss.
+- Aggregated variable-length sessions with arithmetic means and an explicit answer count; empty
+  sessions have absent averages rather than an artificial zero.
+- Added immutable level-specific high scores that compare higher point means or lower interval
+  losses, preserve an existing record on exact ties, and contain no persistence logic.
+- Added JVM tests for advancement boundaries, failed advancement, permanent unlocking, mixed-score
+  aggregation, zero-answer sessions, strict record updates, ties, and score direction.
