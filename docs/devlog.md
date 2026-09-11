@@ -125,3 +125,9 @@
 ## 2026-09-11 — Core milestone changelog
 - Added the first changelog release entry for `v0.1-core`, summarising the complete
   Android-free, JVM-tested domain layer.
+
+## 2026-09-11 — Question-data provenance decision
+- Chose Wikidata under CC0 1.0 as the sole source for the bundled initial question bank.
+- Limited the first bank to mountain elevations, completed-building heights, and explicitly dated
+  national populations, with referenced statements and manual review required before release.
+- Defined snapshot dating, disputed-value exclusions, and in-app and README attribution practices.
