@@ -32,6 +32,12 @@ ID, or unknown field rejects the whole file with an exception that identifies th
 empty question array remains valid. Format evolution requires a new top-level version rather than
 silently changing the meaning of version 1.
 
+Before the first generated bank was distributed, version 1's metadata was completed with a UTC
+generation timestamp and generator script version. The original calendar date remains as a
+convenient display and attribution value and must match the UTC date in the timestamp. Completing
+the unused pre-release format avoids immediately creating a second version while retaining strict
+validation; later changes after distribution still require a new top-level version.
+
 ## Alternatives considered
 
 **Android's `org.json`** avoids a production dependency but makes ordinary JVM tests depend on

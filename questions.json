@@ -1,0 +1,814 @@
+{
+  "version": 1,
+  "metadata": {
+    "generationDate": "2026-09-11",
+    "generationTimestamp": "2026-09-11T14:03:33Z",
+    "sourceDatasets": [
+      "Wikidata main namespace (Q-item and revision identifiers recorded per question)"
+    ],
+    "licence": "Wikidata structured data — CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/)",
+    "scriptVersion": "1.0.0"
+  },
+  "questions": [
+    {
+      "id": "wikidata-q513-mountains",
+      "prompt": "What is the elevation of Mount Everest above sea level?",
+      "trueValue": 8848.86,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q513&oldid=2539415797#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q524-mountains",
+      "prompt": "What is the elevation of Mount Vesuvius above sea level?",
+      "trueValue": 1281,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q524&oldid=2536114585#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q583-mountains",
+      "prompt": "What is the elevation of Mont Blanc above sea level?",
+      "trueValue": 4805.59,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q583&oldid=2537339787#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q1374-mountains",
+      "prompt": "What is the elevation of Matterhorn above sea level?",
+      "trueValue": 4477.54,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q1374&oldid=2528730381#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q4168-mountains",
+      "prompt": "What is the elevation of Loreley above sea level?",
+      "trueValue": 109,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q4168&oldid=2533898024#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q39231-mountains",
+      "prompt": "What is the elevation of Mount Fuji above sea level?",
+      "trueValue": 3777.24,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q39231&oldid=2537608902#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q39739-mountains",
+      "prompt": "What is the elevation of Aconcagua above sea level?",
+      "trueValue": 6962,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q39739&oldid=2514992627#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q43105-mountains",
+      "prompt": "What is the elevation of Mount Elbrus above sea level?",
+      "trueValue": 5642,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q43105&oldid=2542887901#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q43512-mountains",
+      "prompt": "What is the elevation of K2 above sea level?",
+      "trueValue": 8611,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q43512&oldid=2537817148#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q80344-mountains",
+      "prompt": "What is the elevation of Mount Olympus above sea level?",
+      "trueValue": 2917.727,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q80344&oldid=2541702861#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q82019-mountains",
+      "prompt": "What is the elevation of Kanchenjunga above sea level?",
+      "trueValue": 8586,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q82019&oldid=2537796014#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q130736-mountains",
+      "prompt": "What is the elevation of Nanga Parbat above sea level?",
+      "trueValue": 8126,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q130736&oldid=2536077129#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q154372-mountains",
+      "prompt": "What is the elevation of Monte Cassino above sea level?",
+      "trueValue": 520,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q154372&oldid=2532318373#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q158526-mountains",
+      "prompt": "What is the elevation of Monte Titano above sea level?",
+      "trueValue": 756,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q158526&oldid=2528683035#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q193785-mountains",
+      "prompt": "What is the elevation of Mount Tabor above sea level?",
+      "trueValue": 530,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q193785&oldid=2528313427#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q205976-mountains",
+      "prompt": "What is the elevation of Mount of Olives above sea level?",
+      "trueValue": 826,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q205976&oldid=2538852552#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q206161-mountains",
+      "prompt": "What is the elevation of Mount Herzl above sea level?",
+      "trueValue": 834,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q206161&oldid=2528285422#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q210722-mountains",
+      "prompt": "What is the elevation of Sugarloaf Mountain above sea level?",
+      "trueValue": 395,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q210722&oldid=2491911040#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q216894-mountains",
+      "prompt": "What is the elevation of Mount Arafat above sea level?",
+      "trueValue": 454,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q216894&oldid=2522228937#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q229107-mountains",
+      "prompt": "What is the elevation of Mount Kailash above sea level?",
+      "trueValue": 6638,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q229107&oldid=2538870088#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q312818-mountains",
+      "prompt": "What is the elevation of Mount Scopus above sea level?",
+      "trueValue": 826,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q312818&oldid=2485973260#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q499019-mountains",
+      "prompt": "What is the elevation of Jebel Barkal above sea level?",
+      "trueValue": 287,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q499019&oldid=2503270828#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q506938-mountains",
+      "prompt": "What is the elevation of Corcovado above sea level?",
+      "trueValue": 710,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q506938&oldid=2540599195#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q680161-mountains",
+      "prompt": "What is the elevation of Mount Nebo above sea level?",
+      "trueValue": 808,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q680161&oldid=2540853365#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q1288751-mountains",
+      "prompt": "What is the elevation of Mount Gerizim above sea level?",
+      "trueValue": 881,
+      "unit": "metres above sea level",
+      "category": "Mountain elevations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q1288751&oldid=2522185728#P2044",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q9188-buildings",
+      "prompt": "How tall is Empire State Building?",
+      "trueValue": 453,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q9188&oldid=2529508250#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q11245-buildings",
+      "prompt": "How tall is One World Trade Center?",
+      "trueValue": 541.3,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q11245&oldid=2517792274#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q12495-buildings",
+      "prompt": "How tall is Burj Khalifa?",
+      "trueValue": 828,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q12495&oldid=2517789814#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q18547-buildings",
+      "prompt": "How tall is Shanghai Tower?",
+      "trueValue": 632,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q18547&oldid=2515829671#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q29294-buildings",
+      "prompt": "How tall is Willis Tower?",
+      "trueValue": 442.1,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q29294&oldid=2540657573#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q42258-buildings",
+      "prompt": "How tall is Mirante do Vale?",
+      "trueValue": 170,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q42258&oldid=2345270441#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q80813-buildings",
+      "prompt": "How tall is Jin Mao Tower?",
+      "trueValue": 420.5,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q80813&oldid=2485957492#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q80852-buildings",
+      "prompt": "How tall is Shanghai World Financial Center?",
+      "trueValue": 492,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q80852&oldid=2525200023#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q83101-buildings",
+      "prompt": "How tall is Taipei 101?",
+      "trueValue": 508,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q83101&oldid=2520856824#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q170610-buildings",
+      "prompt": "How tall is Edifício Itália?",
+      "trueValue": 165,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q170610&oldid=2500405755#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q191161-buildings",
+      "prompt": "How tall is 30 St Mary Axe?",
+      "trueValue": 250,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q191161&oldid=2516725727#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q192680-buildings",
+      "prompt": "How tall is New York Times Building?",
+      "trueValue": 318.8,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q192680&oldid=2516595014#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q216357-buildings",
+      "prompt": "How tall is Grande Arche?",
+      "trueValue": 110.9,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q216357&oldid=2529589105#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q217652-buildings",
+      "prompt": "How tall is Woolworth Building?",
+      "trueValue": 241,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q217652&oldid=2540592096#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q223207-buildings",
+      "prompt": "How tall is Oriental Pearl Tower?",
+      "trueValue": 468,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q223207&oldid=2542421257#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q270066-buildings",
+      "prompt": "How tall is 7 World Trade Center?",
+      "trueValue": 225,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q270066&oldid=2540636794#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q323767-buildings",
+      "prompt": "How tall is Montparnasse Tower?",
+      "trueValue": 209,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q323767&oldid=2520239263#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q373143-buildings",
+      "prompt": "How tall is Édifice Price?",
+      "trueValue": 82,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q373143&oldid=2485955498#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q525790-buildings",
+      "prompt": "How tall is Cadillac Place?",
+      "trueValue": 67.1,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q525790&oldid=2541603455#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q868772-buildings",
+      "prompt": "How tall is Trump Tower?",
+      "trueValue": 202,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q868772&oldid=2541997064#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q1030463-buildings",
+      "prompt": "How tall is Mode Gakuen Cocoon Tower?",
+      "trueValue": 204,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q1030463&oldid=2485958996#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q1453542-buildings",
+      "prompt": "How tall is Freedom Tower?",
+      "trueValue": 78,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q1453542&oldid=2530479276#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q2564383-buildings",
+      "prompt": "How tall is 90 West Street?",
+      "trueValue": 99,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q2564383&oldid=2540634341#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q3090555-buildings",
+      "prompt": "How tall is Tour Légende?",
+      "trueValue": 70,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q3090555&oldid=2485962143#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q3995702-buildings",
+      "prompt": "How tall is Torres Blancas?",
+      "trueValue": 81,
+      "unit": "metres",
+      "category": "Building heights",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q3995702&oldid=2448310423#P2048",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q16-populations",
+      "prompt": "What was the population of Canada in 2021?",
+      "trueValue": 36991981,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q16&oldid=2543153421#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q20-populations",
+      "prompt": "What was the population of Norway in 2026?",
+      "trueValue": 5627400,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q20&oldid=2543211576#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q30-populations",
+      "prompt": "What was the population of the United States in 2024?",
+      "trueValue": 340110988,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q30&oldid=2544017114#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q32-populations",
+      "prompt": "What was the population of Luxembourg in 2026?",
+      "trueValue": 690959,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q32&oldid=2536938401#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q33-populations",
+      "prompt": "What was the population of Finland in 2025?",
+      "trueValue": 5652881,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q33&oldid=2542841018#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q38-populations",
+      "prompt": "What was the population of Italy in 2023?",
+      "trueValue": 58850717,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q38&oldid=2540155272#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q39-populations",
+      "prompt": "What was the population of Switzerland in 2025?",
+      "trueValue": 9104063,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q39&oldid=2542509382#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q40-populations",
+      "prompt": "What was the population of Austria in 2022?",
+      "trueValue": 8979894,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q40&oldid=2540153606#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q43-populations",
+      "prompt": "What was the population of Turkey in 2023?",
+      "trueValue": 85372377,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q43&oldid=2541514589#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q79-populations",
+      "prompt": "What was the population of Egypt in 2023?",
+      "trueValue": 114535772,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q79&oldid=2541627478#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q96-populations",
+      "prompt": "What was the population of Mexico in 2024?",
+      "trueValue": 132274416,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q96&oldid=2537393815#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q142-populations",
+      "prompt": "What was the population of France in 2025?",
+      "trueValue": 68605616,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q142&oldid=2542579850#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q155-populations",
+      "prompt": "What was the population of Brazil in 2026?",
+      "trueValue": 214211951,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q155&oldid=2539094446#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q159-populations",
+      "prompt": "What was the population of Russia in 2025?",
+      "trueValue": 146119928,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q159&oldid=2540168829#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q183-populations",
+      "prompt": "What was the population of Germany in 2024?",
+      "trueValue": 83577140,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q183&oldid=2542621298#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 1
+    },
+    {
+      "id": "wikidata-q222-populations",
+      "prompt": "What was the population of Albania in 2023?",
+      "trueValue": 2811655,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q222&oldid=2540617470#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q228-populations",
+      "prompt": "What was the population of Andorra in 2026?",
+      "trueValue": 89752,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q228&oldid=2542378042#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q233-populations",
+      "prompt": "What was the population of Malta in 2023?",
+      "trueValue": 553214,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q233&oldid=2542914999#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q235-populations",
+      "prompt": "What was the population of Monaco in 2025?",
+      "trueValue": 38857,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q235&oldid=2539529170#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q236-populations",
+      "prompt": "What was the population of Montenegro in 2022?",
+      "trueValue": 617213,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q236&oldid=2540089703#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q408-populations",
+      "prompt": "What was the population of Australia in 2025?",
+      "trueValue": 27614411,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q408&oldid=2542686979#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q668-populations",
+      "prompt": "What was the population of India in 2020?",
+      "trueValue": 1326093247,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q668&oldid=2543246300#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 2
+    },
+    {
+      "id": "wikidata-q672-populations",
+      "prompt": "What was the population of Tuvalu in 2022?",
+      "trueValue": 10643,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q672&oldid=2532177208#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q702-populations",
+      "prompt": "What was the population of the Federated States of Micronesia in 2023?",
+      "trueValue": 75817,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q702&oldid=2539053376#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q763-populations",
+      "prompt": "What was the population of Saint Kitts and Nevis in 2025?",
+      "trueValue": 46922,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q763&oldid=2542361301#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q784-populations",
+      "prompt": "What was the population of Dominica in 2023?",
+      "trueValue": 74656,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q784&oldid=2542357661#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q801-populations",
+      "prompt": "What was the population of Israel in 2023?",
+      "trueValue": 9840000,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q801&oldid=2542494396#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 3
+    },
+    {
+      "id": "wikidata-q917-populations",
+      "prompt": "What was the population of Bhutan in 2023?",
+      "trueValue": 787424,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q917&oldid=2538773037#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 4
+    },
+    {
+      "id": "wikidata-q921-populations",
+      "prompt": "What was the population of Brunei in 2023?",
+      "trueValue": 458949,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q921&oldid=2532533719#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    },
+    {
+      "id": "wikidata-q1011-populations",
+      "prompt": "What was the population of Cape Verde in 2020?",
+      "trueValue": 555988,
+      "unit": "people",
+      "category": "National populations",
+      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q1011&oldid=2542095039#P1082",
+      "sourceLabel": "Wikidata",
+      "difficulty": 5
+    }
+  ]
+}

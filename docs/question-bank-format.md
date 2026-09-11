@@ -17,8 +17,10 @@ and JSON value types.
 | Field | JSON type | Rules |
 |---|---|---|
 | `generationDate` | string | Required ISO 8601 calendar date in `YYYY-MM-DD` form. |
+| `generationTimestamp` | string | Required ISO 8601 UTC timestamp ending in `Z`. Its UTC date must equal `generationDate`. |
 | `sourceDatasets` | array | Required. Contains non-blank strings naming the datasets used to generate the bank. The array may be empty when no dataset was used. |
 | `licence` | string | Required and non-blank. Identifies the licence applying to the compiled bank. |
+| `scriptVersion` | string | Required and non-blank. Identifies the generator version used to create the bank. |
 
 ## Question object
 

@@ -16,7 +16,9 @@ import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.DateTimeException;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,8 +50,10 @@ public final class QuestionBank {
     private static final Set<String> ROOT_FIELDS = fields("version", "metadata", "questions");
     private static final Set<String> METADATA_FIELDS = fields(
             "generationDate",
+            "generationTimestamp",
             "sourceDatasets",
-            "licence"
+            "licence",
+            "scriptVersion"
     );
     private static final Set<String> QUESTION_FIELDS = fields(
             "id",
@@ -182,10 +186,33 @@ public final class QuestionBank {
         if (!ISO_DATE.matcher(generationDate).matches()) {
             throw invalid(path + ".generationDate", "expected a date in YYYY-MM-DD form");
         }
+        LocalDate generationDay;
         try {
-            LocalDate.parse(generationDate);
+            generationDay = LocalDate.parse(generationDate);
         } catch (DateTimeException exception) {
             throw invalid(path + ".generationDate", "expected a valid calendar date");
+        }
+
+        String generationTimestamp = requireNonBlankString(
+                metadata,
+                "generationTimestamp",
+                path + ".generationTimestamp"
+        );
+        Instant generatedAt;
+        try {
+            generatedAt = Instant.parse(generationTimestamp);
+        } catch (DateTimeException exception) {
+            throw invalid(path + ".generationTimestamp", "expected an ISO 8601 UTC timestamp");
+        }
+        if (!generationTimestamp.endsWith("Z")) {
+            throw invalid(path + ".generationTimestamp", "expected an ISO 8601 UTC timestamp");
+        }
+        LocalDate timestampDay = generatedAt.atZone(ZoneOffset.UTC).toLocalDate();
+        if (!timestampDay.equals(generationDay)) {
+            throw invalid(
+                    path + ".generationDate",
+                    "must match the UTC date in generationTimestamp"
+            );
         }
 
         JsonArray datasets = requireArray(metadata, "sourceDatasets", path + ".sourceDatasets");
@@ -196,6 +223,7 @@ public final class QuestionBank {
             );
         }
         requireNonBlankString(metadata, "licence", path + ".licence");
+        requireNonBlankString(metadata, "scriptVersion", path + ".scriptVersion");
     }
 
     private static Question parseQuestion(JsonObject object, String path)

@@ -2,10 +2,12 @@
   "version": 1,
   "metadata": {
     "generationDate": "2026-09-10",
+    "generationTimestamp": "2026-09-10T12:30:00Z",
     "sourceDatasets": [
       "Example geographical reference dataset"
     ],
-    "licence": "Example only — replace with the applicable dataset licence"
+    "licence": "Example only — replace with the applicable dataset licence",
+    "scriptVersion": "1.0.0"
   },
   "questions": [
     {

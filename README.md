@@ -112,7 +112,16 @@ Further decisions are recorded in [`docs/adr/`](docs/adr/) as the implementation
 
 ## Question data
 
-The question source, author or publisher, retrieval date, permitted use, and licence will be documented here before a question set is distributed with the app.
+The generated candidate bank uses structured data from Wikidata. Its exact retrieval timestamp,
+source dataset identifier, generator version, and CC0 1.0 licence are recorded in
+[`questions.json`](questions.json); every question links to the immutable Wikidata item revision
+used for that generation. [`tools/README.md`](tools/README.md) documents extraction, filtering,
+prompt overrides, and the required manual-curation step.
+
+Wikidata's structured data are made available under the
+[CC0 1.0 Universal public-domain dedication](https://creativecommons.org/publicdomain/zero/1.0/).
+Attribution is included for provenance and academic traceability, not because CC0 requires it.
+Neither Wikidata nor the Wikimedia Foundation endorses Give or Take.
 
 ## Licence
 

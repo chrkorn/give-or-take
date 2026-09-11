@@ -131,3 +131,13 @@
 - Limited the first bank to mountain elevations, completed-building heights, and explicitly dated
   national populations, with referenced statements and manual review required before release.
 - Defined snapshot dating, disputed-value exclusions, and in-app and README attribution practices.
+
+## 2026-09-11 — Reproducible question-bank generation
+- Extended the pre-release version-1 metadata with a UTC generation timestamp and generator
+  version, retaining strict validation in the plain-Java loader and its JUnit tests.
+- Added a standard-library Python generator for referenced Wikidata statements with an identified,
+  rate-limited client, retries, deterministic selection, revision-pinned source links, sanity and
+  conflict filters, dry-run statistics, and a strictly validated manual override layer.
+- Generated an 80-question candidate bank across mountain elevations, completed-building heights,
+  and dated national populations, balanced across available orders of magnitude.
+- Added offline generator tests and run/curation documentation.

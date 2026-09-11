@@ -104,6 +104,41 @@ public class QuestionBankTest {
         );
     }
 
+    @Test
+    public void fromJson_withInvalidGenerationTimestamp_rejectsWholeFile() {
+        String invalidTimestamp = validBank("")
+                .replace("2026-09-10T12:30:00Z", "10 September 2026");
+
+        assertInvalid(
+                invalidTimestamp,
+                "Invalid question bank at $.metadata.generationTimestamp: "
+                        + "expected an ISO 8601 UTC timestamp"
+        );
+    }
+
+    @Test
+    public void fromJson_whenGenerationDateAndTimestampDisagree_rejectsWholeFile() {
+        String mismatchedDate = validBank("")
+                .replace("2026-09-10T12:30:00Z", "2026-09-11T00:00:00Z");
+
+        assertInvalid(
+                mismatchedDate,
+                "Invalid question bank at $.metadata.generationDate: "
+                        + "must match the UTC date in generationTimestamp"
+        );
+    }
+
+    @Test
+    public void fromJson_withBlankScriptVersion_rejectsWholeFile() {
+        String blankScriptVersion = validBank("")
+                .replace("\"scriptVersion\":\"1.0.0\"", "\"scriptVersion\":\" \"");
+
+        assertInvalid(
+                blankScriptVersion,
+                "Invalid question bank at $.metadata.scriptVersion: must not be blank"
+        );
+    }
+
     @Test(timeout = 5000L)
     public void fromJson_withOneThousandQuestions_completesAndLoadsAllQuestions()
             throws Exception {
@@ -134,8 +169,10 @@ public class QuestionBankTest {
                 + "\"version\":1,"
                 + "\"metadata\":{"
                 + "\"generationDate\":\"2026-09-10\","
+                + "\"generationTimestamp\":\"2026-09-10T12:30:00Z\","
                 + "\"sourceDatasets\":[\"Example dataset\"],"
-                + "\"licence\":\"Example licence\""
+                + "\"licence\":\"Example licence\","
+                + "\"scriptVersion\":\"1.0.0\""
                 + "},"
                 + "\"questions\":[" + questions + "]"
                 + "}";
