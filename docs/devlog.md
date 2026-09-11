@@ -121,3 +121,7 @@
   immutable question results.
 - Added JVM tests for valid and empty banks, malformed data, schema errors, duplicate and unknown
   fields, and a 1,000-question performance sanity check.
+
+## 2026-09-11 — Core milestone changelog
+- Added the first changelog release entry for `v0.1-core`, summarising the complete
+  Android-free, JVM-tested domain layer.
