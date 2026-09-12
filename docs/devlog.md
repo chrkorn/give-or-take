@@ -160,3 +160,19 @@
   prevent manual prompt overrides from dropping that context.
 - Kept the bundled-asset loader intentionally version-2-only because reader and data ship together
   and version 1 cannot provide a trustworthy measurement basis for migration.
+
+## 2026-09-12 — Admission rules in the generator
+- Four rules replace what would have been an eighty-record hand review: the exclusion list
+  is honoured, subjects whose sources disagree are rejected, a familiarity floor removes
+  recognition trivia, and the place name is resolved into the prompt.
+- The most interesting finding was in our own code. `difficulty_from_sitelinks()` mapped
+  Wikimedia sitelink count onto a 1–5 scale, so "difficulty" was literally a measure of
+  obscurity — difficulty 5 meant fewer than five Wikipedia language editions. The reviewer
+  inferred that defect from the outside, without seeing the source. Same signal, inverted:
+  what was labelled hard is now rejected as unestimable.
+- The quota was also why the bank drifted obscure. Filling sixteen slots at each of five
+  difficulty levels forced the generator down its sitelink-ordered list into the tail.
+- Competing-value detection reads claim documents rather than query results, because the
+  SPARQL only returns referenced statements and Monte Titano's competing 739 m value
+  carries no reference. That is precisely why it was invisible the first time.
+- 21 offline tests. The SPARQL is unchanged, so none of this has met live Wikidata yet.
