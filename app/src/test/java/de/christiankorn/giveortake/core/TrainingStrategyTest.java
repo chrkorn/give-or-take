@@ -237,7 +237,6 @@ public class TrainingStrategyTest {
                 .trueValue(100.0)
                 .unit("units")
                 .measurementBasis("test value")
-                .difficulty(1)
                 .build();
     }
 }

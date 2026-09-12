@@ -1,5 +1,6 @@
 """Unit tests for the deterministic parts of the question-bank generator."""
 
+import dataclasses
 import datetime as dt
 import decimal
 import tempfile
@@ -75,7 +76,6 @@ def candidate(identifier="wikidata-q1-mountains", entity_id="Q1", sitelinks=80,
         measurement_basis="elevation above sea level",
         source_label="Wikidata",
         sitelinks=sitelinks,
-        difficulty=1,
     )
 
 
@@ -133,19 +133,17 @@ class BuildQuestionsTest(unittest.TestCase):
         self.assertEqual(dt.date(2024, 1, 1), candidates[0].as_of)
         self.assertEqual(decimal.Decimal("1239876"), candidates[0].value)
 
-    def test_apply_overrides_changes_only_curatorial_fields(self):
+    def test_apply_overrides_changes_only_prompt(self):
         candidate = candidate_for("Q30", decimal.Decimal("456"), "Mountain elevations")
         overrides = {
             candidate.identifier: {
                 "prompt": "What is Example's surveyed elevation above sea level, in metres?",
-                "difficulty": 5,
             }
         }
 
         curated, prompts = build_questions.apply_overrides([candidate], overrides)
 
         self.assertEqual(decimal.Decimal("456"), curated[0].value)
-        self.assertEqual(5, curated[0].difficulty)
         self.assertEqual(
             "What is Example's surveyed elevation above sea level, in metres?",
             prompts[candidate.identifier],
@@ -173,25 +171,23 @@ class BuildQuestionsTest(unittest.TestCase):
 
         self.assertEqual({"Q1", "Q3"}, {item.entity_id for item in selected})
 
-    def test_assign_relative_difficulties_spreads_category_over_five_levels(self):
-        candidates = [
-            build_questions.Candidate(
-                **{
-                    **candidate_for(
-                        f"Q{index}", decimal.Decimal(str(100 + index)), "Building heights"
-                    ).__dict__,
-                    "sitelinks": 100 - index,
-                }
+    def test_select_balanced_prefers_more_familiar_subject_within_magnitude(self):
+        less_familiar = candidate_for(
+            "Q1", decimal.Decimal("11"), "Building heights"
+        )
+        more_familiar = dataclasses.replace(
+            less_familiar,
+            identifier="wikidata-q2-buildings",
+            entity_id="Q2",
+            sitelinks=100,
+        )
+
+        with self.assertLogs(level="INFO"):
+            selected = build_questions.select_balanced(
+                [less_familiar, more_familiar], 1
             )
-            for index in range(1, 11)
-        ]
 
-        assigned = build_questions.assign_relative_difficulties(candidates, {})
-
-        counts = {level: 0 for level in range(1, 6)}
-        for candidate in assigned:
-            counts[candidate.difficulty] += 1
-        self.assertEqual({1: 2, 2: 2, 3: 2, 4: 2, 5: 2}, counts)
+        self.assertEqual(["Q2"], [item.entity_id for item in selected])
 
     def test_prompt_templates_include_unit_basis_and_date(self):
         mountain, building, population = build_questions.CATEGORY_SPECS
@@ -221,7 +217,7 @@ class BuildQuestionsTest(unittest.TestCase):
             ),
         )
 
-    def test_question_document_matches_version_two_schema(self):
+    def test_question_document_matches_version_three_schema(self):
         candidate = candidate_for("Q42", decimal.Decimal("123.5"), "Mountain elevations")
         document = build_questions.question_document(
             [candidate],
@@ -234,9 +230,9 @@ class BuildQuestionsTest(unittest.TestCase):
             "2026-09-11T12:00:00Z",
         )
 
-        self.assertEqual(2, document["version"])
+        self.assertEqual(3, document["version"])
         self.assertEqual("2026-09-11", document["metadata"]["generationDate"])
-        self.assertEqual("2.1.0", document["metadata"]["scriptVersion"])
+        self.assertEqual("3.0.0", document["metadata"]["scriptVersion"])
         self.assertEqual(
             ["National populations"], document["timeVaryingCategories"]
         )
@@ -247,6 +243,7 @@ class BuildQuestionsTest(unittest.TestCase):
             document["questions"][0]["measurementBasis"],
         )
         self.assertNotIn("asOf", document["questions"][0])
+        self.assertNotIn("difficulty", document["questions"][0])
         self.assertEqual(
             "https://www.wikidata.org/w/index.php?title=Q42&oldid=987654321#P2044",
             document["questions"][0]["sourceUrl"],
@@ -331,6 +328,17 @@ class BuildQuestionsTest(unittest.TestCase):
             20,
         )
         self.assertEqual(["landmark", "borderline"], [i.identifier for i in kept])
+
+    def test_load_overrides_rejects_removed_difficulty_field(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "overrides.json"
+            path.write_text(
+                json.dumps({"wikidata-q1-mountains": {"difficulty": 2}}),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "unknown fields: difficulty"):
+                build_questions.load_overrides(path)
 
     def test_load_exclusions_reads_ids_and_reasons(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -439,7 +447,6 @@ def candidate_for(entity_id, value, category):
         measurement_basis=measurement_basis,
         source_label="Wikidata",
         sitelinks=80,
-        difficulty=2,
     )
 
 if __name__ == "__main__":

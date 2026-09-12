@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 
-SCRIPT_VERSION = "2.1.0"
+SCRIPT_VERSION = "3.0.0"
 DEFAULT_ENDPOINT = "https://query.wikidata.org/sparql"
 WIKIDATA_API = "https://www.wikidata.org/w/api.php"
 DEFAULT_USER_AGENT = (
@@ -198,7 +198,6 @@ class Candidate:
     measurement_basis: str
     source_label: str
     sitelinks: int
-    difficulty: int
     location: str | None = None
 
 
@@ -426,19 +425,6 @@ def date_from_wikidata_time(value: str | None) -> dt.date | None:
         return None
 
 
-def difficulty_from_sitelinks(sitelinks: int) -> int:
-    """Estimate familiarity from the number of Wikimedia sitelinks."""
-    if sitelinks >= 100:
-        return 1
-    if sitelinks >= 50:
-        return 2
-    if sitelinks >= 20:
-        return 3
-    if sitelinks >= 5:
-        return 4
-    return 5
-
-
 def statement_values(entity: Mapping[str, Any], property_id: str) -> list[decimal.Decimal]:
     """Collect every non-deprecated numeric value an entity records for one property."""
     values: list[decimal.Decimal] = []
@@ -662,7 +648,6 @@ def candidates_from_bindings(
                 measurement_basis=spec.measurement_basis,
                 source_label=QUESTION_SOURCE_LABEL,
                 sitelinks=row["sitelinks"],
-                difficulty=difficulty_from_sitelinks(row["sitelinks"]),
             )
         )
     return candidates
@@ -799,7 +784,7 @@ def load_overrides(path: Path) -> dict[str, dict[str, Any]]:
         raise ValueError(f"invalid JSON in {path}: {exception}") from exception
     if not isinstance(document, dict):
         raise ValueError("override file must contain a JSON object")
-    allowed = {"prompt", "difficulty", "exclude"}
+    allowed = {"prompt", "exclude"}
     result: dict[str, dict[str, Any]] = {}
     for identifier, override in document.items():
         if not isinstance(identifier, str) or not identifier.strip():
@@ -815,11 +800,6 @@ def load_overrides(path: Path) -> dict[str, dict[str, Any]]:
             not isinstance(override["prompt"], str) or not override["prompt"].strip()
         ):
             raise ValueError(f"override {identifier!r} prompt must be non-blank")
-        if "difficulty" in override and (
-            type(override["difficulty"]) is not int
-            or not 1 <= override["difficulty"] <= 5
-        ):
-            raise ValueError(f"override {identifier!r} difficulty must be an integer from 1 to 5")
         if "exclude" in override and type(override["exclude"]) is not bool:
             raise ValueError(f"override {identifier!r} exclude must be a boolean")
         result[identifier] = override
@@ -842,12 +822,10 @@ def apply_overrides(
         if override.get("exclude", False):
             logging.info("DROP %s: excluded by manual override", candidate.identifier)
             continue
-        difficulty = override.get("difficulty", candidate.difficulty)
-        updated = dataclasses.replace(candidate, difficulty=difficulty)
-        retained.append(updated)
-        prompt = override.get("prompt", prompt_for_spec_candidate(updated))
-        validate_prompt_context(updated, prompt)
-        prompts[updated.identifier] = prompt
+        retained.append(candidate)
+        prompt = override.get("prompt", prompt_for_spec_candidate(candidate))
+        validate_prompt_context(candidate, prompt)
+        prompts[candidate.identifier] = prompt
     return retained, prompts
 
 
@@ -920,24 +898,6 @@ def select_balanced(candidates: Sequence[Candidate], quota: int) -> list[Candida
     return selected
 
 
-def assign_relative_difficulties(
-    candidates: Sequence[Candidate], overrides: Mapping[str, Mapping[str, Any]]
-) -> list[Candidate]:
-    """Place selected subjects in familiarity quintiles, then apply authored corrections."""
-    result: list[Candidate] = []
-    for spec in CATEGORY_SPECS:
-        category_candidates = sorted(
-            (item for item in candidates if item.category == spec.label),
-            key=lambda item: (-item.sitelinks, entity_sort_key(item.entity_id)),
-        )
-        count = len(category_candidates)
-        for index, candidate in enumerate(category_candidates):
-            estimated = min(5, (index * 5) // count + 1) if count else 1
-            difficulty = overrides.get(candidate.identifier, {}).get("difficulty", estimated)
-            result.append(dataclasses.replace(candidate, difficulty=difficulty))
-    return result
-
-
 def json_number(value: decimal.Decimal) -> int | float:
     """Convert an exact source decimal to an unquoted JSON number."""
     if value == value.to_integral_value():
@@ -954,7 +914,7 @@ def question_document(
     revisions: Mapping[str, int],
     generation_timestamp: str,
 ) -> dict[str, Any]:
-    """Create the exact strict version-2 JSON shape consumed by the app."""
+    """Create the exact strict version-3 JSON shape consumed by the app."""
     questions = []
     category_order = {spec.label: index for index, spec in enumerate(CATEGORY_SPECS)}
     ordered = sorted(
@@ -979,13 +939,12 @@ def question_document(
             "category": candidate.category,
             "sourceUrl": source_url,
             "sourceLabel": candidate.source_label,
-            "difficulty": candidate.difficulty,
         }
         if candidate.as_of is not None:
             question["asOf"] = candidate.as_of.isoformat()
         questions.append(question)
     return {
-        "version": 2,
+        "version": 3,
         "metadata": {
             "generationDate": generation_timestamp[:10],
             "generationTimestamp": generation_timestamp,
@@ -1147,7 +1106,6 @@ def run(argv: Sequence[str]) -> int:
         for spec in CATEGORY_SPECS:
             category_candidates = [item for item in curated if item.category == spec.label]
             selected.extend(select_balanced(category_candidates, requested[spec.key]))
-        selected = assign_relative_difficulties(selected, overrides)
         print_statistics(selected)
 
         if args.dry_run:

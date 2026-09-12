@@ -9,7 +9,7 @@ the log-relative error `|log10(guess / truth)|`, which compares estimates by mul
 distance. This expression is undefined when the true value is zero and does not provide a
 useful interpretation for signed quantities.
 
-Questions also need equality semantics. Their wording, attribution, difficulty, or corrected
+Questions also need equality semantics. Their wording, attribution, or corrected
 true value may change while stored session data must continue to refer to the same question.
 
 ## Decision
@@ -21,8 +21,8 @@ policy designed explicitly for them rather than a fallback hidden inside log-rel
 Two questions are equal when their stable IDs are equal. Question collections and the data
 layer must therefore prevent different questions from reusing an ID.
 
-`Question` is immutable and constructed through a builder. The builder labels the eight
-arguments at the call site, avoiding mistakes between the five string-valued fields while
+`Question` is immutable and constructed through a builder. The builder labels the
+arguments at the call site, avoiding mistakes between similarly typed string-valued fields while
 keeping validation in the `Question` constructor.
 
 ## Consequences

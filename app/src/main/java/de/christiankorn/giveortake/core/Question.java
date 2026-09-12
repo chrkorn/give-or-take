@@ -20,7 +20,6 @@ public final class Question {
     private final String category;
     private final String sourceUrl;
     private final String sourceLabel;
-    private final int difficulty;
 
     private Question(Builder builder) {
         id = requireNonBlank(builder.id, "id");
@@ -34,16 +33,11 @@ public final class Question {
         if (builder.trueValue <= 0.0) {
             throw new IllegalArgumentException("trueValue must be greater than zero");
         }
-        if (builder.difficulty < 1 || builder.difficulty > 5) {
-            throw new IllegalArgumentException("difficulty must be between 1 and 5");
-        }
-
         trueValue = builder.trueValue;
         asOf = builder.asOf;
         category = builder.category;
         sourceUrl = builder.sourceUrl;
         sourceLabel = builder.sourceLabel;
-        difficulty = builder.difficulty;
     }
 
     /**
@@ -137,15 +131,6 @@ public final class Question {
     }
 
     /**
-     * Returns the authored difficulty level, where 1 is easiest and 5 is hardest.
-     *
-     * @return a difficulty from 1 through 5
-     */
-    public int getDifficulty() {
-        return difficulty;
-    }
-
-    /**
      * Compares questions by their stable identifiers.
      *
      * @param other the object to compare with this question
@@ -194,7 +179,6 @@ public final class Question {
         private String category;
         private String sourceUrl;
         private String sourceLabel;
-        private int difficulty;
 
         private Builder() {
         }
@@ -295,17 +279,6 @@ public final class Question {
          */
         public Builder sourceLabel(String sourceLabel) {
             this.sourceLabel = sourceLabel;
-            return this;
-        }
-
-        /**
-         * Sets the authored difficulty level.
-         *
-         * @param difficulty a level from 1 through 5
-         * @return this builder
-         */
-        public Builder difficulty(int difficulty) {
-            this.difficulty = difficulty;
             return this;
         }
 

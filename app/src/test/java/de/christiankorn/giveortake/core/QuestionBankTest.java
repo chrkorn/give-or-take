@@ -18,9 +18,9 @@ public class QuestionBankTest {
     @Test
     public void fromJson_withSeveralValidQuestions_loadsEveryFieldInSourceOrder()
             throws Exception {
-        String questions = validQuestion("river-thames", 346.0, 2)
+        String questions = validQuestion("river-thames", 346.0)
                 + ","
-                + validQuestion("mount-everest", 8848.86, 4);
+                + validQuestion("mount-everest", 8848.86);
 
         QuestionBank bank = QuestionBank.fromJson(new StringReader(validBank(questions)));
 
@@ -35,7 +35,6 @@ public class QuestionBankTest {
         assertEquals("Example category", loaded.get(0).getCategory());
         assertEquals("https://example.org/river-thames", loaded.get(0).getSourceUrl());
         assertEquals("Example source", loaded.get(0).getSourceLabel());
-        assertEquals(2, loaded.get(0).getDifficulty());
         assertEquals("mount-everest", loaded.get(1).getId());
     }
 
@@ -76,8 +75,7 @@ public class QuestionBankTest {
                 + "\"measurementBasis\":\"example measurement basis\","
                 + "\"category\":\"Example category\","
                 + "\"sourceUrl\":\"https://example.org/missing-prompt\","
-                + "\"sourceLabel\":\"Example source\","
-                + "\"difficulty\":2"
+                + "\"sourceLabel\":\"Example source\""
                 + "}";
 
         assertInvalid(
@@ -88,7 +86,7 @@ public class QuestionBankTest {
 
     @Test
     public void fromJson_withMissingMeasurementBasis_rejectsWholeFile() {
-        String missingBasis = validQuestion("missing-basis", 10.0, 2)
+        String missingBasis = validQuestion("missing-basis", 10.0)
                 .replace("\"measurementBasis\":\"example measurement basis\",", "");
 
         assertInvalid(
@@ -120,7 +118,7 @@ public class QuestionBankTest {
 
     @Test
     public void fromJson_withAsOfInTimeIndependentCategory_rejectsWholeFile() {
-        String unexpectedAsOf = validQuestion("unexpected-date", 10.0, 2)
+        String unexpectedAsOf = validQuestion("unexpected-date", 10.0)
                 .replace(
                         "\"measurementBasis\":\"example measurement basis\",",
                         "\"measurementBasis\":\"example measurement basis\","
@@ -136,27 +134,31 @@ public class QuestionBankTest {
 
     @Test
     public void fromJson_withPreviousSchemaVersion_rejectsWholeFile() {
-        String versionOneBank = validBank("")
-                .replace("\"version\":2", "\"version\":1")
-                .replace("\"timeVaryingCategories\":[\"National populations\"],", "");
+        String versionTwoQuestion = validQuestion("version-two", 10.0)
+                .replace(
+                        "\"sourceLabel\":\"Example source\"",
+                        "\"sourceLabel\":\"Example source\",\"difficulty\":2"
+                );
+        String versionTwoBank = validBank(versionTwoQuestion)
+                .replace("\"version\":3", "\"version\":2");
 
         assertInvalid(
-                versionOneBank,
-                "Invalid question bank at $.version: unsupported version 1"
+                versionTwoBank,
+                "Invalid question bank at $.version: unsupported version 2"
         );
     }
 
     @Test
     public void fromJson_withFutureSchemaVersion_rejectsWholeFile() {
         assertInvalid(
-                validBank("").replace("\"version\":2", "\"version\":3"),
-                "Invalid question bank at $.version: unsupported version 3"
+                validBank("").replace("\"version\":3", "\"version\":4"),
+                "Invalid question bank at $.version: unsupported version 4"
         );
     }
 
     @Test
     public void fromJson_withTrueValueAsString_rejectsWholeFile() {
-        String wrongType = validQuestion("wrong-type", 10.0, 2)
+        String wrongType = validQuestion("wrong-type", 10.0)
                 .replace("\"trueValue\":10.0", "\"trueValue\":\"10.0\"");
 
         assertInvalid(
@@ -167,9 +169,9 @@ public class QuestionBankTest {
 
     @Test
     public void fromJson_withDuplicateIdentifiers_rejectsWholeFile() {
-        String questions = validQuestion("duplicate", 10.0, 2)
+        String questions = validQuestion("duplicate", 10.0)
                 + ","
-                + validQuestion("duplicate", 20.0, 3);
+                + validQuestion("duplicate", 20.0);
 
         assertInvalid(
                 validBank(questions),
@@ -179,12 +181,29 @@ public class QuestionBankTest {
 
     @Test
     public void fromJson_withUnknownQuestionField_rejectsWholeFile() {
-        String unknownField = validQuestion("extra", 10.0, 2)
-                .replace("\"difficulty\":2", "\"difficulty\":2,\"hint\":\"unexpected\"");
+        String unknownField = validQuestion("extra", 10.0)
+                .replace(
+                        "\"sourceLabel\":\"Example source\"",
+                        "\"sourceLabel\":\"Example source\",\"hint\":\"unexpected\""
+                );
 
         assertInvalid(
                 validBank(unknownField),
                 "Invalid question bank at $.questions[0].hint: unknown field"
+        );
+    }
+
+    @Test
+    public void fromJson_withRemovedDifficultyField_rejectsWholeFile() {
+        String obsoleteDifficulty = validQuestion("obsolete-difficulty", 10.0)
+                .replace(
+                        "\"sourceLabel\":\"Example source\"",
+                        "\"sourceLabel\":\"Example source\",\"difficulty\":2"
+                );
+
+        assertInvalid(
+                validBank(obsoleteDifficulty),
+                "Invalid question bank at $.questions[0].difficulty: unknown field"
         );
     }
 
@@ -231,7 +250,7 @@ public class QuestionBankTest {
             if (index > 0) {
                 questions.append(',');
             }
-            questions.append(validQuestion("question-" + index, index + 1.0, 3));
+            questions.append(validQuestion("question-" + index, index + 1.0));
         }
 
         QuestionBank bank = QuestionBank.fromJson(validBank(questions.toString()));
@@ -250,7 +269,7 @@ public class QuestionBankTest {
 
     private static String validBank(String questions) {
         return "{"
-                + "\"version\":2,"
+                + "\"version\":3,"
                 + "\"metadata\":{"
                 + "\"generationDate\":\"2026-09-10\","
                 + "\"generationTimestamp\":\"2026-09-10T12:30:00Z\","
@@ -263,7 +282,7 @@ public class QuestionBankTest {
                 + "}";
     }
 
-    private static String validQuestion(String id, double trueValue, int difficulty) {
+    private static String validQuestion(String id, double trueValue) {
         return "{"
                 + "\"id\":\"" + id + "\","
                 + "\"prompt\":\"How large is " + id + "?\","
@@ -272,8 +291,7 @@ public class QuestionBankTest {
                 + "\"measurementBasis\":\"example measurement basis\","
                 + "\"category\":\"Example category\","
                 + "\"sourceUrl\":\"https://example.org/" + id + "\","
-                + "\"sourceLabel\":\"Example source\","
-                + "\"difficulty\":" + difficulty
+                + "\"sourceLabel\":\"Example source\""
                 + "}";
     }
 
@@ -289,8 +307,7 @@ public class QuestionBankTest {
                 + "\"asOf\":\"" + asOf + "\","
                 + "\"category\":\"National populations\","
                 + "\"sourceUrl\":\"https://example.org/" + id + "\","
-                + "\"sourceLabel\":\"Example source\","
-                + "\"difficulty\":2"
+                + "\"sourceLabel\":\"Example source\""
                 + "}";
     }
 }

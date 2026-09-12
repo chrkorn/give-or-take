@@ -176,3 +176,14 @@
   SPARQL only returns referenced statements and Monte Titano's competing 739 m value
   carries no reference. That is precisely why it was invisible the first time.
 - 21 offline tests. The SPARQL is unchanged, so none of this has met live Wikidata yet.
+
+## 2026-09-12 — Remove unsupported question difficulty
+
+- Removed the sitelink-derived `difficulty` value from the Java question model, strict bank
+  loader, generator candidates and output, override schema, tests, and current format documentation.
+- Advanced the strict question-bank schema and generator to version 3 because version-2 readers and
+  version-3 documents are not mutually compatible.
+- Deleted relative-difficulty quintile assignment without changing selection: sitelink counts still
+  enforce the familiarity floor and prefer familiar subjects within each magnitude bucket.
+- Verified all 120 Java unit tests with `./gradlew test` and all 32 offline generator tests with
+  `python3 -m unittest tools/test_build_questions.py`.
