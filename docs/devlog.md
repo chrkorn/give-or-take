@@ -187,3 +187,20 @@
   enforce the familiarity floor and prefer familiar subjects within each magnitude bucket.
 - Verified all 120 Java unit tests with `./gradlew test` and all 32 offline generator tests with
   `python3 -m unittest tools/test_build_questions.py`.
+
+## 2026-09-12 — Magnitude-coverage design and feasibility
+
+- Recorded why a wide overall value range does not prevent category-to-exponent leakage and chose
+  broad measurement families with overlapping base-10 magnitude bands.
+- Defined an integer-based release check: substantive overlap in every well-populated band, no
+  category above a two-thirds share, at least four substantive bands per large category, and at
+  least 80 percent of questions covered by well-populated bands.
+- Added the validator and five offline tests, and made the generator test suite part of CI. All 37
+  generator tests and all 120 Java unit tests pass.
+- Queried live Wikidata before implementing Areas. With a familiarity floor of 20, a genuine point
+  in time, and a direct reference URL, P2046 provides islands only in `10^0`–`10^4` square
+  kilometres, lakes only in `10^0`–`10^2`, no direct-instance national parks, and a handful of
+  country statements with conflicting inclusion scopes. This is an upper bound before the existing
+  competing-value and manual source-admission rules. The approved `10^0`–`10^7` dated category is
+  therefore not implementable from the proposed pool without either changing date semantics or
+  allowing per-question volatility.
