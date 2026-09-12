@@ -103,3 +103,17 @@ The earlier decision that every Areas question is time-varying is superseded. Qu
 changing jurisdictional boundaries and protected areas still require a genuine reference date.
 This preserves one broad Areas category without weakening date validation for the records that need
 it.
+
+**2026-09-12 — conservative Areas source contract.** The implemented pool uses direct instances of
+island, lake, national park, and sovereign state. Every selected P2046 statement must use square
+kilometres, omit an applies-to-part qualifier, and contain a direct HTTP reference URL. Island
+prompts say land area; lake prompts say surface area. National parks use officially designated area
+and require a point in time. Countries require both a point in time and an explicit P1011 qualifier
+excluding maritime waters, so an unqualified or differently scoped country figure is not silently
+presented as comparable.
+
+A live dry run at the familiarity floor of twenty left 93 area candidates after all automatic
+admission rules. Round-robin selection produced thirty questions across five bands (`10^0` through
+`10^4` square kilometres, distributed 7/7/7/7/2). This is the measured strict-pool span; the earlier
+`10^0`–`10^7` result described the looser feasibility query before the date and scope rules were
+applied.
