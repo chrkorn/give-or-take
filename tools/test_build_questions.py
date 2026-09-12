@@ -40,15 +40,40 @@ def binding(
     return result
 
 
-def claim(amount, rank="normal"):
+def claim(amount, rank="normal", qualifiers=None):
     """Create the wbgetentities claim shape used by the admission-rule tests."""
-    return {
+    result = {
         "rank": rank,
         "mainsnak": {
             "snaktype": "value",
             "datavalue": {"value": {"amount": amount}, "type": "quantity"},
         },
     }
+    if qualifiers:
+        result["qualifiers"] = qualifiers
+    return result
+
+
+def date_qualifier(year):
+    """Create a point-in-time qualifier for a test claim."""
+    return [{
+        "snaktype": "value",
+        "datavalue": {
+            "value": {"time": f"+{year:04d}-01-01T00:00:00Z"},
+            "type": "time",
+        },
+    }]
+
+
+def entity_qualifier(entity_id):
+    """Create a Wikibase-entity qualifier for a test claim."""
+    return [{
+        "snaktype": "value",
+        "datavalue": {
+            "value": {"id": entity_id},
+            "type": "wikibase-entityid",
+        },
+    }]
 
 
 def entity(property_id="P2044", amounts=("+756",), ranks=None, location=None,
@@ -500,6 +525,71 @@ class BuildQuestionsTest(unittest.TestCase):
             },
         )
         self.assertEqual(["agreed"], [item.identifier for item in kept])
+
+    def test_competing_population_values_compare_only_the_selected_date(self):
+        population = candidate_for(
+            "Q30", decimal.Decimal("340110988"), "National populations"
+        )
+        claims = {
+            "claims": {
+                "P1082": [
+                    claim("+331577720", qualifiers={"P585": date_qualifier(2020)}),
+                    claim("+340110988", qualifiers={"P585": date_qualifier(2024)}),
+                ]
+            }
+        }
+
+        self.assertIsNone(
+            build_questions.competing_values_for_candidate(claims, population)
+        )
+
+    def test_competing_population_values_reject_same_date_disagreement(self):
+        population = candidate_for(
+            "Q30", decimal.Decimal("340110988"), "National populations"
+        )
+        claims = {
+            "claims": {
+                "P1082": [
+                    claim("+340110988", qualifiers={"P585": date_qualifier(2024)}),
+                    claim("+330000000", qualifiers={"P585": date_qualifier(2024)}),
+                ]
+            }
+        }
+
+        self.assertIsNotNone(
+            build_questions.competing_values_for_candidate(claims, population)
+        )
+
+    def test_area_conflicts_ignore_other_dates_parts_and_scopes(self):
+        area = dataclasses.replace(
+            candidate_for("Q40", decimal.Decimal("123.5"), "Areas"),
+            as_of=dt.date(2024, 1, 1),
+            measurement_basis="officially designated area",
+        )
+        claims = {
+            "claims": {
+                "P2046": [
+                    claim("+123.5", qualifiers={"P585": date_qualifier(2024)}),
+                    claim("+100", qualifiers={"P585": date_qualifier(2020)}),
+                    claim(
+                        "+12",
+                        qualifiers={
+                            "P585": date_qualifier(2024),
+                            "P518": entity_qualifier("Q99"),
+                        },
+                    ),
+                    claim(
+                        "+130",
+                        qualifiers={
+                            "P585": date_qualifier(2024),
+                            "P1011": entity_qualifier("Q165"),
+                        },
+                    ),
+                ]
+            }
+        }
+
+        self.assertIsNone(build_questions.competing_values_for_candidate(claims, area))
 
     def test_apply_competing_value_rule_keeps_subjects_without_claim_documents(self):
         """A missing claim document is a gap in evidence, not evidence of a conflict."""

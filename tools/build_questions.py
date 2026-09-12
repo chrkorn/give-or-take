@@ -538,6 +538,90 @@ def statement_values(entity: Mapping[str, Any], property_id: str) -> list[decima
     return values
 
 
+def statement_qualifier_dates(
+    statement: Mapping[str, Any], property_id: str
+) -> set[dt.date]:
+    """Return supported calendar dates from one statement qualifier."""
+    dates: set[dt.date] = set()
+    for snak in statement.get("qualifiers", {}).get(property_id, []):
+        if not isinstance(snak, Mapping) or snak.get("snaktype") != "value":
+            continue
+        value = (snak.get("datavalue") or {}).get("value", {})
+        if not isinstance(value, Mapping):
+            continue
+        parsed = date_from_wikidata_time(value.get("time"))
+        if parsed is not None:
+            dates.add(parsed)
+    return dates
+
+
+def statement_qualifier_entity_ids(
+    statement: Mapping[str, Any], property_id: str
+) -> set[str]:
+    """Return Q-identifiers from one statement qualifier."""
+    identifiers: set[str] = set()
+    for snak in statement.get("qualifiers", {}).get(property_id, []):
+        if not isinstance(snak, Mapping) or snak.get("snaktype") != "value":
+            continue
+        value = (snak.get("datavalue") or {}).get("value", {})
+        if isinstance(value, Mapping) and isinstance(value.get("id"), str):
+            identifiers.add(value["id"])
+    return identifiers
+
+
+def statement_matches_candidate(
+    statement: Mapping[str, Any], candidate: Candidate
+) -> bool:
+    """Return whether a claim measures the same date and scope as a candidate."""
+    if candidate.category == "National populations":
+        return candidate.as_of in statement_qualifier_dates(statement, "P585")
+    if candidate.category != "Areas":
+        return True
+
+    # An area of a named sub-part is a different quantity, not a competing answer.
+    if statement.get("qualifiers", {}).get("P518"):
+        return False
+    dates = statement_qualifier_dates(statement, "P585")
+    if candidate.as_of is None:
+        if dates:
+            return False
+    elif candidate.as_of not in dates:
+        return False
+    if candidate.measurement_basis == "total area excluding maritime waters":
+        return "Q165" in statement_qualifier_entity_ids(statement, "P1011")
+    return not statement.get("qualifiers", {}).get("P1011")
+
+
+def candidate_statement_values(
+    entity: Mapping[str, Any], candidate: Candidate
+) -> list[decimal.Decimal]:
+    """Collect non-deprecated values measuring a candidate's exact context."""
+    values: list[decimal.Decimal] = []
+    for statement in entity.get("claims", {}).get(candidate.property_id, []):
+        if not isinstance(statement, Mapping):
+            continue
+        if statement.get("rank") == DEPRECATED_RANK:
+            continue
+        if not statement_matches_candidate(statement, candidate):
+            continue
+        snak = statement.get("mainsnak")
+        if not isinstance(snak, Mapping) or snak.get("snaktype") != "value":
+            continue
+        amount = (snak.get("datavalue") or {}).get("value", {})
+        if not isinstance(amount, Mapping):
+            continue
+        text = amount.get("amount")
+        if not isinstance(text, str):
+            continue
+        try:
+            parsed = decimal.Decimal(text)
+        except decimal.InvalidOperation:
+            continue
+        if parsed.is_finite():
+            values.append(parsed)
+    return values
+
+
 def competing_values(
     entity: Mapping[str, Any],
     property_id: str,
@@ -556,6 +640,22 @@ def competing_values(
     if scale == 0:
         return None
     if (highest - lowest) / scale > tolerance:
+        return (lowest, highest)
+    return None
+
+
+def competing_values_for_candidate(
+    entity: Mapping[str, Any],
+    candidate: Candidate,
+    tolerance: decimal.Decimal = COMPETING_VALUE_TOLERANCE,
+) -> tuple[decimal.Decimal, decimal.Decimal] | None:
+    """Return a disagreeing pair measured for the candidate's date and scope."""
+    values = candidate_statement_values(entity, candidate)
+    if len(values) < 2:
+        return None
+    lowest, highest = min(values), max(values)
+    scale = max(abs(lowest), abs(highest))
+    if scale and (highest - lowest) / scale > tolerance:
         return (lowest, highest)
     return None
 
@@ -905,7 +1005,7 @@ def apply_competing_value_rule(
             )
             kept.append(candidate)
             continue
-        conflict = competing_values(entity, candidate.property_id, tolerance)
+        conflict = competing_values_for_candidate(entity, candidate, tolerance)
         if conflict is not None:
             lowest, highest = conflict
             logging.info(

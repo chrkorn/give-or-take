@@ -148,7 +148,7 @@ Four rules now run before selection. Each logs its rejections with a reason, so
 |---|---|---|
 | Exclusion list | `--exclusions` | Honours `tools/exclusions.json`. Records cut by hand after review would otherwise return on the next run, silently breaking the reproducibility the pinned revisions provide. A listed id that no longer appears produces a warning, not an error — upstream data legitimately changes. |
 | Familiarity floor | `--min-sitelinks` | Rejects subjects described in fewer than N Wikimedia language editions. This is a floor, not a difficulty rating: the review found such subjects yield recall questions, because the player cannot reason toward an answer from the prompt. |
-| Competing values | `--competing-value-tolerance` | Rejects a subject whose own sources disagree about the value by more than a relative tolerance. Deprecated statements are ignored: a superseded value is not a live disagreement. |
+| Competing values | `--competing-value-tolerance` | Rejects a subject whose own sources disagree about the same dated and scoped value by more than a relative tolerance. Deprecated statements are ignored: a superseded value is not a live disagreement. |
 | Location in the prompt | — | Resolves `P131`, falling back to `P17`, and names the place in the prompt. Removes a class of identity ambiguity: "Sugarloaf Mountain", "Corcovado" and "Freedom Tower" each denote more than one subject. |
 
 ### Why the competing-value rule reads claim documents rather than the query
@@ -158,6 +158,11 @@ that carries no reference is therefore invisible to them — which is exactly ho
 Titano disagreement (739 m against 756 m) reached the first bank. The rule fetches each
 subject's full claim document from the MediaWiki API instead, so unreferenced
 disagreements are visible.
+
+Only claims measuring the selected context compete. Population claims must have the selected P585
+date. Area claims must have the selected date and inclusion scope, and an area applying to a named
+part is a different quantity. Without those comparisons, ordinary population change and legitimate
+land-versus-total-area distinctions would be mistaken for source disputes.
 
 ### Calibration
 
