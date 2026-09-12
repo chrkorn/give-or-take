@@ -46,8 +46,9 @@ from one category in one band. A release bank must satisfy all of these rules:
 3. Every testable band contains at least two categories that contribute at least two questions
    each.
 4. No category contributes more than two thirds of a testable band.
-5. Every category containing at least twelve questions contributes at least two questions to each
-   of at least four different magnitude bands.
+5. Every category containing at least twelve questions **and whose configured admissible value
+   range can occupy at least four magnitude bands** contributes at least two questions to each of
+   at least four different bands.
 
 The thresholds are deliberately integer-friendly. In the smallest testable band, a `4 + 2` split
 passes while `5 + 1` fails. Requiring two questions makes overlap substantive rather than allowing
@@ -117,3 +118,34 @@ admission rules. Round-robin selection produced thirty questions across five ban
 `10^4` square kilometres, distributed 7/7/7/7/2). This is the measured strict-pool span; the earlier
 `10^0`–`10^7` result described the looser feasibility query before the date and scope rules were
 applied.
+
+**2026-09-12 — rule 5 limited to physically eligible categories.** The original wording applied
+the four-band requirement to every category with at least twelve questions. That made the rule
+unsatisfiable for configured mountain elevations (100–9,000 metres) and building heights
+(10–1,000 metres): adding questions cannot make a bounded physical range occupy four bands. A quota
+of fewer than twelve merely hid the contradiction and would make an otherwise harmless quota
+increase fail.
+
+Rule 5 now applies only when the category's configured minimum and maximum can occupy at least four
+base-10 bands. It therefore continues to constrain broad families such as Areas and national
+populations, while the intentionally retained narrow height categories are judged through the
+bank-level overlap and dominance rules. Dropping rule 5 entirely was rejected because a nominally
+broad category could then collapse into one or two populated bands. Adding a second bank-level
+breadth rule was rejected because the existing 80-percent testable-share rule already measures bank
+breadth and would not replace the need to check whether broad categories actually use their range.
+
+**2026-09-12 — partial repair accepted and protected by a ratchet.** Adding Lengths or Masses was
+explicitly rejected for the current scope. The five rules remain the definition of a fully repaired
+bank, but the shipped bank is accepted with a measured limitation. CI prints the complete matrix and
+checks monotonic outcomes against the accepted baseline: at least 74/80 questions in testable bands,
+at least two fully compliant bands, at most five insufficient-overlap bands, at most one other
+dominated band, and no broad-category span failures. A future improvement passes without changing
+the baseline; a regression fails.
+
+The known gaps are `10^0` and `10^1`, which contain only Areas; `10^5`, `10^6`, and `10^7`, which
+contain only national populations; and `10^4`, where populations contribute six of eight questions
+and exceed the two-thirds cap. Areas overlap the two retained height categories at `10^2` and
+`10^3`, so those bands meet the full-repair rules. The gap remains because the approved subject
+families do not naturally bridge small areas to large populations, and manufacturing that bridge
+would require adding another broad measurement family. This limitation is accepted and documented
+rather than concealed by weakening the thresholds.

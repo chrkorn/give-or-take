@@ -274,6 +274,42 @@ class Candidate:
     location: str | None = None
 
 
+@dataclasses.dataclass(frozen=True)
+class MagnitudeRecord:
+    """Minimal question data needed to assess category-to-magnitude leakage."""
+
+    identifier: str
+    category: str
+    value: decimal.Decimal
+
+
+@dataclasses.dataclass(frozen=True)
+class MagnitudeCoverageAssessment:
+    """Measured matrix and monotonic outcomes used by the release-bank ratchet."""
+
+    matrix: Mapping[int, Mapping[str, int]]
+    question_count: int
+    testable_questions: int
+    testable_bands: tuple[int, ...]
+    compliant_bands: tuple[int, ...]
+    insufficient_overlap_bands: tuple[int, ...]
+    dominated_bands: tuple[int, ...]
+    broad_category_failures: tuple[str, ...]
+    violations: tuple[str, ...]
+
+
+@dataclasses.dataclass(frozen=True)
+class MagnitudeCoverageRatchet:
+    """Accepted lower and upper bounds that may improve but must not regress."""
+
+    minimum_testable_share_numerator: int
+    minimum_testable_share_denominator: int
+    minimum_compliant_bands: int
+    maximum_insufficient_overlap_bands: int
+    maximum_dominated_bands: int
+    maximum_broad_category_failures: int
+
+
 CATEGORY_SPECS = (
     CategorySpec(
         key="mountains",
@@ -1167,29 +1203,36 @@ def select_balanced(candidates: Sequence[Candidate], quota: int) -> list[Candida
     return selected
 
 
-def validate_magnitude_coverage(candidates: Sequence[Candidate]) -> None:
-    """Reject a bank whose categories reveal its base-10 magnitude bands.
+def supported_magnitude_band_count(spec: CategorySpec) -> int:
+    """Return how many base-10 bands a category's configured range can occupy."""
+    return spec.maximum.adjusted() - spec.minimum.adjusted() + 1
+
+
+def assess_magnitude_coverage(
+    records: Sequence[MagnitudeRecord],
+) -> MagnitudeCoverageAssessment:
+    """Measure how strongly categories partition the occupied magnitude bands.
 
     Values are interpreted in each category's fixed display unit. Unit choice is an
     editorial decision made before this check; changing units merely to move a category
     between bands would not improve magnitude coverage.
     """
-    if not candidates:
+    if not records:
         raise ValueError("magnitude coverage requires at least one question")
 
     cells: collections.Counter[tuple[str, int]] = collections.Counter()
     band_totals: collections.Counter[int] = collections.Counter()
     category_totals: collections.Counter[str] = collections.Counter()
-    for candidate in candidates:
-        if not candidate.value.is_finite() or candidate.value <= 0:
+    for record in records:
+        if not record.value.is_finite() or record.value <= 0:
             raise ValueError(
                 f"magnitude coverage requires a positive finite value for "
-                f"{candidate.identifier}"
+                f"{record.identifier}"
             )
-        exponent = candidate.value.adjusted()
-        cells[(candidate.category, exponent)] += 1
+        exponent = record.value.adjusted()
+        cells[(record.category, exponent)] += 1
         band_totals[exponent] += 1
-        category_totals[candidate.category] += 1
+        category_totals[record.category] += 1
 
     testable_bands = {
         exponent
@@ -1200,14 +1243,17 @@ def validate_magnitude_coverage(candidates: Sequence[Candidate]) -> None:
     violations: list[str] = []
     if (
         testable_questions * MIN_TESTABLE_SHARE_DENOMINATOR
-        < len(candidates) * MIN_TESTABLE_SHARE_NUMERATOR
+        < len(records) * MIN_TESTABLE_SHARE_NUMERATOR
     ):
         violations.append(
             f"testable magnitude bands contain {testable_questions} of "
-            f"{len(candidates)} questions; at least 80% required"
+            f"{len(records)} questions; at least 80% required"
         )
 
     categories = sorted(category_totals)
+    compliant_bands: list[int] = []
+    insufficient_overlap_bands: list[int] = []
+    dominated_bands: list[int] = []
     for exponent in sorted(testable_bands):
         band_count = band_totals[exponent]
         category_counts = {
@@ -1221,6 +1267,7 @@ def validate_magnitude_coverage(candidates: Sequence[Candidate]) -> None:
             if count >= MIN_SUBSTANTIVE_CELL_SIZE
         ]
         if len(substantive_categories) < 2:
+            insufficient_overlap_bands.append(exponent)
             violations.append(
                 f"magnitude band 10^{exponent} has {len(substantive_categories)} "
                 "substantive categories; at least 2 required"
@@ -1232,27 +1279,147 @@ def validate_magnitude_coverage(candidates: Sequence[Candidate]) -> None:
             dominant_count * MAX_BAND_SHARE_DENOMINATOR
             > band_count * MAX_BAND_SHARE_NUMERATOR
         ):
+            # Bands already recorded for insufficient overlap have the same root defect;
+            # the ratchet tracks dominance separately only where overlap exists.
+            if exponent not in insufficient_overlap_bands:
+                dominated_bands.append(exponent)
             violations.append(
                 f"magnitude band 10^{exponent} is dominated by "
                 f"{dominant_category!r} ({dominant_count} of {band_count}); "
                 "maximum share is two thirds"
             )
+        if (
+            exponent not in insufficient_overlap_bands
+            and exponent not in dominated_bands
+        ):
+            compliant_bands.append(exponent)
 
+    specs_by_label = {spec.label: spec for spec in CATEGORY_SPECS}
+    broad_category_failures: list[str] = []
     for category in categories:
         if category_totals[category] < MIN_CATEGORY_SIZE:
+            continue
+        spec = specs_by_label.get(category)
+        if spec is None or supported_magnitude_band_count(spec) < MIN_CATEGORY_BAND_COUNT:
             continue
         covered_bands = sum(
             cells[(category, exponent)] >= MIN_SUBSTANTIVE_CELL_SIZE
             for exponent in band_totals
         )
         if covered_bands < MIN_CATEGORY_BAND_COUNT:
+            broad_category_failures.append(category)
             violations.append(
                 f"category {category!r} substantively covers {covered_bands} "
                 f"magnitude bands; at least {MIN_CATEGORY_BAND_COUNT} required"
             )
 
-    if violations:
-        raise ValueError("magnitude coverage failed: " + "; ".join(violations))
+    matrix = {
+        exponent: {
+            category: cells[(category, exponent)]
+            for category in categories
+        }
+        for exponent in sorted(band_totals)
+    }
+    return MagnitudeCoverageAssessment(
+        matrix=matrix,
+        question_count=len(records),
+        testable_questions=testable_questions,
+        testable_bands=tuple(sorted(testable_bands)),
+        compliant_bands=tuple(compliant_bands),
+        insufficient_overlap_bands=tuple(insufficient_overlap_bands),
+        dominated_bands=tuple(dominated_bands),
+        broad_category_failures=tuple(broad_category_failures),
+        violations=tuple(violations),
+    )
+
+
+def format_magnitude_coverage(assessment: MagnitudeCoverageAssessment) -> str:
+    """Render the complete matrix and summary for CI and report evidence."""
+    categories = sorted({category for row in assessment.matrix.values() for category in row})
+    first_width = max(9, max(len(f"10^{exponent}") for exponent in assessment.matrix))
+    widths = {
+        category: max(len(category), 5)
+        for category in categories
+    }
+    lines = [
+        "Magnitude matrix (values use each category's fixed display unit)",
+        "band".ljust(first_width)
+        + "  "
+        + "  ".join(category.rjust(widths[category]) for category in categories),
+    ]
+    for exponent, row in assessment.matrix.items():
+        marker = "*" if exponent in assessment.testable_bands else " "
+        label = f"{marker}10^{exponent}"
+        lines.append(
+            label.ljust(first_width)
+            + "  "
+            + "  ".join(str(row[category]).rjust(widths[category]) for category in categories)
+        )
+    lines.extend([
+        "* testable band (at least 6 questions)",
+        (
+            f"Testable questions: {assessment.testable_questions}/"
+            f"{assessment.question_count}"
+        ),
+        f"Fully compliant testable bands: {len(assessment.compliant_bands)}",
+        (
+            "Insufficient-overlap bands: "
+            + (", ".join(f"10^{value}" for value in assessment.insufficient_overlap_bands)
+               or "none")
+        ),
+        (
+            "Other dominated bands: "
+            + (", ".join(f"10^{value}" for value in assessment.dominated_bands)
+               or "none")
+        ),
+        (
+            "Broad-category span failures: "
+            + (", ".join(assessment.broad_category_failures) or "none")
+        ),
+    ])
+    return "\n".join(lines)
+
+
+def validate_magnitude_coverage_ratchet(
+    assessment: MagnitudeCoverageAssessment,
+    ratchet: MagnitudeCoverageRatchet,
+) -> None:
+    """Fail only when one of the accepted coverage outcomes becomes worse."""
+    regressions: list[str] = []
+    if (
+        assessment.testable_questions * ratchet.minimum_testable_share_denominator
+        < assessment.question_count * ratchet.minimum_testable_share_numerator
+    ):
+        regressions.append("testable-question share fell below the accepted baseline")
+    if len(assessment.compliant_bands) < ratchet.minimum_compliant_bands:
+        regressions.append("the number of fully compliant bands fell below the baseline")
+    if (
+        len(assessment.insufficient_overlap_bands)
+        > ratchet.maximum_insufficient_overlap_bands
+    ):
+        regressions.append("the number of insufficient-overlap bands increased")
+    if len(assessment.dominated_bands) > ratchet.maximum_dominated_bands:
+        regressions.append("the number of other dominated bands increased")
+    if (
+        len(assessment.broad_category_failures)
+        > ratchet.maximum_broad_category_failures
+    ):
+        regressions.append("the number of broad-category span failures increased")
+    if regressions:
+        raise ValueError("magnitude coverage regressed: " + "; ".join(regressions))
+
+
+def validate_magnitude_coverage(candidates: Sequence[Candidate]) -> None:
+    """Reject a bank that does not yet satisfy the full-repair definition."""
+    assessment = assess_magnitude_coverage([
+        MagnitudeRecord(item.identifier, item.category, item.value)
+        for item in candidates
+    ])
+
+    if assessment.violations:
+        raise ValueError(
+            "magnitude coverage failed: " + "; ".join(assessment.violations)
+        )
 
 
 def json_number(value: decimal.Decimal) -> int | float:

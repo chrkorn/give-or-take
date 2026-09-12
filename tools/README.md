@@ -135,6 +135,21 @@ python3 -m unittest tools/test_build_questions.py
 These tests accompany the filtering and selection logic. A successful test does not replace the
 manual source and wording review required by ADR 0011.
 
+## Magnitude-coverage ratchet
+
+Run the same non-regression check as CI with:
+
+```shell
+python3 -m tools.check_magnitude_coverage
+```
+
+The command always prints the complete category-by-magnitude matrix and the remaining failures
+against ADR 0013's full-repair definition. It then compares monotonic summary outcomes with
+`magnitude-coverage-ratchet.json`. Better coverage passes automatically; fewer compliant bands,
+more overlap or dominance failures, a lower testable-question share, or a new broad-category span
+failure stops CI. The ratchet records an accepted limitation, not a claim that the bank is fully
+repaired.
+
 ## Admission rules
 
 Added after an external review of the first generated bank found six factually wrong
