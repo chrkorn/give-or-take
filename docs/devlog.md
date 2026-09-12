@@ -141,3 +141,11 @@
 - Generated an 80-question candidate bank across mountain elevations, completed-building heights,
   and dated national populations, balanced across available orders of magnitude.
 - Added offline generator tests and run/curation documentation.
+
+## 2026-09-12 — Question-data source-admission amendment
+- Corrected ADR 0011 after external review exposed six factual errors that revision-pinning and
+  source-reproduction validation could not detect.
+- Established Wikidata as a discovery index rather than final authority, with six admission rules,
+  tiered primary-source requirements, automated conflict checks, and documented manual sampling.
+- Dropped the unsupported per-question difficulty field rather than treating sitelink counts as a
+  measure of estimation difficulty.
