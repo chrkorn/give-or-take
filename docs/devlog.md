@@ -204,3 +204,7 @@
   competing-value and manual source-admission rules. The approved `10^0`–`10^7` dated category is
   therefore not implementable from the proposed pool without either changing date semantics or
   allowing per-question volatility.
+- Repeating the same live query without requiring a point-in-time qualifier produced directly
+  referenced, familiar candidates across `10^0`–`10^7`, including all four proposed subject types.
+  This supports per-question volatility as a viable correction while confirming that a retrieval
+  date must not be presented as the date on which an undated measurement was true.
