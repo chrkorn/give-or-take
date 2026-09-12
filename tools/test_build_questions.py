@@ -19,6 +19,8 @@ def binding(
     rank="NormalRank",
     sitelinks="80",
     year=None,
+    measurement_basis=None,
+    reference_url=None,
 ):
     """Create the small SPARQL JSON shape used by generator tests."""
     result = {
@@ -31,6 +33,10 @@ def binding(
     }
     if year is not None:
         result["pointInTime"] = {"value": f"{year:04d}-01-01T00:00:00Z"}
+    if measurement_basis is not None:
+        result["measurementBasis"] = {"value": measurement_basis}
+    if reference_url is not None:
+        result["referenceUrl"] = {"value": reference_url}
     return result
 
 
@@ -151,6 +157,76 @@ class BuildQuestionsTest(unittest.TestCase):
         self.assertEqual(dt.date(2024, 1, 1), candidates[0].as_of)
         self.assertEqual(decimal.Decimal("1239876"), candidates[0].value)
 
+    def test_area_candidate_retains_basis_date_and_direct_source(self):
+        spec = next(s for s in build_questions.CATEGORY_SPECS if s.key == "areas")
+        rows = [binding(
+            entity_id="Q40",
+            label="Example Island",
+            amount="123.5",
+            unit="Q712226",
+            year=2024,
+            measurement_basis="land area",
+            reference_url="https://statistics.example/island-area",
+        )]
+
+        candidates = build_questions.candidates_from_bindings(spec, rows, 2026)
+
+        self.assertEqual(1, len(candidates))
+        self.assertEqual("land area", candidates[0].measurement_basis)
+        self.assertEqual(dt.date(2024, 1, 1), candidates[0].as_of)
+        self.assertEqual("statistics.example", candidates[0].source_label)
+        self.assertEqual(
+            "https://statistics.example/island-area", candidates[0].source_url
+        )
+
+    def test_area_candidate_derives_source_label_from_reference_url(self):
+        spec = next(s for s in build_questions.CATEGORY_SPECS if s.key == "areas")
+        rows = [binding(
+            entity_id="Q41",
+            label="Example Lake",
+            amount="45.5",
+            unit="Q712226",
+            measurement_basis="surface area",
+            reference_url="https://www.lakes.example/data/41",
+        )]
+
+        candidates = build_questions.candidates_from_bindings(spec, rows, 2026)
+
+        self.assertEqual("lakes.example", candidates[0].source_label)
+
+    def test_changing_area_without_date_is_rejected(self):
+        spec = next(s for s in build_questions.CATEGORY_SPECS if s.key == "areas")
+        rows = [binding(
+            entity_id="Q42",
+            label="Example National Park",
+            amount="456.7",
+            unit="Q712226",
+            measurement_basis="officially designated area",
+            reference_url="https://parks.example/area",
+        )]
+
+        with self.assertLogs(level="INFO") as logs:
+            candidates = build_questions.candidates_from_bindings(spec, rows, 2026)
+
+        self.assertEqual([], candidates)
+        self.assertIn("missing point-in-time date", "\n".join(logs.output))
+
+    def test_area_without_direct_reference_url_is_rejected(self):
+        spec = next(s for s in build_questions.CATEGORY_SPECS if s.key == "areas")
+        rows = [binding(
+            entity_id="Q43",
+            label="Example Island",
+            amount="789.1",
+            unit="Q712226",
+            measurement_basis="land area",
+        )]
+
+        with self.assertLogs(level="INFO") as logs:
+            candidates = build_questions.candidates_from_bindings(spec, rows, 2026)
+
+        self.assertEqual([], candidates)
+        self.assertIn("missing direct HTTP reference URL", "\n".join(logs.output))
+
     def test_apply_overrides_changes_only_prompt(self):
         candidate = candidate_for("Q30", decimal.Decimal("456"), "Mountain elevations")
         overrides = {
@@ -252,7 +328,7 @@ class BuildQuestionsTest(unittest.TestCase):
             build_questions.validate_magnitude_coverage([])
 
     def test_prompt_templates_include_unit_basis_and_date(self):
-        mountain, building, population = build_questions.CATEGORY_SPECS
+        mountain, building, population = build_questions.CATEGORY_SPECS[:3]
 
         self.assertEqual(
             "What is the elevation of Mount Everest above sea level, in metres?",
@@ -279,6 +355,34 @@ class BuildQuestionsTest(unittest.TestCase):
             ),
         )
 
+    def test_area_prompt_states_source_basis_unit_and_optional_date(self):
+        area = next(s for s in build_questions.CATEGORY_SPECS if s.key == "areas")
+
+        self.assertEqual(
+            "According to Example Atlas, what is the land area of Example Island in "
+            "Exampleland, in square kilometres?",
+            build_questions.prompt_for(
+                area,
+                "Example Island",
+                None,
+                "Example Atlas",
+                "Exampleland",
+                "land area",
+            ),
+        )
+        self.assertEqual(
+            "According to Parks Agency, what was the officially designated area of "
+            "Example Park on 1 January 2024, in square kilometres?",
+            build_questions.prompt_for(
+                area,
+                "Example Park",
+                dt.date(2024, 1, 1),
+                "Parks Agency",
+                None,
+                "officially designated area",
+            ),
+        )
+
     def test_question_document_matches_version_four_schema(self):
         candidate = candidate_for("Q42", decimal.Decimal("123.5"), "Mountain elevations")
         document = build_questions.question_document(
@@ -294,7 +398,7 @@ class BuildQuestionsTest(unittest.TestCase):
 
         self.assertEqual(4, document["version"])
         self.assertEqual("2026-09-11", document["metadata"]["generationDate"])
-        self.assertEqual("4.0.0", document["metadata"]["scriptVersion"])
+        self.assertEqual("4.1.0", document["metadata"]["scriptVersion"])
         self.assertEqual(123.5, document["questions"][0]["trueValue"])
         self.assertEqual("metres", document["questions"][0]["unit"])
         self.assertEqual(
@@ -333,6 +437,12 @@ class BuildQuestionsTest(unittest.TestCase):
             self.assertIn("prov:wasDerivedFrom", spec.query)
             self.assertIn("wikibase:DeprecatedRank", spec.query)
         self.assertIn("pq:P585", build_questions.POPULATION_QUERY)
+        for query in build_questions.AREA_QUERIES:
+            self.assertIn("pr:P854", query)
+        self.assertIn(
+            "total area excluding maritime waters",
+            build_questions.AREA_QUERIES[-1],
+        )
 
     # ------------------------------------------------------------------
     # Admission rules added after the external review of the first bank.
@@ -511,6 +621,9 @@ def candidate_for(entity_id, value, category):
         ),
         "National populations": (
             "populations", "P1082", "people", "resident population"
+        ),
+        "Areas": (
+            "areas", "P2046", "square kilometres", "land area"
         ),
     }
     key, property_id, unit, measurement_basis = properties[category]

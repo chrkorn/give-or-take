@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 
-SCRIPT_VERSION = "4.0.0"
+SCRIPT_VERSION = "4.1.0"
 DEFAULT_ENDPOINT = "https://query.wikidata.org/sparql"
 WIKIDATA_API = "https://www.wikidata.org/w/api.php"
 DEFAULT_USER_AGENT = (
@@ -111,6 +111,7 @@ PREFIX psv: <http://www.wikidata.org/prop/statement/value/>
 PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
 PREFIX wikibase: <http://wikiba.se/ontology#>
 PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX pr: <http://www.wikidata.org/prop/reference/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 """
 
@@ -177,6 +178,64 @@ ORDER BY DESC(?sitelinks) ?item ?amount
 LIMIT 1200
 """
 
+def area_query(subject_clause: str, measurement_basis: str, date_required: bool) -> str:
+    """Compose one small P2046 query so Wikidata need not plan a large union."""
+    date_clause = (
+        "?statement pq:P585 ?pointInTime."
+        if date_required
+        else "OPTIONAL { ?statement pq:P585 ?pointInTime. }"
+    )
+    return COMMON_PREFIXES + f"""
+SELECT DISTINCT ?item ?itemLabel ?amount ?unit ?rank ?pointInTime ?sitelinks
+                ?measurementBasis ?referenceUrl WHERE {{
+  ?item p:P2046 ?statement;
+        wikibase:sitelinks ?sitelinks.
+  {subject_clause}
+  BIND("{measurement_basis}" AS ?measurementBasis)
+  ?statement ps:P2046 ?amount;
+             psv:P2046 ?valueNode;
+             wikibase:rank ?rank;
+             prov:wasDerivedFrom ?reference.
+  {date_clause}
+  ?reference pr:P854 ?referenceUrl.
+  ?valueNode wikibase:quantityUnit ?unit.
+  FILTER(?rank != wikibase:DeprecatedRank)
+  FILTER(?unit = wd:Q712226)
+  FILTER NOT EXISTS {{ ?statement pq:P518 ?part. }}
+  ?item rdfs:label ?itemLabel.
+  FILTER(LANG(?itemLabel) = "en")
+}}
+ORDER BY DESC(?sitelinks) ?item ?amount
+LIMIT 400
+"""
+
+
+AREA_QUERIES = (
+    area_query("?item wdt:P31 wd:Q23442.", "land area", False),
+    area_query("?item wdt:P31 wd:Q23397.", "surface area", False),
+    area_query("?item wdt:P31 wd:Q46169.", "officially designated area", True),
+    area_query(
+        """
+  ?item wdt:P31 wd:Q3624078.
+  ?statement pq:P1011 wd:Q165.
+  FILTER NOT EXISTS { ?item wdt:P576 ?dissolutionDate. }
+        """.strip(),
+        "total area excluding maritime waters",
+        True,
+    ),
+)
+
+AREA_MEASUREMENT_BASES = frozenset({
+    "land area",
+    "surface area",
+    "officially designated area",
+    "total area excluding maritime waters",
+})
+DATED_AREA_BASES = frozenset({
+    "officially designated area",
+    "total area excluding maritime waters",
+})
+
 
 @dataclasses.dataclass(frozen=True)
 class CategorySpec:
@@ -193,6 +252,7 @@ class CategorySpec:
     maximum: decimal.Decimal
     quota: int
     query: str
+    additional_queries: tuple[str, ...] = ()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -210,6 +270,7 @@ class Candidate:
     measurement_basis: str
     source_label: str
     sitelinks: int
+    source_url: str | None = None
     location: str | None = None
 
 
@@ -224,7 +285,7 @@ CATEGORY_SPECS = (
         time_varying=False,
         minimum=decimal.Decimal("100"),
         maximum=decimal.Decimal("9000"),
-        quota=25,
+        quota=10,
         query=MOUNTAIN_QUERY,
     ),
     CategorySpec(
@@ -237,7 +298,7 @@ CATEGORY_SPECS = (
         time_varying=False,
         minimum=decimal.Decimal("10"),
         maximum=decimal.Decimal("1000"),
-        quota=25,
+        quota=10,
         query=BUILDING_QUERY,
     ),
     CategorySpec(
@@ -252,6 +313,20 @@ CATEGORY_SPECS = (
         maximum=decimal.Decimal("2000000000"),
         quota=30,
         query=POPULATION_QUERY,
+    ),
+    CategorySpec(
+        key="areas",
+        label="Areas",
+        property_id="P2046",
+        unit_qid="Q712226",
+        output_unit="square kilometres",
+        measurement_basis="area",
+        time_varying=False,
+        minimum=decimal.Decimal("1"),
+        maximum=decimal.Decimal("99999999.999999"),
+        quota=30,
+        query=AREA_QUERIES[0],
+        additional_queries=AREA_QUERIES[1:],
     ),
 )
 
@@ -511,6 +586,8 @@ def is_suspiciously_round(value: decimal.Decimal, category_key: str) -> bool:
     trailing_zeroes = len(digits) - len(digits.rstrip("0"))
     if category_key == "populations":
         return trailing_zeroes >= 5
+    if category_key == "areas":
+        return int(value) >= 10000 and trailing_zeroes >= 4
     return int(value) >= 100 and trailing_zeroes >= 2
 
 
@@ -520,6 +597,7 @@ def prompt_for(
     as_of: dt.date | None,
     source_label: str,
     location: str | None = None,
+    measurement_basis: str | None = None,
 ) -> str:
     """Render category-specific wording that also states necessary qualifiers.
 
@@ -537,6 +615,19 @@ def prompt_for(
         )
         place = f" in {location}" if location else ""
         return f"What is the architectural height of {display_name}{place}, in metres?"
+    if spec.key == "areas":
+        if measurement_basis not in AREA_MEASUREMENT_BASES:
+            raise ValueError("area prompt requires a supported measurement basis")
+        place = f" in {location}" if location else ""
+        if as_of:
+            return (
+                f"According to {source_label}, what was the {measurement_basis} of "
+                f"{label}{place} on {display_date_in_english(as_of)}, in square kilometres?"
+            )
+        return (
+            f"According to {source_label}, what is the {measurement_basis} of "
+            f"{label}{place}, in square kilometres?"
+        )
     if as_of is None:
         raise ValueError("population prompt requires a reference date")
     display_name = f"the {label}" if label in COUNTRY_NAMES_REQUIRING_ARTICLE else label
@@ -573,6 +664,14 @@ def candidates_from_bindings(
         rank = rank_priority(binding_value(binding, "rank"))
         sitelinks_text = binding_value(binding, "sitelinks")
         as_of = date_from_wikidata_time(binding_value(binding, "pointInTime"))
+        measurement_basis = spec.measurement_basis
+        source_label = QUESTION_SOURCE_LABEL
+        source_url: str | None = None
+        if spec.key == "areas":
+            measurement_basis = binding_value(binding, "measurementBasis") or ""
+            source_url = binding_value(binding, "referenceUrl")
+            if source_url is not None:
+                source_label = source_label_from_url(source_url)
 
         reason: str | None = None
         amount: decimal.Decimal | None = None
@@ -602,8 +701,27 @@ def candidates_from_bindings(
             reason = "missing supported statement rank"
         elif reason is None and spec.time_varying and as_of is None:
             reason = "missing point-in-time date"
+        elif (
+            reason is None
+            and spec.key == "areas"
+            and measurement_basis not in AREA_MEASUREMENT_BASES
+        ):
+            reason = f"unsupported area measurement basis {measurement_basis!r}"
+        elif (
+            reason is None
+            and spec.key == "areas"
+            and measurement_basis in DATED_AREA_BASES
+            and as_of is None
+        ):
+            reason = "missing point-in-time date for changing area"
+        elif (
+            reason is None
+            and spec.key == "areas"
+            and (source_url is None or not is_absolute_http_url(source_url))
+        ):
+            reason = "missing direct HTTP reference URL"
         elif reason is None and as_of is not None and as_of.year > current_year:
-            reason = f"future population date {as_of.isoformat()}"
+            reason = f"future reference date {as_of.isoformat()}"
 
         if reason is not None:
             logging.info("DROP %s %s: %s", spec.key, subject, reason)
@@ -622,6 +740,9 @@ def candidates_from_bindings(
                 "as_of": as_of,
                 "rank": rank,
                 "sitelinks": sitelinks,
+                "measurement_basis": measurement_basis,
+                "source_label": source_label,
+                "source_url": source_url,
             }
         )
 
@@ -637,6 +758,11 @@ def candidates_from_bindings(
         if spec.time_varying:
             latest_date = max(row["as_of"] for row in rows)
             rows = [row for row in rows if row["as_of"] == latest_date]
+        elif spec.key == "areas":
+            dated_rows = [row for row in rows if row["as_of"] is not None]
+            if dated_rows:
+                latest_date = max(row["as_of"] for row in dated_rows)
+                rows = [row for row in dated_rows if row["as_of"] == latest_date]
         values = {row["amount"] for row in rows}
         if len(values) != 1:
             logging.info(
@@ -646,7 +772,15 @@ def candidates_from_bindings(
                 ", ".join(str(value) for value in sorted(values)),
             )
             continue
-        row = max(rows, key=lambda item: (item["sitelinks"], item["label"]))
+        row = max(
+            rows,
+            key=lambda item: (
+                item["sitelinks"],
+                item["label"],
+                item["source_label"],
+                item["source_url"] or "",
+            ),
+        )
         candidates.append(
             Candidate(
                 identifier=candidate_id(spec, entity_id),
@@ -657,12 +791,27 @@ def candidates_from_bindings(
                 category=spec.label,
                 property_id=spec.property_id,
                 unit=spec.output_unit,
-                measurement_basis=spec.measurement_basis,
-                source_label=QUESTION_SOURCE_LABEL,
+                measurement_basis=row["measurement_basis"],
+                source_label=row["source_label"],
                 sitelinks=row["sitelinks"],
+                source_url=row["source_url"],
             )
         )
     return candidates
+
+
+def is_absolute_http_url(value: str) -> bool:
+    """Return whether a source address is an absolute HTTP or HTTPS URL."""
+    parsed = urllib.parse.urlparse(value)
+    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+
+
+def source_label_from_url(value: str) -> str:
+    """Derive a reviewable source label when a reference omits its publisher item."""
+    hostname = urllib.parse.urlparse(value).hostname
+    if not hostname:
+        return QUESTION_SOURCE_LABEL
+    return hostname.removeprefix("www.")
 
 
 def load_exclusions(path: Path) -> dict[str, str]:
@@ -850,6 +999,7 @@ def prompt_for_spec_candidate(candidate: Candidate) -> str:
         candidate.as_of,
         candidate.source_label,
         candidate.location,
+        candidate.measurement_basis,
     )
 
 
@@ -877,6 +1027,13 @@ def validate_prompt_context(candidate: Candidate, prompt: str) -> None:
                 f"prompt override for {candidate.identifier!r} omits source "
                 f"{candidate.source_label}"
             )
+    elif candidate.category == "Areas" and (
+        candidate.source_label.casefold() not in prompt.casefold()
+    ):
+        raise ValueError(
+            f"prompt override for {candidate.identifier!r} omits source "
+            f"{candidate.source_label}"
+        )
 
 
 def select_balanced(candidates: Sequence[Candidate], quota: int) -> list[Candidate]:
@@ -1023,7 +1180,7 @@ def question_document(
     )
     for candidate in ordered:
         revision = revisions[candidate.entity_id]
-        source_url = (
+        source_url = candidate.source_url or (
             "https://www.wikidata.org/w/index.php?"
             + urllib.parse.urlencode(
                 {"title": candidate.entity_id, "oldid": str(revision)}
@@ -1125,9 +1282,10 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--endpoint", default=DEFAULT_ENDPOINT)
     parser.add_argument("--user-agent", default=DEFAULT_USER_AGENT)
     parser.add_argument("--request-delay", type=float, default=1.0)
-    parser.add_argument("--mountains", type=int, default=25, metavar="COUNT")
-    parser.add_argument("--buildings", type=int, default=25, metavar="COUNT")
+    parser.add_argument("--mountains", type=int, default=10, metavar="COUNT")
+    parser.add_argument("--buildings", type=int, default=10, metavar="COUNT")
     parser.add_argument("--populations", type=int, default=30, metavar="COUNT")
+    parser.add_argument("--areas", type=int, default=30, metavar="COUNT")
     parser.add_argument(
         "--generation-timestamp",
         help="fixed UTC timestamp for reproducible output (for example 2026-09-11T12:00:00Z)",
@@ -1135,7 +1293,7 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     args = parser.parse_args(argv)
     if args.request_delay < 0:
         parser.error("--request-delay must not be negative")
-    for name in ("mountains", "buildings", "populations"):
+    for name in ("mountains", "buildings", "populations", "areas"):
         if not 0 <= getattr(args, name) <= 100:
             parser.error(f"--{name} must be between 0 and 100")
     return args
@@ -1154,11 +1312,24 @@ def run(argv: Sequence[str]) -> int:
             "mountains": args.mountains,
             "buildings": args.buildings,
             "populations": args.populations,
+            "areas": args.areas,
         }
         all_candidates: list[Candidate] = []
         for spec in CATEGORY_SPECS:
+            if requested[spec.key] == 0:
+                continue
             logging.info("Querying Wikidata for %s", spec.label.lower())
-            bindings = client.query(args.endpoint, spec.query)
+            bindings: list[Mapping[str, Any]] = []
+            queries = (spec.query,) + spec.additional_queries
+            for index, query in enumerate(queries, start=1):
+                if len(queries) > 1:
+                    logging.info(
+                        "Querying %s source type %d of %d",
+                        spec.label.lower(),
+                        index,
+                        len(queries),
+                    )
+                bindings.extend(client.query(args.endpoint, query))
             category_candidates = candidates_from_bindings(
                 spec, bindings, int(generated_at[:4])
             )
