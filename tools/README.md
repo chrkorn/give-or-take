@@ -1,6 +1,6 @@
 # Question-bank generator
 
-`build_questions.py` creates the version-3 `questions.json` consumed by Give or Take. It queries
+`build_questions.py` creates the version-4 `questions.json` consumed by Give or Take. It queries
 referenced, non-deprecated Wikidata statements selected under ADR 0011. It uses only the Python 3
 standard library; `requirements.txt` exists to make that absence of third-party dependencies
 explicit.

@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 
-SCRIPT_VERSION = "3.0.0"
+SCRIPT_VERSION = "4.0.0"
 DEFAULT_ENDPOINT = "https://query.wikidata.org/sparql"
 WIKIDATA_API = "https://www.wikidata.org/w/api.php"
 DEFAULT_USER_AGENT = (
@@ -1014,7 +1014,7 @@ def question_document(
     revisions: Mapping[str, int],
     generation_timestamp: str,
 ) -> dict[str, Any]:
-    """Create the exact strict version-3 JSON shape consumed by the app."""
+    """Create the exact strict version-4 JSON shape consumed by the app."""
     questions = []
     category_order = {spec.label: index for index, spec in enumerate(CATEGORY_SPECS)}
     ordered = sorted(
@@ -1036,6 +1036,7 @@ def question_document(
             "trueValue": json_number(candidate.value),
             "unit": candidate.unit,
             "measurementBasis": candidate.measurement_basis,
+            "timeVarying": candidate.as_of is not None,
             "category": candidate.category,
             "sourceUrl": source_url,
             "sourceLabel": candidate.source_label,
@@ -1044,7 +1045,7 @@ def question_document(
             question["asOf"] = candidate.as_of.isoformat()
         questions.append(question)
     return {
-        "version": 3,
+        "version": 4,
         "metadata": {
             "generationDate": generation_timestamp[:10],
             "generationTimestamp": generation_timestamp,
@@ -1052,9 +1053,6 @@ def question_document(
             "licence": LICENCE,
             "scriptVersion": SCRIPT_VERSION,
         },
-        "timeVaryingCategories": [
-            spec.label for spec in CATEGORY_SPECS if spec.time_varying
-        ],
         "questions": questions,
     }
 

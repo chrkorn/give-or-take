@@ -36,21 +36,20 @@ import java.util.regex.Pattern;
  * {@code android.*} imports and lets ordinary JVM unit tests exercise exactly the parser used by
  * the application without an emulator or Android framework mocks.</p>
  *
- * <p>Version 3 uses strict, transactional validation. A malformed document, an invalid question,
+ * <p>Version 4 uses strict, transactional validation. A malformed document, an invalid question,
  * a duplicate identifier, or an unknown field rejects the entire bank. Bundled data is controlled
  * by the application build, so silently omitting a defective entry would conceal a data-generation
  * error and could ship an unexpectedly incomplete quiz.</p>
  */
 public final class QuestionBank {
     /** The only question-bank format version understood by this loader. */
-    public static final int SUPPORTED_VERSION = 3;
+    public static final int SUPPORTED_VERSION = 4;
 
     private static final int BUFFER_SIZE = 4096;
     private static final Pattern ISO_DATE = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
     private static final Set<String> ROOT_FIELDS = fields(
             "version",
             "metadata",
-            "timeVaryingCategories",
             "questions"
     );
     private static final Set<String> METADATA_FIELDS = fields(
@@ -66,6 +65,7 @@ public final class QuestionBank {
             "trueValue",
             "unit",
             "measurementBasis",
+            "timeVarying",
             "asOf",
             "category",
             "sourceUrl",
@@ -81,7 +81,7 @@ public final class QuestionBank {
     /**
      * Loads a complete question bank from JSON text.
      *
-     * @param json complete JSON document using the version-3 question-bank format
+     * @param json complete JSON document using the version-4 question-bank format
      * @return an immutable bank containing the validated questions
      * @throws IllegalArgumentException if {@code json} is {@code null}
      * @throws QuestionBankFormatException if the document is malformed or violates the schema
@@ -100,7 +100,7 @@ public final class QuestionBank {
      * ownership with the caller makes lifecycle and error handling explicit while preserving the
      * framework-independent parsing boundary.</p>
      *
-     * @param reader source of a complete version-3 question-bank document
+     * @param reader source of a complete version-4 question-bank document
      * @return an immutable bank containing the validated questions
      * @throws IllegalArgumentException if {@code reader} is {@code null}
      * @throws IOException if reading the supplied character stream fails
@@ -144,7 +144,6 @@ public final class QuestionBank {
         rejectUnknownFields(root, ROOT_FIELDS, "$");
 
         validateMetadata(requireObject(root, "metadata", "$.metadata"));
-        Set<String> timeVaryingCategories = parseTimeVaryingCategories(root);
         JsonArray questionArray = requireArray(root, "questions", "$.questions");
         List<Question> questions = new ArrayList<>(questionArray.size());
         Set<String> identifiers = new HashSet<>();
@@ -157,7 +156,7 @@ public final class QuestionBank {
                     "question"
             );
             rejectUnknownFields(questionObject, QUESTION_FIELDS, path);
-            Question question = parseQuestion(questionObject, path, timeVaryingCategories);
+            Question question = parseQuestion(questionObject, path);
             if (!identifiers.add(question.getId())) {
                 throw invalid(path + ".id", "duplicate identifier '" + question.getId() + "'");
             }
@@ -233,25 +232,9 @@ public final class QuestionBank {
         requireNonBlankString(metadata, "scriptVersion", path + ".scriptVersion");
     }
 
-    private static Set<String> parseTimeVaryingCategories(JsonObject root)
-            throws QuestionBankFormatException {
-        String path = "$.timeVaryingCategories";
-        JsonArray array = requireArray(root, "timeVaryingCategories", path);
-        Set<String> categories = new HashSet<>();
-        for (int index = 0; index < array.size(); index++) {
-            String itemPath = path + "[" + index + "]";
-            String category = requireNonBlankString(array.get(index), itemPath);
-            if (!categories.add(category)) {
-                throw invalid(itemPath, "duplicate category '" + category + "'");
-            }
-        }
-        return categories;
-    }
-
     private static Question parseQuestion(
             JsonObject object,
-            String path,
-            Set<String> timeVaryingCategories
+            String path
     )
             throws QuestionBankFormatException {
         String id = requireNonBlankString(object, "id", path + ".id");
@@ -267,11 +250,16 @@ public final class QuestionBank {
                 path + ".measurementBasis"
         );
         String category = requireNonBlankString(object, "category", path + ".category");
+        boolean timeVarying = requireBoolean(
+                object,
+                "timeVarying",
+                path + ".timeVarying"
+        );
         LocalDate asOf = null;
-        if (timeVaryingCategories.contains(category)) {
+        if (timeVarying) {
             asOf = requireDate(object, "asOf", path + ".asOf");
         } else if (object.has("asOf")) {
-            throw invalid(path + ".asOf", "must be absent for a time-independent category");
+            throw invalid(path + ".asOf", "must be absent when timeVarying is false");
         }
         String sourceUrl = requireNonBlankString(object, "sourceUrl", path + ".sourceUrl");
         requireHttpUrl(sourceUrl, path + ".sourceUrl");
@@ -286,6 +274,7 @@ public final class QuestionBank {
                 .trueValue(trueValue)
                 .unit(unit)
                 .measurementBasis(measurementBasis)
+                .timeVarying(timeVarying)
                 .asOf(asOf)
                 .category(category)
                 .sourceUrl(sourceUrl)
@@ -332,6 +321,15 @@ public final class QuestionBank {
             throw invalid(path, "expected an integer");
         }
         return (int) value;
+    }
+
+    private static boolean requireBoolean(JsonObject object, String fieldName, String path)
+            throws QuestionBankFormatException {
+        JsonPrimitive primitive = requirePrimitive(object, fieldName, path);
+        if (!primitive.isBoolean()) {
+            throw invalid(path, "expected a boolean");
+        }
+        return primitive.getAsBoolean();
     }
 
     private static double requireFiniteNumber(JsonObject object, String fieldName, String path)

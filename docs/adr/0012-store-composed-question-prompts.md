@@ -62,3 +62,11 @@ The bank format therefore advances to version 3. Although the reader and asset s
 is a breaking change to the strict schema: version 2 requires the field and version 3 rejects it as
 unknown. A new version makes a mismatched reader and asset fail with the intended unsupported-version
 error instead of a misleading field-validation error.
+
+**2026-09-12 — version 4 declares volatility per question.** ADR 0013 groups different subject
+types into broad measurement families so category alone reveals less about the answer's magnitude.
+The version-3 root-level `timeVaryingCategories` declaration cannot represent a family such as
+Areas containing both stable physical measurements and changing jurisdictional boundaries.
+Version 4 therefore replaces it with a required boolean `timeVarying` field on every question.
+`asOf` is required when that flag is true and forbidden when it is false. The explicit boolean
+keeps a missing date distinguishable from an intentionally time-independent value.
