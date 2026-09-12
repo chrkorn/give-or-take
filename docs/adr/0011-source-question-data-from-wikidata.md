@@ -141,3 +141,15 @@ general assurances with explicit admission gates. They increase curation effort 
 uneven number of questions across categories, but they preserve the distinction between reproducible
 provenance and defensible factual authority. Any question that fails a gate is excluded or rewritten;
 the generator succeeding is no longer sufficient evidence for release.
+
+**2026-09-12 — competing values must share a measurement context.** The first implementation of
+the competing-statement gate compared every non-deprecated value for a property. That is valid for
+stable, unqualified mountain elevations, but not for properties whose qualifiers distinguish the
+quantity. It incorrectly classified population change over time as source disagreement and could
+likewise compare the area of a whole feature with a named part or a differently scoped area.
+
+The gate now compares population values only when their P585 date matches the selected candidate.
+For areas it additionally requires the selected date and inclusion scope, and ignores P2046 values
+that apply to a named part. Two materially different values in the same context still fail. This is
+a correction to the admission rule, not a relaxation: values answering different questions are no
+longer used as evidence that the selected answer is disputed.
