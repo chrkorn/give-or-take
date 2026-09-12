@@ -208,3 +208,23 @@
   referenced, familiar candidates across `10^0`–`10^7`, including all four proposed subject types.
   This supports per-question volatility as a viable correction while confirming that a retrieval
   date must not be presented as the date on which an undated measurement was true.
+
+## 2026-09-12 — Referenced Areas generator
+
+- Added Areas as a broad P2046 measurement family covering islands, lakes, national parks, and
+  strictly scoped sovereign states. Prompts carry the fixed square-kilometre unit, the applicable
+  area basis, the direct reference hostname, and a genuine date where the scope can change.
+- Split the four subject types into separate Wikidata queries after the combined query exceeded the
+  public endpoint's planning limits. No dependency was added.
+- A live area-only run left 93 candidates after the familiarity and competing-value gates. The
+  balanced 30-question selection spans five orders of magnitude (`10^0`–`10^4`, distributed
+  7/7/7/7/2).
+- Corrected the competing-value gate to compare like with like. Historical population figures no
+  longer compete with the selected date, and area claims must match the selected date and scope;
+  same-context disagreements still fail. The corrected live population run supplies all 30
+  requested questions across `10^4`–`10^9`.
+- Combining the live distributions shows that Areas alone does not make the release bank pass ADR
+  0013. The edge bands remain single-category and populations dominate `10^4`; enabling the bank
+  gate therefore awaits a content decision about another broad measurement family or removal of
+  legacy categories, rather than weakening the accepted thresholds.
+- All 46 offline generator tests and all 120 Java unit tests pass.
