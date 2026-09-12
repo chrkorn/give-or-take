@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 
-SCRIPT_VERSION = "1.0.0"
+SCRIPT_VERSION = "2.0.0"
 DEFAULT_ENDPOINT = "https://query.wikidata.org/sparql"
 WIKIDATA_API = "https://www.wikidata.org/w/api.php"
 DEFAULT_USER_AGENT = (
@@ -36,7 +36,22 @@ LICENCE = (
     "(https://creativecommons.org/publicdomain/zero/1.0/)"
 )
 ENTITY_ID_PATTERN = re.compile(r"Q[1-9][0-9]*$")
-YEAR_PATTERN = re.compile(r"^[+]?([0-9]{4,})-")
+DATE_PATTERN = re.compile(r"^[+]?([0-9]{4})-([0-9]{2})-([0-9]{2})T")
+QUESTION_SOURCE_LABEL = "Wikidata"
+ENGLISH_MONTH_NAMES = (
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+)
 COUNTRY_NAMES_REQUIRING_ARTICLE = {
     "Bahamas",
     "Democratic Republic of the Congo",
@@ -49,6 +64,9 @@ COUNTRY_NAMES_REQUIRING_ARTICLE = {
     "United Arab Emirates",
     "United Kingdom",
     "United States",
+}
+BUILDING_NAMES_REQUIRING_ARTICLE = {
+    "Empire State Building",
 }
 
 COMMON_PREFIXES = """
@@ -136,6 +154,8 @@ class CategorySpec:
     property_id: str
     unit_qid: str
     output_unit: str
+    measurement_basis: str
+    time_varying: bool
     minimum: decimal.Decimal
     maximum: decimal.Decimal
     quota: int
@@ -150,10 +170,12 @@ class Candidate:
     entity_id: str
     label: str
     value: decimal.Decimal
-    year: int | None
+    as_of: dt.date | None
     category: str
     property_id: str
     unit: str
+    measurement_basis: str
+    source_label: str
     sitelinks: int
     difficulty: int
 
@@ -164,7 +186,9 @@ CATEGORY_SPECS = (
         label="Mountain elevations",
         property_id="P2044",
         unit_qid="Q11573",
-        output_unit="metres above sea level",
+        output_unit="metres",
+        measurement_basis="elevation above sea level",
+        time_varying=False,
         minimum=decimal.Decimal("100"),
         maximum=decimal.Decimal("9000"),
         quota=25,
@@ -176,6 +200,8 @@ CATEGORY_SPECS = (
         property_id="P2048",
         unit_qid="Q11573",
         output_unit="metres",
+        measurement_basis="architectural height",
+        time_varying=False,
         minimum=decimal.Decimal("10"),
         maximum=decimal.Decimal("1000"),
         quota=25,
@@ -187,6 +213,8 @@ CATEGORY_SPECS = (
         property_id="P1082",
         unit_qid="Q199",
         output_unit="people",
+        measurement_basis="resident population",
+        time_varying=True,
         minimum=decimal.Decimal("1000"),
         maximum=decimal.Decimal("2000000000"),
         quota=30,
@@ -320,15 +348,17 @@ def rank_priority(rank_uri: str | None) -> int:
     return 0
 
 
-def year_from_wikidata_time(value: str | None) -> int | None:
-    """Extract a positive calendar year from a Wikidata date-time literal."""
+def date_from_wikidata_time(value: str | None) -> dt.date | None:
+    """Extract a supported calendar date from a Wikidata date-time literal."""
     if value is None:
         return None
-    match = YEAR_PATTERN.match(value)
+    match = DATE_PATTERN.match(value)
     if match is None:
         return None
-    year = int(match.group(1))
-    return year if year > 0 else None
+    try:
+        return dt.date(*(int(part) for part in match.groups()))
+    except ValueError:
+        return None
 
 
 def difficulty_from_sitelinks(sitelinks: int) -> int:
@@ -355,16 +385,33 @@ def is_suspiciously_round(value: decimal.Decimal, category_key: str) -> bool:
     return int(value) >= 100 and trailing_zeroes >= 2
 
 
-def prompt_for(spec: CategorySpec, label: str, year: int | None) -> str:
+def prompt_for(
+    spec: CategorySpec,
+    label: str,
+    as_of: dt.date | None,
+    source_label: str,
+) -> str:
     """Render category-specific wording that also states necessary qualifiers."""
     if spec.key == "mountains":
-        return f"What is the elevation of {label} above sea level?"
+        return f"What is the elevation of {label} above sea level, in metres?"
     if spec.key == "buildings":
-        return f"How tall is {label}?"
-    if year is None:
-        raise ValueError("population prompt requires a year")
+        display_name = (
+            f"the {label}" if label in BUILDING_NAMES_REQUIRING_ARTICLE else label
+        )
+        return f"What is the architectural height of {display_name}, in metres?"
+    if as_of is None:
+        raise ValueError("population prompt requires a reference date")
     display_name = f"the {label}" if label in COUNTRY_NAMES_REQUIRING_ARTICLE else label
-    return f"What was the population of {display_name} in {year}?"
+    display_date = display_date_in_english(as_of)
+    return (
+        f"According to {source_label}, what was the resident population of "
+        f"{display_name} on {display_date}? Give your answer as a number of people."
+    )
+
+
+def display_date_in_english(value: dt.date) -> str:
+    """Format a stable English date without depending on the machine locale."""
+    return f"{value.day} {ENGLISH_MONTH_NAMES[value.month - 1]} {value.year}"
 
 
 def candidate_id(spec: CategorySpec, entity_id: str) -> str:
@@ -387,7 +434,7 @@ def candidates_from_bindings(
         unit_qid = qid_from_uri(binding_value(binding, "unit"))
         rank = rank_priority(binding_value(binding, "rank"))
         sitelinks_text = binding_value(binding, "sitelinks")
-        year = year_from_wikidata_time(binding_value(binding, "pointInTime"))
+        as_of = date_from_wikidata_time(binding_value(binding, "pointInTime"))
 
         reason: str | None = None
         amount: decimal.Decimal | None = None
@@ -415,10 +462,10 @@ def candidates_from_bindings(
             reason = f"suspiciously round value {amount}"
         elif reason is None and rank == 0:
             reason = "missing supported statement rank"
-        elif reason is None and spec.key == "populations" and year is None:
-            reason = "missing point-in-time year"
-        elif reason is None and spec.key == "populations" and year > current_year:
-            reason = f"future population year {year}"
+        elif reason is None and spec.time_varying and as_of is None:
+            reason = "missing point-in-time date"
+        elif reason is None and as_of is not None and as_of.year > current_year:
+            reason = f"future population date {as_of.isoformat()}"
 
         if reason is not None:
             logging.info("DROP %s %s: %s", spec.key, subject, reason)
@@ -434,7 +481,7 @@ def candidates_from_bindings(
                 "entity_id": entity_id,
                 "label": label,
                 "amount": amount,
-                "year": year,
+                "as_of": as_of,
                 "rank": rank,
                 "sitelinks": sitelinks,
             }
@@ -449,9 +496,9 @@ def candidates_from_bindings(
         rows = grouped[entity_id]
         best_rank = max(row["rank"] for row in rows)
         rows = [row for row in rows if row["rank"] == best_rank]
-        if spec.key == "populations":
-            latest_year = max(row["year"] for row in rows)
-            rows = [row for row in rows if row["year"] == latest_year]
+        if spec.time_varying:
+            latest_date = max(row["as_of"] for row in rows)
+            rows = [row for row in rows if row["as_of"] == latest_date]
         values = {row["amount"] for row in rows}
         if len(values) != 1:
             logging.info(
@@ -468,10 +515,12 @@ def candidates_from_bindings(
                 entity_id=entity_id,
                 label=row["label"],
                 value=row["amount"],
-                year=row["year"],
+                as_of=row["as_of"],
                 category=spec.label,
                 property_id=spec.property_id,
                 unit=spec.output_unit,
+                measurement_basis=spec.measurement_basis,
+                source_label=QUESTION_SOURCE_LABEL,
                 sitelinks=row["sitelinks"],
                 difficulty=difficulty_from_sitelinks(row["sitelinks"]),
             )
@@ -535,16 +584,42 @@ def apply_overrides(
         difficulty = override.get("difficulty", candidate.difficulty)
         updated = dataclasses.replace(candidate, difficulty=difficulty)
         retained.append(updated)
-        prompts[updated.identifier] = override.get(
-            "prompt", prompt_for_spec_candidate(updated)
-        )
+        prompt = override.get("prompt", prompt_for_spec_candidate(updated))
+        validate_prompt_context(updated, prompt)
+        prompts[updated.identifier] = prompt
     return retained, prompts
 
 
 def prompt_for_spec_candidate(candidate: Candidate) -> str:
     """Render a prompt after resolving a candidate back to its category."""
     spec = next(spec for spec in CATEGORY_SPECS if spec.label == candidate.category)
-    return prompt_for(spec, candidate.label, candidate.year)
+    return prompt_for(spec, candidate.label, candidate.as_of, candidate.source_label)
+
+
+def validate_prompt_context(candidate: Candidate, prompt: str) -> None:
+    """Reject curated wording that drops structured measurement context."""
+    prompt_words = set(re.findall(r"[a-z]+", prompt.casefold()))
+    required_words = set(re.findall(
+        r"[a-z]+",
+        f"{candidate.measurement_basis} {candidate.unit}".casefold(),
+    ))
+    missing_words = sorted(required_words - prompt_words)
+    if missing_words:
+        raise ValueError(
+            f"prompt override for {candidate.identifier!r} omits measurement context: "
+            + ", ".join(missing_words)
+        )
+    if candidate.as_of is not None:
+        display_date = display_date_in_english(candidate.as_of)
+        if display_date.casefold() not in prompt.casefold():
+            raise ValueError(
+                f"prompt override for {candidate.identifier!r} omits date {display_date}"
+            )
+        if candidate.source_label.casefold() not in prompt.casefold():
+            raise ValueError(
+                f"prompt override for {candidate.identifier!r} omits source "
+                f"{candidate.source_label}"
+            )
 
 
 def select_balanced(candidates: Sequence[Candidate], quota: int) -> list[Candidate]:
@@ -612,7 +687,7 @@ def question_document(
     revisions: Mapping[str, int],
     generation_timestamp: str,
 ) -> dict[str, Any]:
-    """Create the exact strict version-1 JSON shape consumed by the app."""
+    """Create the exact strict version-2 JSON shape consumed by the app."""
     questions = []
     category_order = {spec.label: index for index, spec in enumerate(CATEGORY_SPECS)}
     ordered = sorted(
@@ -628,20 +703,22 @@ def question_document(
             )
             + f"#{candidate.property_id}"
         )
-        questions.append(
-            {
-                "id": candidate.identifier,
-                "prompt": prompts[candidate.identifier],
-                "trueValue": json_number(candidate.value),
-                "unit": candidate.unit,
-                "category": candidate.category,
-                "sourceUrl": source_url,
-                "sourceLabel": "Wikidata",
-                "difficulty": candidate.difficulty,
-            }
-        )
+        question = {
+            "id": candidate.identifier,
+            "prompt": prompts[candidate.identifier],
+            "trueValue": json_number(candidate.value),
+            "unit": candidate.unit,
+            "measurementBasis": candidate.measurement_basis,
+            "category": candidate.category,
+            "sourceUrl": source_url,
+            "sourceLabel": candidate.source_label,
+            "difficulty": candidate.difficulty,
+        }
+        if candidate.as_of is not None:
+            question["asOf"] = candidate.as_of.isoformat()
+        questions.append(question)
     return {
-        "version": 1,
+        "version": 2,
         "metadata": {
             "generationDate": generation_timestamp[:10],
             "generationTimestamp": generation_timestamp,
@@ -649,6 +726,9 @@ def question_document(
             "licence": LICENCE,
             "scriptVersion": SCRIPT_VERSION,
         },
+        "timeVaryingCategories": [
+            spec.label for spec in CATEGORY_SPECS if spec.time_varying
+        ],
         "questions": questions,
     }
 

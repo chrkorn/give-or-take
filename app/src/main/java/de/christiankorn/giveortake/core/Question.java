@@ -1,5 +1,7 @@
 package de.christiankorn.giveortake.core;
 
+import java.time.LocalDate;
+
 /**
  * Describes a numerical estimation question and the authoritative value against
  * which guesses are scored.
@@ -13,6 +15,8 @@ public final class Question {
     private final String prompt;
     private final double trueValue;
     private final String unit;
+    private final String measurementBasis;
+    private final LocalDate asOf;
     private final String category;
     private final String sourceUrl;
     private final String sourceLabel;
@@ -22,6 +26,7 @@ public final class Question {
         id = requireNonBlank(builder.id, "id");
         prompt = requireNonBlank(builder.prompt, "prompt");
         unit = requireNonBlank(builder.unit, "unit");
+        measurementBasis = requireNonBlank(builder.measurementBasis, "measurementBasis");
 
         if (!Double.isFinite(builder.trueValue)) {
             throw new IllegalArgumentException("trueValue must be finite");
@@ -34,6 +39,7 @@ public final class Question {
         }
 
         trueValue = builder.trueValue;
+        asOf = builder.asOf;
         category = builder.category;
         sourceUrl = builder.sourceUrl;
         sourceLabel = builder.sourceLabel;
@@ -83,6 +89,24 @@ public final class Question {
      */
     public String getUnit() {
         return unit;
+    }
+
+    /**
+     * Returns the criterion that defines what the numerical value measures.
+     *
+     * @return the non-blank measurement basis
+     */
+    public String getMeasurementBasis() {
+        return measurementBasis;
+    }
+
+    /**
+     * Returns the date to which a time-varying value refers.
+     *
+     * @return the reference date, or {@code null} for a time-independent quantity
+     */
+    public LocalDate getAsOf() {
+        return asOf;
     }
 
     /**
@@ -165,6 +189,8 @@ public final class Question {
         private String prompt;
         private double trueValue;
         private String unit;
+        private String measurementBasis;
+        private LocalDate asOf;
         private String category;
         private String sourceUrl;
         private String sourceLabel;
@@ -214,6 +240,28 @@ public final class Question {
          */
         public Builder unit(String unit) {
             this.unit = unit;
+            return this;
+        }
+
+        /**
+         * Sets the criterion that defines what the numerical value measures.
+         *
+         * @param measurementBasis the non-blank measurement basis
+         * @return this builder
+         */
+        public Builder measurementBasis(String measurementBasis) {
+            this.measurementBasis = measurementBasis;
+            return this;
+        }
+
+        /**
+         * Sets the date to which a time-varying value refers.
+         *
+         * @param asOf the reference date, or {@code null} for a time-independent quantity
+         * @return this builder
+         */
+        public Builder asOf(LocalDate asOf) {
+            this.asOf = asOf;
             return this;
         }
 

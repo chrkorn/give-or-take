@@ -1,6 +1,6 @@
 # Question-bank generator
 
-`build_questions.py` creates the version-1 `questions.json` consumed by Give or Take. It queries
+`build_questions.py` creates the version-2 `questions.json` consumed by Give or Take. It queries
 referenced, non-deprecated Wikidata statements selected under ADR 0011. It uses only the Python 3
 standard library; `requirements.txt` exists to make that absence of third-party dependencies
 explicit.
@@ -11,15 +11,28 @@ The defaults generate 80 questions:
 
 | Category | Default | Typical magnitude | Why it is included |
 |---|---:|---:|---|
-| Mountain elevations | 25 | `10^2`–`10^3` metres | Familiar natural quantities, including regional and famous peaks. |
+| Mountain elevations | 25 | `10^2`–`10^3` metres | Familiar natural quantities measured as elevation above sea level. |
 | Completed-building heights | 25 | `10^1`–`10^2` metres | Human-made quantities that overlap partly with mountains without duplicating their scale. |
-| Dated national populations | 30 | `10^3`–`10^9` people | Most of the bank's order-of-magnitude range; prompts state the source year. |
+| Dated national populations | 30 | `10^3`–`10^9` people | Most of the bank's order-of-magnitude range; prompts state the full reference date. |
 
 This 25/25/30 split keeps all three ADR-approved subjects visible while populations provide the
 wide scale range needed to exercise log-relative scoring. Within each category, selection cycles
 through available base-10 magnitude bins before taking a second item from a bin. More familiar
 subjects are preferred within a bin. The counts can be changed on the command line, but a released
 bank should remain in the requested 60–100 range and should be manually reviewed.
+
+## Generated prompt templates
+
+The generator stores complete English prompts so reviewers see exactly what the app will display:
+
+- mountain elevation: `What is the elevation of {subject} above sea level, in metres?`
+- building height: `What is the architectural height of {subject}, in metres?`
+- population: `According to {source}, what was the resident population of {subject} on {date}? Give your answer as a number of people.`
+
+The population template uses a second sentence because ending the question with “in people” is
+grammatical but mechanical. Country and selected building names receive a leading article where
+English requires one. Dates use a fixed English day-month-year form rather than the development
+machine's locale.
 
 ## Run it
 
@@ -58,7 +71,7 @@ An override may replace `prompt`, set `difficulty` from 1 through 5, or set `exc
 ```json
 {
   "wikidata-q513-mountains": {
-    "prompt": "How high is Mount Everest above sea level?",
+    "prompt": "What is Mount Everest's elevation above sea level, in metres?",
     "difficulty": 1
   },
   "wikidata-q999999-buildings": {
@@ -67,8 +80,10 @@ An override may replace `prompt`, set `difficulty` from 1 through 5, or set `exc
 }
 ```
 
-Unknown IDs and fields stop generation. This catches stale IDs and spelling mistakes instead of
-silently ignoring intended edits. Overrides cannot change values, units, categories, or source
+Unknown IDs and fields stop generation. A prompt override must retain the generated measurement
+basis, unit, and applicable reference date. This catches stale IDs, spelling mistakes, and wording
+that drifts away from the structured fields instead of silently ignoring intended edits. Overrides
+cannot change values, units, categories, or source
 links; changing those would disguise a data correction as copy editing.
 
 ## Selection and validation rules

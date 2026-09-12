@@ -170,6 +170,7 @@ public class LogRelativeScoreTest {
                 .prompt("What is the value?")
                 .trueValue(trueValue)
                 .unit("units")
+                .measurementBasis("test value")
                 .difficulty(1)
                 .build();
     }

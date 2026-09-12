@@ -1,6 +1,6 @@
 # Question bank JSON format
 
-[`question-bank.example.json`](question-bank.example.json) is the canonical example for version 1
+[`question-bank.example.json`](question-bank.example.json) is the canonical example for version 2
 of the bundled question-bank format. Generated question data must use the same field names, nesting,
 and JSON value types.
 
@@ -8,8 +8,9 @@ and JSON value types.
 
 | Field | JSON type | Rules |
 |---|---|---|
-| `version` | number | Required integer. Version 1 is the only currently supported value. |
+| `version` | number | Required integer. Version 2 is the only currently supported value. |
 | `metadata` | object | Required. Describes the provenance of the bank as a whole. |
+| `timeVaryingCategories` | array | Required. Contains unique, non-blank category names whose questions require an `asOf` date. |
 | `questions` | array | Required. Contains zero or more question objects. An empty bank is valid. |
 
 ## Metadata object
@@ -24,14 +25,16 @@ and JSON value types.
 
 ## Question object
 
-Every listed field is required. JSON `null` is not accepted for any field.
+Every listed field except `asOf` is required. JSON `null` is not accepted for any field.
 
 | Field | JSON type | Rules |
 |---|---|---|
 | `id` | string | Non-blank and unique within the file. Stable across wording or value corrections. |
-| `prompt` | string | Non-blank text shown to the player. |
+| `prompt` | string | Non-blank, fully composed text shown to the player. It states the unit, measurement basis, and reference date when applicable. |
 | `trueValue` | number | Finite and greater than zero, matching the logarithmic scoring domain. A numeric string is not a number. |
 | `unit` | string | Non-blank unit in which answers are entered. |
+| `measurementBasis` | string | Required and non-blank. Defines what was measured, independently of its unit. |
+| `asOf` | string | Required ISO 8601 date in `YYYY-MM-DD` form when `category` occurs in `timeVaryingCategories`; forbidden otherwise. |
 | `category` | string | Non-blank subject grouping. |
 | `sourceUrl` | string | Non-blank absolute `http` or `https` URL supporting the authoritative value. |
 | `sourceLabel` | string | Non-blank human-readable source name. |
@@ -41,4 +44,21 @@ JSON numbers must be unquoted. In particular, `"trueValue": "346.0"` is invalid 
 string contains digits. This keeps schema errors visible instead of silently coercing them.
 
 Whether unrecognised fields are rejected or ignored is a loader policy and is deliberately not part
-of the version 1 data shape. Generated data should never emit fields not documented above.
+of the version 2 data shape. Generated data should never emit fields not documented above.
+
+## Prompt representation
+
+The JSON stores the complete reviewed prompt rather than a runtime template identifier. Structured
+`unit`, `measurementBasis`, and `asOf` fields remain authoritative context and support validation,
+display, and future analysis. The generator composes both representations together and rejects a
+manual prompt override that drops the required measurement words or date. This keeps the exact text
+visible in data-review diffs without moving English grammar and category exceptions into the app.
+
+## Version compatibility
+
+The bundled-asset loader accepts only version 2. Version 1 is not migrated at runtime because the
+application and its generated bank are released together, and version 1 has no reliable value from
+which a required `measurementBasis` can be inferred. Failing on an old asset exposes a packaging
+error. Accepting both versions would ease a staged rollout, but it would add a second parser path and
+either invent measurement semantics or weaken the new invariant; those costs are justified for
+user-owned data, not for this controlled asset.

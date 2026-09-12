@@ -1,5 +1,6 @@
 """Unit tests for the deterministic parts of the question-bank generator."""
 
+import datetime as dt
 import decimal
 import unittest
 
@@ -64,7 +65,7 @@ class BuildQuestionsTest(unittest.TestCase):
         self.assertEqual([], candidates)
         self.assertIn("conflicting best-ranked values 321, 322", "\n".join(logs.output))
 
-    def test_population_uses_latest_best_ranked_year(self):
+    def test_population_uses_latest_best_ranked_date(self):
         spec = build_questions.CATEGORY_SPECS[2]
         rows = [
             binding(
@@ -80,14 +81,14 @@ class BuildQuestionsTest(unittest.TestCase):
         candidates = build_questions.candidates_from_bindings(spec, rows, 2026)
 
         self.assertEqual(1, len(candidates))
-        self.assertEqual(2024, candidates[0].year)
+        self.assertEqual(dt.date(2024, 1, 1), candidates[0].as_of)
         self.assertEqual(decimal.Decimal("1239876"), candidates[0].value)
 
     def test_apply_overrides_changes_only_curatorial_fields(self):
         candidate = candidate_for("Q30", decimal.Decimal("456"), "Mountain elevations")
         overrides = {
             candidate.identifier: {
-                "prompt": "What is Example's surveyed elevation?",
+                "prompt": "What is Example's surveyed elevation above sea level, in metres?",
                 "difficulty": 5,
             }
         }
@@ -96,7 +97,19 @@ class BuildQuestionsTest(unittest.TestCase):
 
         self.assertEqual(decimal.Decimal("456"), curated[0].value)
         self.assertEqual(5, curated[0].difficulty)
-        self.assertEqual("What is Example's surveyed elevation?", prompts[candidate.identifier])
+        self.assertEqual(
+            "What is Example's surveyed elevation above sea level, in metres?",
+            prompts[candidate.identifier],
+        )
+
+    def test_apply_overrides_rejects_prompt_missing_measurement_context(self):
+        candidate = candidate_for("Q31", decimal.Decimal("456"), "Building heights")
+
+        with self.assertRaisesRegex(ValueError, "omits measurement context"):
+            build_questions.apply_overrides(
+                [candidate],
+                {candidate.identifier: {"prompt": "How tall is Example?"}},
+            )
 
     def test_select_balanced_round_robins_across_magnitudes(self):
         candidates = [
@@ -131,31 +144,60 @@ class BuildQuestionsTest(unittest.TestCase):
             counts[candidate.difficulty] += 1
         self.assertEqual({1: 2, 2: 2, 3: 2, 4: 2, 5: 2}, counts)
 
-    def test_population_prompt_adds_article_only_when_name_requires_it(self):
-        spec = build_questions.CATEGORY_SPECS[2]
+    def test_prompt_templates_include_unit_basis_and_date(self):
+        mountain, building, population = build_questions.CATEGORY_SPECS
 
         self.assertEqual(
-            "What was the population of the United States in 2024?",
-            build_questions.prompt_for(spec, "United States", 2024),
+            "What is the elevation of Mount Everest above sea level, in metres?",
+            build_questions.prompt_for(mountain, "Mount Everest", None, "Wikidata"),
         )
         self.assertEqual(
-            "What was the population of Canada in 2024?",
-            build_questions.prompt_for(spec, "Canada", 2024),
+            "What is the architectural height of the Empire State Building, in metres?",
+            build_questions.prompt_for(
+                building, "Empire State Building", None, "Wikidata"
+            ),
+        )
+        self.assertEqual(
+            "According to Destatis, what was the resident population of the United States "
+            "on 31 December 2024? Give your answer as a number of people.",
+            build_questions.prompt_for(
+                population, "United States", dt.date(2024, 12, 31), "Destatis"
+            ),
+        )
+        self.assertEqual(
+            "According to Wikidata, what was the resident population of Canada on "
+            "31 December 2024? Give your answer as a number of people.",
+            build_questions.prompt_for(
+                population, "Canada", dt.date(2024, 12, 31), "Wikidata"
+            ),
         )
 
-    def test_question_document_matches_extended_version_one_metadata(self):
+    def test_question_document_matches_version_two_schema(self):
         candidate = candidate_for("Q42", decimal.Decimal("123.5"), "Mountain elevations")
         document = build_questions.question_document(
             [candidate],
-            {candidate.identifier: "What is the elevation of Example?"},
+            {
+                candidate.identifier: (
+                    "What is the elevation of Example above sea level, in metres?"
+                )
+            },
             {"Q42": 987654321},
             "2026-09-11T12:00:00Z",
         )
 
-        self.assertEqual(1, document["version"])
+        self.assertEqual(2, document["version"])
         self.assertEqual("2026-09-11", document["metadata"]["generationDate"])
-        self.assertEqual("1.0.0", document["metadata"]["scriptVersion"])
+        self.assertEqual("2.0.0", document["metadata"]["scriptVersion"])
+        self.assertEqual(
+            ["National populations"], document["timeVaryingCategories"]
+        )
         self.assertEqual(123.5, document["questions"][0]["trueValue"])
+        self.assertEqual("metres", document["questions"][0]["unit"])
+        self.assertEqual(
+            "elevation above sea level",
+            document["questions"][0]["measurementBasis"],
+        )
+        self.assertNotIn("asOf", document["questions"][0])
         self.assertEqual(
             "https://www.wikidata.org/w/index.php?title=Q42&oldid=987654321#P2044",
             document["questions"][0]["sourceUrl"],
@@ -171,20 +213,28 @@ class BuildQuestionsTest(unittest.TestCase):
 def candidate_for(entity_id, value, category):
     """Create a candidate with the source property matching its category."""
     properties = {
-        "Mountain elevations": ("mountains", "P2044", "metres above sea level"),
-        "Building heights": ("buildings", "P2048", "metres"),
-        "National populations": ("populations", "P1082", "people"),
+        "Mountain elevations": (
+            "mountains", "P2044", "metres", "elevation above sea level"
+        ),
+        "Building heights": (
+            "buildings", "P2048", "metres", "architectural height"
+        ),
+        "National populations": (
+            "populations", "P1082", "people", "resident population"
+        ),
     }
-    key, property_id, unit = properties[category]
+    key, property_id, unit, measurement_basis = properties[category]
     return build_questions.Candidate(
         identifier=f"wikidata-{entity_id.lower()}-{key}",
         entity_id=entity_id,
         label="Example",
         value=value,
-        year=2024 if key == "populations" else None,
+        as_of=dt.date(2024, 1, 1) if key == "populations" else None,
         category=category,
         property_id=property_id,
         unit=unit,
+        measurement_basis=measurement_basis,
+        source_label="Wikidata",
         sitelinks=80,
         difficulty=2,
     )

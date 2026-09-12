@@ -236,6 +236,7 @@ public class TrainingStrategyTest {
                 .prompt("Estimate for " + id)
                 .trueValue(100.0)
                 .unit("units")
+                .measurementBasis("test value")
                 .difficulty(1)
                 .build();
     }
