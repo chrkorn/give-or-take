@@ -2,8 +2,11 @@ package de.christiankorn.giveortake.core;
 
 import org.junit.Test;
 
+import java.time.LocalDate;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
 /**
@@ -18,10 +21,23 @@ public class QuestionTest {
         assertEquals("How long is the River Thames?", question.getPrompt());
         assertEquals(346.0, question.getTrueValue(), 0.0);
         assertEquals("km", question.getUnit());
+        assertEquals("river length along the main channel", question.getMeasurementBasis());
+        assertNull(question.getAsOf());
         assertEquals("Geography", question.getCategory());
         assertEquals("https://example.com/river-thames", question.getSourceUrl());
         assertEquals("Example source", question.getSourceLabel());
         assertEquals(2, question.getDifficulty());
+    }
+
+    @Test
+    public void build_withAsOf_exposesReferenceDate() {
+        Question question = validQuestionBuilder()
+                .category("National populations")
+                .measurementBasis("resident population")
+                .asOf(LocalDate.of(2024, 12, 31))
+                .build();
+
+        assertEquals(LocalDate.of(2024, 12, 31), question.getAsOf());
     }
 
     @Test
@@ -52,6 +68,14 @@ public class QuestionTest {
     @Test
     public void build_withBlankUnit_throwsUsefulException() {
         assertInvalid(validQuestionBuilder().unit("   "), "unit must not be null or blank");
+    }
+
+    @Test
+    public void build_withMissingMeasurementBasis_throwsUsefulException() {
+        assertInvalid(
+                validQuestionBuilder().measurementBasis(null),
+                "measurementBasis must not be null or blank"
+        );
     }
 
     @Test
@@ -110,6 +134,7 @@ public class QuestionTest {
                 .prompt("What is the length of the River Thames?")
                 .trueValue(346.1)
                 .unit("kilometres")
+                .measurementBasis("charted river length")
                 .category("Rivers")
                 .sourceUrl("https://example.org/thames")
                 .sourceLabel("Different source")
@@ -134,6 +159,7 @@ public class QuestionTest {
                 .prompt("How long is the River Thames?")
                 .trueValue(346.0)
                 .unit("km")
+                .measurementBasis("river length along the main channel")
                 .category("Geography")
                 .sourceUrl("https://example.com/river-thames")
                 .sourceLabel("Example source")

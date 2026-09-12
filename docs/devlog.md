@@ -149,3 +149,14 @@
   tiered primary-source requirements, automated conflict checks, and documented manual sampling.
 - Dropped the unsupported per-question difficulty field rather than treating sitelink counts as a
   measure of estimation difficulty.
+
+## 2026-09-12 — Explicit measurement context
+
+- Chose version-2 question banks with fully composed, reviewable prompts plus structured
+  `measurementBasis` and conditional `asOf` fields.
+- Declared time-varying categories at bank level so the strict loader can require dates for those
+  questions and forbid dates on time-independent quantities.
+- Added generator templates that state the basis, unit, and full reference date, with checks that
+  prevent manual prompt overrides from dropping that context.
+- Kept the bundled-asset loader intentionally version-2-only because reader and data ship together
+  and version 1 cannot provide a trustworthy measurement basis for migration.

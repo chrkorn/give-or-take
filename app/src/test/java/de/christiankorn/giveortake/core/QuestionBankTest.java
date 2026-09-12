@@ -3,9 +3,11 @@ package de.christiankorn.giveortake.core;
 import org.junit.Test;
 
 import java.io.StringReader;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -28,11 +30,24 @@ public class QuestionBankTest {
         assertEquals("How large is river-thames?", loaded.get(0).getPrompt());
         assertEquals(346.0, loaded.get(0).getTrueValue(), 0.0);
         assertEquals("units", loaded.get(0).getUnit());
+        assertEquals("example measurement basis", loaded.get(0).getMeasurementBasis());
+        assertNull(loaded.get(0).getAsOf());
         assertEquals("Example category", loaded.get(0).getCategory());
         assertEquals("https://example.org/river-thames", loaded.get(0).getSourceUrl());
         assertEquals("Example source", loaded.get(0).getSourceLabel());
         assertEquals(2, loaded.get(0).getDifficulty());
         assertEquals("mount-everest", loaded.get(1).getId());
+    }
+
+    @Test
+    public void fromJson_withDatedTimeVaryingQuestion_loadsAsOf() throws Exception {
+        QuestionBank bank = QuestionBank.fromJson(
+                validBank(validPopulationQuestion("germany-population", "2024-12-31"))
+        );
+
+        Question question = bank.getQuestions().get(0);
+        assertEquals("resident population", question.getMeasurementBasis());
+        assertEquals(LocalDate.of(2024, 12, 31), question.getAsOf());
     }
 
     @Test
@@ -58,6 +73,7 @@ public class QuestionBankTest {
                 + "\"id\":\"missing-prompt\","
                 + "\"trueValue\":10.0,"
                 + "\"unit\":\"units\","
+                + "\"measurementBasis\":\"example measurement basis\","
                 + "\"category\":\"Example category\","
                 + "\"sourceUrl\":\"https://example.org/missing-prompt\","
                 + "\"sourceLabel\":\"Example source\","
@@ -67,6 +83,74 @@ public class QuestionBankTest {
         assertInvalid(
                 validBank(questionWithoutPrompt),
                 "Invalid question bank at $.questions[0].prompt: missing required field"
+        );
+    }
+
+    @Test
+    public void fromJson_withMissingMeasurementBasis_rejectsWholeFile() {
+        String missingBasis = validQuestion("missing-basis", 10.0, 2)
+                .replace("\"measurementBasis\":\"example measurement basis\",", "");
+
+        assertInvalid(
+                validBank(missingBasis),
+                "Invalid question bank at $.questions[0].measurementBasis: "
+                        + "missing required field"
+        );
+    }
+
+    @Test
+    public void fromJson_withMissingAsOfInTimeVaryingCategory_rejectsWholeFile() {
+        String missingAsOf = validPopulationQuestion("missing-date", "2024-12-31")
+                .replace("\"asOf\":\"2024-12-31\",", "");
+
+        assertInvalid(
+                validBank(missingAsOf),
+                "Invalid question bank at $.questions[0].asOf: missing required field"
+        );
+    }
+
+    @Test
+    public void fromJson_withInvalidAsOfDate_rejectsWholeFile() {
+        assertInvalid(
+                validBank(validPopulationQuestion("invalid-date", "2024-02-30")),
+                "Invalid question bank at $.questions[0].asOf: "
+                        + "expected a valid calendar date"
+        );
+    }
+
+    @Test
+    public void fromJson_withAsOfInTimeIndependentCategory_rejectsWholeFile() {
+        String unexpectedAsOf = validQuestion("unexpected-date", 10.0, 2)
+                .replace(
+                        "\"measurementBasis\":\"example measurement basis\",",
+                        "\"measurementBasis\":\"example measurement basis\","
+                                + "\"asOf\":\"2024-12-31\","
+                );
+
+        assertInvalid(
+                validBank(unexpectedAsOf),
+                "Invalid question bank at $.questions[0].asOf: "
+                        + "must be absent for a time-independent category"
+        );
+    }
+
+    @Test
+    public void fromJson_withPreviousSchemaVersion_rejectsWholeFile() {
+        String versionOneBank = validBank("")
+                .replace("\"version\":2", "\"version\":1")
+                .replace("\"timeVaryingCategories\":[\"National populations\"],", "");
+
+        assertInvalid(
+                versionOneBank,
+                "Invalid question bank at $.version: unsupported version 1"
+        );
+    }
+
+    @Test
+    public void fromJson_withFutureSchemaVersion_rejectsWholeFile() {
+        assertInvalid(
+                validBank("").replace("\"version\":2", "\"version\":3"),
+                "Invalid question bank at $.version: unsupported version 3"
         );
     }
 
@@ -166,7 +250,7 @@ public class QuestionBankTest {
 
     private static String validBank(String questions) {
         return "{"
-                + "\"version\":1,"
+                + "\"version\":2,"
                 + "\"metadata\":{"
                 + "\"generationDate\":\"2026-09-10\","
                 + "\"generationTimestamp\":\"2026-09-10T12:30:00Z\","
@@ -174,6 +258,7 @@ public class QuestionBankTest {
                 + "\"licence\":\"Example licence\","
                 + "\"scriptVersion\":\"1.0.0\""
                 + "},"
+                + "\"timeVaryingCategories\":[\"National populations\"],"
                 + "\"questions\":[" + questions + "]"
                 + "}";
     }
@@ -184,10 +269,28 @@ public class QuestionBankTest {
                 + "\"prompt\":\"How large is " + id + "?\","
                 + "\"trueValue\":" + trueValue + ","
                 + "\"unit\":\"units\","
+                + "\"measurementBasis\":\"example measurement basis\","
                 + "\"category\":\"Example category\","
                 + "\"sourceUrl\":\"https://example.org/" + id + "\","
                 + "\"sourceLabel\":\"Example source\","
                 + "\"difficulty\":" + difficulty
+                + "}";
+    }
+
+    private static String validPopulationQuestion(String id, String asOf) {
+        return "{"
+                + "\"id\":\"" + id + "\","
+                + "\"prompt\":\"According to Example source, what was the resident "
+                + "population of Exampleland on 31 December 2024? Give your answer as a "
+                + "number of people.\","
+                + "\"trueValue\":1234567,"
+                + "\"unit\":\"people\","
+                + "\"measurementBasis\":\"resident population\","
+                + "\"asOf\":\"" + asOf + "\","
+                + "\"category\":\"National populations\","
+                + "\"sourceUrl\":\"https://example.org/" + id + "\","
+                + "\"sourceLabel\":\"Example source\","
+                + "\"difficulty\":2"
                 + "}";
     }
 }
