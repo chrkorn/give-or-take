@@ -54,6 +54,18 @@ COMPETING_VALUE_TOLERANCE = decimal.Decimal("0.005")
 # prompt and can only recall the fact.
 DEFAULT_MINIMUM_SITELINKS = 20
 
+# ADR 0013 defines intentionally coarse, integer-friendly release-bank coverage
+# thresholds. Keep the ratios as integer pairs so boundary checks do not depend on
+# floating-point rounding.
+MIN_TESTABLE_BAND_SIZE = 6
+MIN_SUBSTANTIVE_CELL_SIZE = 2
+MAX_BAND_SHARE_NUMERATOR = 2
+MAX_BAND_SHARE_DENOMINATOR = 3
+MIN_CATEGORY_SIZE = 12
+MIN_CATEGORY_BAND_COUNT = 4
+MIN_TESTABLE_SHARE_NUMERATOR = 4
+MIN_TESTABLE_SHARE_DENOMINATOR = 5
+
 # Deprecated statements are excluded from conflict detection: a value the community has
 # already marked as superseded is not evidence of a live disagreement.
 DEPRECATED_RANK = "deprecated"
@@ -896,6 +908,94 @@ def select_balanced(candidates: Sequence[Candidate], quota: int) -> list[Candida
         if candidate.identifier not in selected_ids:
             logging.info("DROP %s: category quota of %d reached", candidate.identifier, quota)
     return selected
+
+
+def validate_magnitude_coverage(candidates: Sequence[Candidate]) -> None:
+    """Reject a bank whose categories reveal its base-10 magnitude bands.
+
+    Values are interpreted in each category's fixed display unit. Unit choice is an
+    editorial decision made before this check; changing units merely to move a category
+    between bands would not improve magnitude coverage.
+    """
+    if not candidates:
+        raise ValueError("magnitude coverage requires at least one question")
+
+    cells: collections.Counter[tuple[str, int]] = collections.Counter()
+    band_totals: collections.Counter[int] = collections.Counter()
+    category_totals: collections.Counter[str] = collections.Counter()
+    for candidate in candidates:
+        if not candidate.value.is_finite() or candidate.value <= 0:
+            raise ValueError(
+                f"magnitude coverage requires a positive finite value for "
+                f"{candidate.identifier}"
+            )
+        exponent = candidate.value.adjusted()
+        cells[(candidate.category, exponent)] += 1
+        band_totals[exponent] += 1
+        category_totals[candidate.category] += 1
+
+    testable_bands = {
+        exponent
+        for exponent, count in band_totals.items()
+        if count >= MIN_TESTABLE_BAND_SIZE
+    }
+    testable_questions = sum(band_totals[exponent] for exponent in testable_bands)
+    violations: list[str] = []
+    if (
+        testable_questions * MIN_TESTABLE_SHARE_DENOMINATOR
+        < len(candidates) * MIN_TESTABLE_SHARE_NUMERATOR
+    ):
+        violations.append(
+            f"testable magnitude bands contain {testable_questions} of "
+            f"{len(candidates)} questions; at least 80% required"
+        )
+
+    categories = sorted(category_totals)
+    for exponent in sorted(testable_bands):
+        band_count = band_totals[exponent]
+        category_counts = {
+            category: cells[(category, exponent)]
+            for category in categories
+            if cells[(category, exponent)]
+        }
+        substantive_categories = [
+            category
+            for category, count in category_counts.items()
+            if count >= MIN_SUBSTANTIVE_CELL_SIZE
+        ]
+        if len(substantive_categories) < 2:
+            violations.append(
+                f"magnitude band 10^{exponent} has {len(substantive_categories)} "
+                "substantive categories; at least 2 required"
+            )
+        dominant_category, dominant_count = max(
+            category_counts.items(), key=lambda item: (item[1], item[0])
+        )
+        if (
+            dominant_count * MAX_BAND_SHARE_DENOMINATOR
+            > band_count * MAX_BAND_SHARE_NUMERATOR
+        ):
+            violations.append(
+                f"magnitude band 10^{exponent} is dominated by "
+                f"{dominant_category!r} ({dominant_count} of {band_count}); "
+                "maximum share is two thirds"
+            )
+
+    for category in categories:
+        if category_totals[category] < MIN_CATEGORY_SIZE:
+            continue
+        covered_bands = sum(
+            cells[(category, exponent)] >= MIN_SUBSTANTIVE_CELL_SIZE
+            for exponent in band_totals
+        )
+        if covered_bands < MIN_CATEGORY_BAND_COUNT:
+            violations.append(
+                f"category {category!r} substantively covers {covered_bands} "
+                f"magnitude bands; at least {MIN_CATEGORY_BAND_COUNT} required"
+            )
+
+    if violations:
+        raise ValueError("magnitude coverage failed: " + "; ".join(violations))
 
 
 def json_number(value: decimal.Decimal) -> int | float:

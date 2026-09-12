@@ -79,6 +79,24 @@ def candidate(identifier="wikidata-q1-mountains", entity_id="Q1", sitelinks=80,
     )
 
 
+def coverage_candidates(counts):
+    """Create candidates from a category/exponent/count matrix."""
+    result = []
+    number = 1
+    for category, exponent_counts in counts.items():
+        for exponent, count in exponent_counts.items():
+            for offset in range(count):
+                result.append(dataclasses.replace(
+                    candidate(),
+                    identifier=f"coverage-{number}",
+                    entity_id=f"Q{number}",
+                    category=category,
+                    value=decimal.Decimal(10) ** exponent + offset,
+                ))
+                number += 1
+    return result
+
+
 class BuildQuestionsTest(unittest.TestCase):
     """Exercise filtering, curation, selection, and JSON construction offline."""
 
@@ -188,6 +206,50 @@ class BuildQuestionsTest(unittest.TestCase):
             )
 
         self.assertEqual(["Q2"], [item.entity_id for item in selected])
+
+    def test_magnitude_coverage_accepts_broad_overlapping_categories(self):
+        candidates = coverage_candidates({
+            "Areas": {0: 3, 1: 3, 2: 3, 3: 3},
+            "Lengths": {0: 3, 1: 3, 2: 3, 3: 3},
+            "Masses": {0: 3, 1: 3, 2: 3, 3: 3},
+        })
+
+        build_questions.validate_magnitude_coverage(candidates)
+
+    def test_magnitude_coverage_rejects_token_overlap_and_dominance(self):
+        candidates = coverage_candidates({
+            "Areas": {2: 5},
+            "Lengths": {2: 1},
+        })
+
+        with self.assertRaisesRegex(ValueError, "10\\^2 has 1 substantive") as error:
+            build_questions.validate_magnitude_coverage(candidates)
+
+        self.assertIn("'Areas' (5 of 6)", str(error.exception))
+
+    def test_magnitude_coverage_rejects_internally_narrow_categories(self):
+        candidates = coverage_candidates({
+            "Buildings": {1: 6, 2: 6},
+            "Mountains": {1: 6, 2: 6},
+        })
+
+        with self.assertRaisesRegex(ValueError, "Buildings.*covers 2") as error:
+            build_questions.validate_magnitude_coverage(candidates)
+
+        self.assertIn("Mountains' substantively covers 2", str(error.exception))
+
+    def test_magnitude_coverage_rejects_sparse_band_evasion(self):
+        candidates = coverage_candidates({
+            "Areas": {0: 5, 1: 5},
+            "Lengths": {2: 5, 3: 5},
+        })
+
+        with self.assertRaisesRegex(ValueError, "contain 0 of 20 questions"):
+            build_questions.validate_magnitude_coverage(candidates)
+
+    def test_magnitude_coverage_rejects_an_empty_bank(self):
+        with self.assertRaisesRegex(ValueError, "at least one question"):
+            build_questions.validate_magnitude_coverage([])
 
     def test_prompt_templates_include_unit_basis_and_date(self):
         mountain, building, population = build_questions.CATEGORY_SPECS
