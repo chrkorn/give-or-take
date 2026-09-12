@@ -2,6 +2,9 @@
 
 import datetime as dt
 import decimal
+import tempfile
+import pathlib
+import json
 import unittest
 
 from tools import build_questions
@@ -28,6 +31,52 @@ def binding(
     if year is not None:
         result["pointInTime"] = {"value": f"{year:04d}-01-01T00:00:00Z"}
     return result
+
+
+def claim(amount, rank="normal"):
+    """Create the wbgetentities claim shape used by the admission-rule tests."""
+    return {
+        "rank": rank,
+        "mainsnak": {
+            "snaktype": "value",
+            "datavalue": {"value": {"amount": amount}, "type": "quantity"},
+        },
+    }
+
+
+def entity(property_id="P2044", amounts=("+756",), ranks=None, location=None,
+           location_property="P131"):
+    """Create a minimal entity document with claims for one property."""
+    ranks = ranks or ["normal"] * len(amounts)
+    claims = {property_id: [claim(a, r) for a, r in zip(amounts, ranks)]}
+    if location is not None:
+        claims[location_property] = [{
+            "rank": "normal",
+            "mainsnak": {
+                "snaktype": "value",
+                "datavalue": {"value": {"id": location}, "type": "wikibase-entityid"},
+            },
+        }]
+    return {"claims": claims}
+
+
+def candidate(identifier="wikidata-q1-mountains", entity_id="Q1", sitelinks=80,
+              property_id="P2044", category="Mountain elevations", label="Test Peak"):
+    """Create a Candidate with the fields the admission rules read."""
+    return build_questions.Candidate(
+        identifier=identifier,
+        entity_id=entity_id,
+        label=label,
+        value=decimal.Decimal("1234"),
+        as_of=None,
+        category=category,
+        property_id=property_id,
+        unit="metres",
+        measurement_basis="elevation above sea level",
+        source_label="Wikidata",
+        sitelinks=sitelinks,
+        difficulty=1,
+    )
 
 
 class BuildQuestionsTest(unittest.TestCase):
@@ -187,7 +236,7 @@ class BuildQuestionsTest(unittest.TestCase):
 
         self.assertEqual(2, document["version"])
         self.assertEqual("2026-09-11", document["metadata"]["generationDate"])
-        self.assertEqual("2.0.0", document["metadata"]["scriptVersion"])
+        self.assertEqual("2.1.0", document["metadata"]["scriptVersion"])
         self.assertEqual(
             ["National populations"], document["timeVaryingCategories"]
         )
@@ -208,6 +257,160 @@ class BuildQuestionsTest(unittest.TestCase):
             self.assertIn("prov:wasDerivedFrom", spec.query)
             self.assertIn("wikibase:DeprecatedRank", spec.query)
         self.assertIn("pq:P585", build_questions.POPULATION_QUERY)
+
+    # ------------------------------------------------------------------
+    # Admission rules added after the external review of the first bank.
+    # ------------------------------------------------------------------
+
+    def test_competing_values_rejects_monte_titano_disagreement(self):
+        """739 m against 756 m is an unresolved disagreement, not a rounding difference."""
+        conflict = build_questions.competing_values(
+            entity(amounts=["+756", "+739"]), "P2044"
+        )
+        self.assertIsNotNone(conflict)
+        self.assertEqual(
+            (decimal.Decimal("739"), decimal.Decimal("756")), conflict
+        )
+
+    def test_competing_values_keeps_everest_measurement_variation(self):
+        """Published Everest values differ by metres at most; that is not a dispute."""
+        self.assertIsNone(
+            build_questions.competing_values(
+                entity(amounts=["+8848.86", "+8848", "+8844.43"]), "P2044"
+            )
+        )
+
+    def test_competing_values_keeps_mont_blanc_snow_variation(self):
+        """Snow-and-ice summit values vary by a few metres between surveys."""
+        self.assertIsNone(
+            build_questions.competing_values(
+                entity(amounts=["+4805.59", "+4808.72", "+4810.02"]), "P2044"
+            )
+        )
+
+    def test_competing_values_ignores_deprecated_statements(self):
+        """A value the community has already superseded is not a live disagreement."""
+        self.assertIsNone(
+            build_questions.competing_values(
+                entity(amounts=["+8848.86", "+8840"], ranks=["preferred", "deprecated"]),
+                "P2044",
+            )
+        )
+
+    def test_competing_values_returns_none_for_a_single_value(self):
+        self.assertIsNone(build_questions.competing_values(entity(), "P2044"))
+
+    def test_competing_values_returns_none_when_property_absent(self):
+        self.assertIsNone(build_questions.competing_values(entity(), "P2048"))
+
+    def test_apply_competing_value_rule_drops_only_the_disputed_subject(self):
+        disputed = candidate(identifier="disputed", entity_id="Q158526")
+        agreed = candidate(identifier="agreed", entity_id="Q513")
+        kept = build_questions.apply_competing_value_rule(
+            [disputed, agreed],
+            {
+                "Q158526": entity(amounts=["+756", "+739"]),
+                "Q513": entity(amounts=["+8848.86"]),
+            },
+        )
+        self.assertEqual(["agreed"], [item.identifier for item in kept])
+
+    def test_apply_competing_value_rule_keeps_subjects_without_claim_documents(self):
+        """A missing claim document is a gap in evidence, not evidence of a conflict."""
+        kept = build_questions.apply_competing_value_rule([candidate()], {})
+        self.assertEqual(1, len(kept))
+
+    def test_familiarity_floor_rejects_obscure_subjects(self):
+        """Sitelink count stands in for whether a subject can be reasoned about."""
+        kept = build_questions.apply_familiarity_floor(
+            [
+                candidate(identifier="landmark", sitelinks=140),
+                candidate(identifier="borderline", sitelinks=20),
+                candidate(identifier="obscure", sitelinks=3),
+            ],
+            20,
+        )
+        self.assertEqual(["landmark", "borderline"], [i.identifier for i in kept])
+
+    def test_load_exclusions_reads_ids_and_reasons(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "exclusions.json"
+            path.write_text(json.dumps({
+                "excluded": [{"id": "a", "subject": "A", "reason": "wrong value"}]
+            }), encoding="utf-8")
+            self.assertEqual({"a": "wrong value"}, build_questions.load_exclusions(path))
+
+    def test_load_exclusions_returns_empty_when_absent(self):
+        with tempfile.TemporaryDirectory() as directory:
+            missing = pathlib.Path(directory) / "nothing.json"
+            self.assertEqual({}, build_questions.load_exclusions(missing))
+
+    def test_load_exclusions_rejects_an_entry_without_a_reason(self):
+        """A cut without a recorded reason is not auditable, so it is not accepted."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "exclusions.json"
+            path.write_text(json.dumps({"excluded": [{"id": "a"}]}), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                build_questions.load_exclusions(path)
+
+    def test_apply_exclusions_drops_listed_records(self):
+        kept = build_questions.apply_exclusions(
+            [candidate(identifier="keep"), candidate(identifier="cut")],
+            {"cut": "factually wrong"},
+        )
+        self.assertEqual(["keep"], [item.identifier for item in kept])
+
+    def test_apply_exclusions_warns_but_does_not_fail_on_a_stale_entry(self):
+        """Upstream data legitimately changes; a vanished subject must not break the build."""
+        with self.assertLogs(level="WARNING") as captured:
+            kept = build_questions.apply_exclusions([candidate(identifier="keep")],
+                                                    {"gone": "no longer present"})
+        self.assertEqual(["keep"], [item.identifier for item in kept])
+        self.assertTrue(any("gone" in line for line in captured.output))
+
+    def test_location_entity_id_prefers_the_narrower_administrative_unit(self):
+        document = {"claims": {
+            "P131": entity(location="Q8678", location_property="P131")["claims"]["P131"],
+            "P17": entity(location="Q155", location_property="P17")["claims"]["P17"],
+        }}
+        self.assertEqual("Q8678", build_questions.location_entity_id(document))
+
+    def test_location_entity_id_falls_back_to_country(self):
+        document = entity(location="Q155", location_property="P17")
+        self.assertEqual("Q155", build_questions.location_entity_id(document))
+
+    def test_location_entity_id_returns_none_when_unresolved(self):
+        self.assertIsNone(build_questions.location_entity_id(entity()))
+
+    def test_prompt_names_the_place_for_an_ambiguous_mountain(self):
+        """"Sugarloaf Mountain" alone denotes many summits."""
+        spec = next(s for s in build_questions.CATEGORY_SPECS if s.key == "mountains")
+        prompt = build_questions.prompt_for(
+            spec, "Sugarloaf Mountain", None, "Wikidata", "Rio de Janeiro"
+        )
+        self.assertIn("Sugarloaf Mountain in Rio de Janeiro", prompt)
+        self.assertIn("in metres", prompt)
+
+    def test_prompt_names_the_place_for_an_ambiguous_building(self):
+        """"Freedom Tower" is widely used for One World Trade Center."""
+        spec = next(s for s in build_questions.CATEGORY_SPECS if s.key == "buildings")
+        prompt = build_questions.prompt_for(
+            spec, "Freedom Tower", None, "Wikidata", "Miami"
+        )
+        self.assertIn("Freedom Tower in Miami", prompt)
+
+    def test_prompt_omits_the_place_when_none_resolves(self):
+        spec = next(s for s in build_questions.CATEGORY_SPECS if s.key == "mountains")
+        prompt = build_questions.prompt_for(spec, "Mount Everest", None, "Wikidata", None)
+        self.assertEqual(
+            "What is the elevation of Mount Everest above sea level, in metres?", prompt
+        )
+
+    def test_attach_locations_leaves_unresolved_candidates_unchanged(self):
+        result = build_questions.attach_locations([candidate()], {}, {})
+        self.assertIsNone(result[0].location)
+
+
 
 
 def candidate_for(entity_id, value, category):
@@ -238,7 +441,6 @@ def candidate_for(entity_id, value, category):
         sitelinks=80,
         difficulty=2,
     )
-
 
 if __name__ == "__main__":
     unittest.main()

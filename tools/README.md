@@ -126,3 +126,35 @@ python3 -m unittest tools/test_build_questions.py
 
 These tests accompany the filtering and selection logic. A successful test does not replace the
 manual source and wording review required by ADR 0011.
+
+## Admission rules
+
+Added after an external review of the first generated bank found six factually wrong
+values among eighty, none of which the existing validation could detect: it verified that
+each value matched its cited Wikidata statement, not that the statement was right.
+
+Four rules now run before selection. Each logs its rejections with a reason, so
+`--dry-run` shows what every rule costs.
+
+| Rule | Flag | Purpose |
+|---|---|---|
+| Exclusion list | `--exclusions` | Honours `tools/exclusions.json`. Records cut by hand after review would otherwise return on the next run, silently breaking the reproducibility the pinned revisions provide. A listed id that no longer appears produces a warning, not an error — upstream data legitimately changes. |
+| Familiarity floor | `--min-sitelinks` | Rejects subjects described in fewer than N Wikimedia language editions. This is a floor, not a difficulty rating: the review found such subjects yield recall questions, because the player cannot reason toward an answer from the prompt. |
+| Competing values | `--competing-value-tolerance` | Rejects a subject whose own sources disagree about the value by more than a relative tolerance. Deprecated statements are ignored: a superseded value is not a live disagreement. |
+| Location in the prompt | — | Resolves `P131`, falling back to `P17`, and names the place in the prompt. Removes a class of identity ambiguity: "Sugarloaf Mountain", "Corcovado" and "Freedom Tower" each denote more than one subject. |
+
+### Why the competing-value rule reads claim documents rather than the query
+
+The SPARQL queries return only referenced, non-deprecated statements. A competing value
+that carries no reference is therefore invisible to them — which is exactly how the Monte
+Titano disagreement (739 m against 756 m) reached the first bank. The rule fetches each
+subject's full claim document from the MediaWiki API instead, so unreferenced
+disagreements are visible.
+
+### Calibration
+
+The tolerance is set so that Monte Titano fails and Mount Everest and Mont Blanc pass.
+Everest's published values differ by a few metres between surveys, and Mont Blanc's
+snow-and-ice summit varies between measurements; neither is a source disagreement. Monte
+Titano's two values differ by 2.3%, which is. The unit tests encode all three cases, so
+changing the tolerance without re-reading them will fail the suite.

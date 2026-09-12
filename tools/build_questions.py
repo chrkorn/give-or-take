@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 
-SCRIPT_VERSION = "2.0.0"
+SCRIPT_VERSION = "2.1.0"
 DEFAULT_ENDPOINT = "https://query.wikidata.org/sparql"
 WIKIDATA_API = "https://www.wikidata.org/w/api.php"
 DEFAULT_USER_AGENT = (
@@ -38,6 +38,27 @@ LICENCE = (
 ENTITY_ID_PATTERN = re.compile(r"Q[1-9][0-9]*$")
 DATE_PATTERN = re.compile(r"^[+]?([0-9]{4})-([0-9]{2})-([0-9]{2})T")
 QUESTION_SOURCE_LABEL = "Wikidata"
+
+# Admission rules added after an external review of the first generated bank.
+# See ADR 0011 (amendments) and docs/question-bank-review-2026-09-12.md.
+
+# Two values for the same property that differ by more than this relative amount are
+# treated as an unresolved source disagreement, and the subject is rejected. Calibrated
+# so Monte Titano (739 m against 756 m, 2.3% apart) fails while Mount Everest and
+# Mont Blanc, whose published values differ by centimetres, survive.
+COMPETING_VALUE_TOLERANCE = decimal.Decimal("0.005")
+
+# Minimum number of Wikimedia sitelinks. This is a familiarity floor, not a difficulty
+# rating: the review found that subjects described in only a handful of language editions
+# produce recognition trivia, because the player cannot reason toward an answer from the
+# prompt and can only recall the fact.
+DEFAULT_MINIMUM_SITELINKS = 20
+
+# Deprecated statements are excluded from conflict detection: a value the community has
+# already marked as superseded is not evidence of a live disagreement.
+DEPRECATED_RANK = "deprecated"
+
+LOCATION_PROPERTIES = ("P131", "P17")
 ENGLISH_MONTH_NAMES = (
     "January",
     "February",
@@ -178,6 +199,7 @@ class Candidate:
     source_label: str
     sitelinks: int
     difficulty: int
+    location: str | None = None
 
 
 CATEGORY_SPECS = (
@@ -279,6 +301,49 @@ class WikidataClient:
             raise RuntimeError("No Wikidata revision returned for: " + ", ".join(missing))
         return revisions
 
+    def entity_claims(self, entity_ids: Sequence[str]) -> dict[str, dict[str, Any]]:
+        """Fetch full claim lists so conflicts invisible to the query can be detected.
+
+        The SPARQL query only returns referenced, non-deprecated statements. An item can
+        still carry a competing value that is unreferenced, which is precisely how the
+        Monte Titano disagreement reached the first bank unnoticed.
+        """
+        return self._entities(entity_ids, "claims")
+
+    def entity_labels(self, entity_ids: Sequence[str]) -> dict[str, str]:
+        """Resolve entity identifiers to English labels, for place names in prompts."""
+        result: dict[str, str] = {}
+        for entity_id, entity in self._entities(entity_ids, "labels").items():
+            label = entity.get("labels", {}).get("en", {}).get("value")
+            if isinstance(label, str) and label:
+                result[entity_id] = label
+        return result
+
+    def _entities(self, entity_ids: Sequence[str], props: str) -> dict[str, dict[str, Any]]:
+        entities: dict[str, dict[str, Any]] = {}
+        unique = sorted(set(entity_ids), key=entity_sort_key)
+        for start in range(0, len(unique), 50):
+            batch = unique[start : start + 50]
+            query = urllib.parse.urlencode(
+                {
+                    "action": "wbgetentities",
+                    "props": props,
+                    "ids": "|".join(batch),
+                    "languages": "en",
+                    "format": "json",
+                    "formatversion": "2",
+                }
+            )
+            request = urllib.request.Request(
+                f"{WIKIDATA_API}?{query}",
+                headers={"Accept": "application/json", "User-Agent": self.user_agent},
+            )
+            payload = self._request_json(request)
+            for entity_id, entity in payload.get("entities", {}).items():
+                if isinstance(entity, dict):
+                    entities[entity_id] = entity
+        return entities
+
     def _request_json(self, request: urllib.request.Request) -> dict[str, Any]:
         for attempt in range(4):
             self._pace()
@@ -374,6 +439,72 @@ def difficulty_from_sitelinks(sitelinks: int) -> int:
     return 5
 
 
+def statement_values(entity: Mapping[str, Any], property_id: str) -> list[decimal.Decimal]:
+    """Collect every non-deprecated numeric value an entity records for one property."""
+    values: list[decimal.Decimal] = []
+    for statement in entity.get("claims", {}).get(property_id, []):
+        if not isinstance(statement, Mapping):
+            continue
+        if statement.get("rank") == DEPRECATED_RANK:
+            continue
+        snak = statement.get("mainsnak")
+        if not isinstance(snak, Mapping) or snak.get("snaktype") != "value":
+            continue
+        amount = (snak.get("datavalue") or {}).get("value", {})
+        if not isinstance(amount, Mapping):
+            continue
+        text = amount.get("amount")
+        if not isinstance(text, str):
+            continue
+        try:
+            parsed = decimal.Decimal(text)
+        except decimal.InvalidOperation:
+            continue
+        if parsed.is_finite():
+            values.append(parsed)
+    return values
+
+
+def competing_values(
+    entity: Mapping[str, Any],
+    property_id: str,
+    tolerance: decimal.Decimal = COMPETING_VALUE_TOLERANCE,
+) -> tuple[decimal.Decimal, decimal.Decimal] | None:
+    """Return the widest disagreeing pair of values, or None when the sources agree.
+
+    A single-answer quiz cannot use a quantity its own sources dispute: two different
+    answers would both be defensible, and the player is penalised for the disagreement.
+    """
+    values = statement_values(entity, property_id)
+    if len(values) < 2:
+        return None
+    lowest, highest = min(values), max(values)
+    scale = max(abs(lowest), abs(highest))
+    if scale == 0:
+        return None
+    if (highest - lowest) / scale > tolerance:
+        return (lowest, highest)
+    return None
+
+
+def location_entity_id(entity: Mapping[str, Any]) -> str | None:
+    """Find the place an item belongs to, preferring the narrower administrative unit."""
+    claims = entity.get("claims", {})
+    for property_id in LOCATION_PROPERTIES:
+        for statement in claims.get(property_id, []):
+            if not isinstance(statement, Mapping):
+                continue
+            if statement.get("rank") == DEPRECATED_RANK:
+                continue
+            snak = statement.get("mainsnak")
+            if not isinstance(snak, Mapping) or snak.get("snaktype") != "value":
+                continue
+            value = (snak.get("datavalue") or {}).get("value", {})
+            if isinstance(value, Mapping) and isinstance(value.get("id"), str):
+                return value["id"]
+    return None
+
+
 def is_suspiciously_round(value: decimal.Decimal, category_key: str) -> bool:
     """Flag coarse values likely to be placeholders rather than measurements."""
     if value != value.to_integral_value():
@@ -390,15 +521,24 @@ def prompt_for(
     label: str,
     as_of: dt.date | None,
     source_label: str,
+    location: str | None = None,
 ) -> str:
-    """Render category-specific wording that also states necessary qualifiers."""
+    """Render category-specific wording that also states necessary qualifiers.
+
+    The location is part of the identification, not decoration. Several names in the
+    first bank denoted more than one subject: "Sugarloaf Mountain", "Corcovado", and
+    "Freedom Tower", which is widely used for One World Trade Center but described the
+    Miami building. Naming the place removes that ambiguity mechanically.
+    """
     if spec.key == "mountains":
-        return f"What is the elevation of {label} above sea level, in metres?"
+        place = f" in {location}" if location else ""
+        return f"What is the elevation of {label}{place} above sea level, in metres?"
     if spec.key == "buildings":
         display_name = (
             f"the {label}" if label in BUILDING_NAMES_REQUIRING_ARTICLE else label
         )
-        return f"What is the architectural height of {display_name}, in metres?"
+        place = f" in {location}" if location else ""
+        return f"What is the architectural height of {display_name}{place}, in metres?"
     if as_of is None:
         raise ValueError("population prompt requires a reference date")
     display_name = f"the {label}" if label in COUNTRY_NAMES_REQUIRING_ARTICLE else label
@@ -528,6 +668,127 @@ def candidates_from_bindings(
     return candidates
 
 
+def load_exclusions(path: Path) -> dict[str, str]:
+    """Load the editorial exclusion list so regeneration reproduces the shipped bank.
+
+    Records removed by hand after review would otherwise return on the next run, which
+    silently breaks the reproducibility the pinned revisions are meant to provide.
+    """
+    if not path.exists():
+        return {}
+    document = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(document, dict):
+        raise ValueError(f"{path} must contain a JSON object")
+    entries = document.get("excluded", [])
+    if not isinstance(entries, list):
+        raise ValueError(f"{path} 'excluded' must be an array")
+    exclusions: dict[str, str] = {}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise ValueError(f"{path} entries must be objects")
+        identifier = entry.get("id")
+        reason = entry.get("reason")
+        if not isinstance(identifier, str) or not identifier:
+            raise ValueError(f"{path} entry is missing a string id")
+        if not isinstance(reason, str) or not reason:
+            raise ValueError(f"{path} entry {identifier!r} is missing a reason")
+        if identifier in exclusions:
+            raise ValueError(f"{path} lists {identifier!r} twice")
+        exclusions[identifier] = reason
+    return exclusions
+
+
+def apply_exclusions(
+    candidates: Sequence[Candidate], exclusions: Mapping[str, str]
+) -> list[Candidate]:
+    """Drop excluded records and warn about entries the source no longer produces.
+
+    A stale entry is a warning rather than an error: upstream data legitimately changes,
+    and failing the build because a rejected subject disappeared would be perverse. It is
+    still worth surfacing, because it may equally mean an id was mistyped.
+    """
+    kept: list[Candidate] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        reason = exclusions.get(candidate.identifier)
+        if reason is None:
+            kept.append(candidate)
+            continue
+        seen.add(candidate.identifier)
+        logging.info("DROP %s: excluded by review — %s", candidate.identifier, reason)
+    for identifier in sorted(set(exclusions) - seen):
+        logging.warning(
+            "exclusion %s matched no candidate; the source may have changed or the id "
+            "may be wrong",
+            identifier,
+        )
+    return kept
+
+
+def apply_familiarity_floor(
+    candidates: Sequence[Candidate], minimum_sitelinks: int
+) -> list[Candidate]:
+    """Reject subjects too obscure to estimate rather than merely recall."""
+    kept: list[Candidate] = []
+    for candidate in candidates:
+        if candidate.sitelinks < minimum_sitelinks:
+            logging.info(
+                "DROP %s: %d sitelinks is below the familiarity floor of %d",
+                candidate.identifier,
+                candidate.sitelinks,
+                minimum_sitelinks,
+            )
+            continue
+        kept.append(candidate)
+    return kept
+
+
+def apply_competing_value_rule(
+    candidates: Sequence[Candidate],
+    entities: Mapping[str, Mapping[str, Any]],
+    tolerance: decimal.Decimal = COMPETING_VALUE_TOLERANCE,
+) -> list[Candidate]:
+    """Reject subjects whose own sources disagree about the value."""
+    kept: list[Candidate] = []
+    for candidate in candidates:
+        entity = entities.get(candidate.entity_id)
+        if entity is None:
+            logging.warning(
+                "no claim document for %s; competing-value rule not applied",
+                candidate.identifier,
+            )
+            kept.append(candidate)
+            continue
+        conflict = competing_values(entity, candidate.property_id, tolerance)
+        if conflict is not None:
+            lowest, highest = conflict
+            logging.info(
+                "DROP %s: competing values %s and %s (%.2f%% apart)",
+                candidate.identifier,
+                lowest,
+                highest,
+                float((highest - lowest) / max(abs(lowest), abs(highest)) * 100),
+            )
+            continue
+        kept.append(candidate)
+    return kept
+
+
+def attach_locations(
+    candidates: Sequence[Candidate],
+    entities: Mapping[str, Mapping[str, Any]],
+    place_labels: Mapping[str, str],
+) -> list[Candidate]:
+    """Attach a place name where one resolves, leaving the prompt unchanged otherwise."""
+    result: list[Candidate] = []
+    for candidate in candidates:
+        entity = entities.get(candidate.entity_id) or {}
+        place_id = location_entity_id(entity)
+        location = place_labels.get(place_id) if place_id else None
+        result.append(dataclasses.replace(candidate, location=location))
+    return result
+
+
 def load_overrides(path: Path) -> dict[str, dict[str, Any]]:
     """Load and strictly validate the small human-curation layer."""
     try:
@@ -593,7 +854,13 @@ def apply_overrides(
 def prompt_for_spec_candidate(candidate: Candidate) -> str:
     """Render a prompt after resolving a candidate back to its category."""
     spec = next(spec for spec in CATEGORY_SPECS if spec.label == candidate.category)
-    return prompt_for(spec, candidate.label, candidate.as_of, candidate.source_label)
+    return prompt_for(
+        spec,
+        candidate.label,
+        candidate.as_of,
+        candidate.source_label,
+        candidate.location,
+    )
 
 
 def validate_prompt_context(candidate: Candidate, prompt: str) -> None:
@@ -776,6 +1043,27 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true", help="print statistics without writing")
     parser.add_argument("--output", type=Path, default=repository / "questions.json")
+    parser.add_argument(
+        "--exclusions",
+        type=Path,
+        default=repository / "tools" / "exclusions.json",
+        help="editorial exclusion list; honoured so regeneration reproduces the bank",
+    )
+    parser.add_argument(
+        "--min-sitelinks",
+        type=int,
+        default=DEFAULT_MINIMUM_SITELINKS,
+        help=(
+            "familiarity floor: reject subjects described in fewer Wikimedia language "
+            "editions, because they yield recall questions rather than estimation ones"
+        ),
+    )
+    parser.add_argument(
+        "--competing-value-tolerance",
+        type=decimal.Decimal,
+        default=COMPETING_VALUE_TOLERANCE,
+        help="relative difference above which two source values count as disagreeing",
+    )
     parser.add_argument("--overrides", type=Path, default=repository / "tools" / "overrides.json")
     parser.add_argument("--endpoint", default=DEFAULT_ENDPOINT)
     parser.add_argument("--user-agent", default=DEFAULT_USER_AGENT)
@@ -803,6 +1091,7 @@ def run(argv: Sequence[str]) -> int:
     try:
         generated_at = utc_timestamp(args.generation_timestamp)
         overrides = load_overrides(args.overrides)
+        exclusions = load_exclusions(args.exclusions)
         client = WikidataClient(args.user_agent, args.request_delay)
         requested = {
             "mountains": args.mountains,
@@ -818,6 +1107,41 @@ def run(argv: Sequence[str]) -> int:
             )
             all_candidates.extend(category_candidates)
 
+        # Admission rules, cheapest first so the network is spared what it can be.
+        before_rules = len(all_candidates)
+        all_candidates = apply_exclusions(all_candidates, exclusions)
+        after_exclusions = len(all_candidates)
+        all_candidates = apply_familiarity_floor(all_candidates, args.min_sitelinks)
+        after_floor = len(all_candidates)
+
+        entity_ids = sorted({item.entity_id for item in all_candidates}, key=entity_sort_key)
+        logging.info("Fetching claim documents for %d subjects", len(entity_ids))
+        entities = client.entity_claims(entity_ids)
+        all_candidates = apply_competing_value_rule(
+            all_candidates, entities, args.competing_value_tolerance
+        )
+        after_competing = len(all_candidates)
+
+        place_ids = sorted(
+            {
+                place_id
+                for item in all_candidates
+                if (place_id := location_entity_id(entities.get(item.entity_id) or {}))
+            },
+            key=entity_sort_key,
+        )
+        place_labels = client.entity_labels(place_ids) if place_ids else {}
+        all_candidates = attach_locations(all_candidates, entities, place_labels)
+
+        logging.info(
+            "Admission rules: %d candidates -> %d after exclusions -> %d after the "
+            "familiarity floor -> %d after the competing-value rule",
+            before_rules,
+            after_exclusions,
+            after_floor,
+            after_competing,
+        )
+
         curated, prompts = apply_overrides(all_candidates, overrides)
         selected: list[Candidate] = []
         for spec in CATEGORY_SPECS:
@@ -829,8 +1153,10 @@ def run(argv: Sequence[str]) -> int:
         if args.dry_run:
             logging.info("Dry run: %s was not written", args.output)
             return 0
-        entity_ids = sorted({item.entity_id for item in selected}, key=entity_sort_key)
-        revisions = client.revisions(entity_ids)
+        selected_entity_ids = sorted(
+            {item.entity_id for item in selected}, key=entity_sort_key
+        )
+        revisions = client.revisions(selected_entity_ids)
         document = question_document(selected, prompts, revisions, generated_at)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(
