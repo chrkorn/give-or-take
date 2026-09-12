@@ -1,0 +1,8 @@
+{
+  "minimumTestableShareNumerator": 74,
+  "minimumTestableShareDenominator": 80,
+  "minimumCompliantBands": 2,
+  "maximumInsufficientOverlapBands": 5,
+  "maximumDominatedBands": 1,
+  "maximumBroadCategoryFailures": 0
+}

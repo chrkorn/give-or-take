@@ -227,4 +227,12 @@
   0013. The edge bands remain single-category and populations dominate `10^4`; enabling the bank
   gate therefore awaits a content decision about another broad measurement family or removal of
   legacy categories, rather than weakening the accepted thresholds.
-- All 46 offline generator tests and all 120 Java unit tests pass.
+- The remaining gap was accepted without adding Lengths or Masses. Regenerated the shipped bank as
+  version 4 with 80 questions: 10 mountains, 10 buildings, 30 populations, and 30 areas.
+- Corrected ADR 0013 rule 5 so its four-band requirement applies only to categories whose configured
+  admissible range can occupy four bands. The old question-count-only condition became impossible
+  for mountains and buildings as soon as either quota reached twelve.
+- Added a CI ratchet that always prints the full matrix and fails only if the achieved outcomes
+  regress. The report-ready before/after tables record the improvement from 46/64 testable questions
+  and zero compliant bands to 74/80 and two compliant bands, together with every unclosed gap.
+- All 53 offline tooling tests and all 120 Java unit tests pass.

@@ -330,14 +330,22 @@ class BuildQuestionsTest(unittest.TestCase):
 
     def test_magnitude_coverage_rejects_internally_narrow_categories(self):
         candidates = coverage_candidates({
-            "Buildings": {1: 6, 2: 6},
-            "Mountains": {1: 6, 2: 6},
+            "Areas": {1: 6, 2: 6},
+            "National populations": {1: 6, 2: 6},
         })
 
-        with self.assertRaisesRegex(ValueError, "Buildings.*covers 2") as error:
+        with self.assertRaisesRegex(ValueError, "Areas.*covers 2") as error:
             build_questions.validate_magnitude_coverage(candidates)
 
-        self.assertIn("Mountains' substantively covers 2", str(error.exception))
+        self.assertIn("National populations' substantively covers 2", str(error.exception))
+
+    def test_magnitude_coverage_exempts_physically_narrow_categories(self):
+        candidates = coverage_candidates({
+            "Building heights": {2: 6, 3: 6},
+            "Mountain elevations": {2: 6, 3: 6},
+        })
+
+        build_questions.validate_magnitude_coverage(candidates)
 
     def test_magnitude_coverage_rejects_sparse_band_evasion(self):
         candidates = coverage_candidates({
@@ -351,6 +359,61 @@ class BuildQuestionsTest(unittest.TestCase):
     def test_magnitude_coverage_rejects_an_empty_bank(self):
         with self.assertRaisesRegex(ValueError, "at least one question"):
             build_questions.validate_magnitude_coverage([])
+
+    def test_magnitude_coverage_ratchet_accepts_improvement(self):
+        assessment = build_questions.assess_magnitude_coverage([
+            build_questions.MagnitudeRecord(item.identifier, item.category, item.value)
+            for item in coverage_candidates({
+                "Areas": {0: 3, 1: 3, 2: 3, 3: 3},
+                "National populations": {0: 3, 1: 3, 2: 3, 3: 3},
+            })
+        ])
+        ratchet = build_questions.MagnitudeCoverageRatchet(
+            minimum_testable_share_numerator=3,
+            minimum_testable_share_denominator=4,
+            minimum_compliant_bands=2,
+            maximum_insufficient_overlap_bands=2,
+            maximum_dominated_bands=1,
+            maximum_broad_category_failures=0,
+        )
+
+        build_questions.validate_magnitude_coverage_ratchet(assessment, ratchet)
+
+    def test_magnitude_coverage_ratchet_rejects_regression(self):
+        assessment = build_questions.assess_magnitude_coverage([
+            build_questions.MagnitudeRecord(item.identifier, item.category, item.value)
+            for item in coverage_candidates({"Areas": {0: 6, 1: 6}})
+        ])
+        ratchet = build_questions.MagnitudeCoverageRatchet(
+            minimum_testable_share_numerator=4,
+            minimum_testable_share_denominator=5,
+            minimum_compliant_bands=1,
+            maximum_insufficient_overlap_bands=1,
+            maximum_dominated_bands=0,
+            maximum_broad_category_failures=1,
+        )
+
+        with self.assertRaisesRegex(ValueError, "compliant bands") as error:
+            build_questions.validate_magnitude_coverage_ratchet(assessment, ratchet)
+
+        self.assertIn("insufficient-overlap bands increased", str(error.exception))
+
+    def test_magnitude_coverage_format_prints_every_cell(self):
+        assessment = build_questions.assess_magnitude_coverage([
+            build_questions.MagnitudeRecord(item.identifier, item.category, item.value)
+            for item in coverage_candidates({
+                "Areas": {0: 3},
+                "National populations": {0: 3, 1: 1},
+            })
+        ])
+
+        rendered = build_questions.format_magnitude_coverage(assessment)
+
+        self.assertIn("*10^0", rendered)
+        self.assertIn(" 10^1", rendered)
+        self.assertIn("Areas", rendered)
+        self.assertIn("National populations", rendered)
+        self.assertIn("Testable questions: 6/7", rendered)
 
     def test_prompt_templates_include_unit_basis_and_date(self):
         mountain, building, population = build_questions.CATEGORY_SPECS[:3]
