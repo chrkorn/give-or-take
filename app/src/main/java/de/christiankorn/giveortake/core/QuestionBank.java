@@ -36,14 +36,14 @@ import java.util.regex.Pattern;
  * {@code android.*} imports and lets ordinary JVM unit tests exercise exactly the parser used by
  * the application without an emulator or Android framework mocks.</p>
  *
- * <p>Version 2 uses strict, transactional validation. A malformed document, an invalid question,
+ * <p>Version 3 uses strict, transactional validation. A malformed document, an invalid question,
  * a duplicate identifier, or an unknown field rejects the entire bank. Bundled data is controlled
  * by the application build, so silently omitting a defective entry would conceal a data-generation
  * error and could ship an unexpectedly incomplete quiz.</p>
  */
 public final class QuestionBank {
     /** The only question-bank format version understood by this loader. */
-    public static final int SUPPORTED_VERSION = 2;
+    public static final int SUPPORTED_VERSION = 3;
 
     private static final int BUFFER_SIZE = 4096;
     private static final Pattern ISO_DATE = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
@@ -69,8 +69,7 @@ public final class QuestionBank {
             "asOf",
             "category",
             "sourceUrl",
-            "sourceLabel",
-            "difficulty"
+            "sourceLabel"
     );
 
     private final List<Question> questions;
@@ -82,7 +81,7 @@ public final class QuestionBank {
     /**
      * Loads a complete question bank from JSON text.
      *
-     * @param json complete JSON document using the version-2 question-bank format
+     * @param json complete JSON document using the version-3 question-bank format
      * @return an immutable bank containing the validated questions
      * @throws IllegalArgumentException if {@code json} is {@code null}
      * @throws QuestionBankFormatException if the document is malformed or violates the schema
@@ -101,7 +100,7 @@ public final class QuestionBank {
      * ownership with the caller makes lifecycle and error handling explicit while preserving the
      * framework-independent parsing boundary.</p>
      *
-     * @param reader source of a complete version-2 question-bank document
+     * @param reader source of a complete version-3 question-bank document
      * @return an immutable bank containing the validated questions
      * @throws IllegalArgumentException if {@code reader} is {@code null}
      * @throws IOException if reading the supplied character stream fails
@@ -281,11 +280,6 @@ public final class QuestionBank {
                 "sourceLabel",
                 path + ".sourceLabel"
         );
-        int difficulty = requireInteger(object, "difficulty", path + ".difficulty");
-        if (difficulty < 1 || difficulty > 5) {
-            throw invalid(path + ".difficulty", "must be between 1 and 5");
-        }
-
         return Question.builder()
                 .id(id)
                 .prompt(prompt)
@@ -296,7 +290,6 @@ public final class QuestionBank {
                 .category(category)
                 .sourceUrl(sourceUrl)
                 .sourceLabel(sourceLabel)
-                .difficulty(difficulty)
                 .build();
     }
 

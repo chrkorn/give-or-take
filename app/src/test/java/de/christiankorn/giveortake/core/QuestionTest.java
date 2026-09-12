@@ -26,7 +26,6 @@ public class QuestionTest {
         assertEquals("Geography", question.getCategory());
         assertEquals("https://example.com/river-thames", question.getSourceUrl());
         assertEquals("Example source", question.getSourceLabel());
-        assertEquals(2, question.getDifficulty());
     }
 
     @Test
@@ -111,22 +110,6 @@ public class QuestionTest {
     }
 
     @Test
-    public void build_withDifficultyBelowRange_throwsUsefulException() {
-        assertInvalid(
-                validQuestionBuilder().difficulty(0),
-                "difficulty must be between 1 and 5"
-        );
-    }
-
-    @Test
-    public void build_withDifficultyAboveRange_throwsUsefulException() {
-        assertInvalid(
-                validQuestionBuilder().difficulty(6),
-                "difficulty must be between 1 and 5"
-        );
-    }
-
-    @Test
     public void equals_withSameId_ignoresDescriptiveFields() {
         Question original = validQuestionBuilder().build();
         Question corrected = Question.builder()
@@ -138,7 +121,6 @@ public class QuestionTest {
                 .category("Rivers")
                 .sourceUrl("https://example.org/thames")
                 .sourceLabel("Different source")
-                .difficulty(3)
                 .build();
 
         assertEquals(original, corrected);
@@ -162,8 +144,7 @@ public class QuestionTest {
                 .measurementBasis("river length along the main channel")
                 .category("Geography")
                 .sourceUrl("https://example.com/river-thames")
-                .sourceLabel("Example source")
-                .difficulty(2);
+                .sourceLabel("Example source");
     }
 
     private static void assertInvalid(Question.Builder builder, String expectedMessage) {

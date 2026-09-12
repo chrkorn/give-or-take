@@ -1,6 +1,6 @@
 # Question-bank generator
 
-`build_questions.py` creates the version-2 `questions.json` consumed by Give or Take. It queries
+`build_questions.py` creates the version-3 `questions.json` consumed by Give or Take. It queries
 referenced, non-deprecated Wikidata statements selected under ADR 0011. It uses only the Python 3
 standard library; `requirements.txt` exists to make that absence of third-party dependencies
 explicit.
@@ -66,13 +66,12 @@ numeric Wikidata Q-ID, so source changes produce a focused diff rather than an a
 ## Manual prompt curation
 
 `overrides.json` is the reviewed layer over generated source data. Keys are stable generated IDs.
-An override may replace `prompt`, set `difficulty` from 1 through 5, or set `exclude` to `true`:
+An override may replace `prompt` or set `exclude` to `true`:
 
 ```json
 {
   "wikidata-q513-mountains": {
-    "prompt": "What is Mount Everest's elevation above sea level, in metres?",
-    "difficulty": 1
+    "prompt": "What is Mount Everest's elevation above sea level, in metres?"
   },
   "wikidata-q999999-buildings": {
     "exclude": true
@@ -104,12 +103,10 @@ buildings, and 1,000–2,000,000,000 people for national populations. Integer mo
 values divisible by 100 and population values divisible by 100,000 are treated as suspiciously
 coarse placeholders.
 
-Difficulty is a reproducible estimate of likely familiarity, not an empirical measurement of
-estimation error. Within each selected category, Wikimedia sitelink counts place subjects into five
-relative familiarity bands: widely documented subjects receive level 1 and less documented ones
-receive level 5. This gives each category a useful spread without pretending that an arbitrary
-global sitelink threshold is universal. Manual review can correct the proxy through
-`overrides.json`.
+Wikimedia sitelink counts serve only as a familiarity signal. The global threshold rejects subjects
+that are too obscure for a player to estimate meaningfully, and the selector prefers more familiar
+subjects within each order-of-magnitude bucket. Sitelink counts are not emitted as question data or
+interpreted as estimation difficulty.
 
 Each output source link contains the Wikidata Q-ID, immutable revision number, and relevant
 property anchor. This makes the value inspected for a released bank recoverable even after the

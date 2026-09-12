@@ -53,3 +53,12 @@ switching only the sentence template to Android string resources would not solve
 The root declaration keeps category volatility out of `Question` itself. `Question` stores an
 immutable `LocalDate` when supplied, while `QuestionBank` applies the cross-record rule that decides
 whether the date is required or forbidden.
+
+## Amendments
+
+**2026-09-12 — version 3 removes question difficulty.** ADR 0011's source-admission amendment
+removed the sitelink-derived `difficulty` field because it did not measure estimation difficulty.
+The bank format therefore advances to version 3. Although the reader and asset ship together, this
+is a breaking change to the strict schema: version 2 requires the field and version 3 rejects it as
+unknown. A new version makes a mismatched reader and asset fail with the intended unsupported-version
+error instead of a misleading field-validation error.

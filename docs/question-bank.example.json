@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "metadata": {
     "generationDate": "2026-09-10",
     "generationTimestamp": "2026-09-10T12:30:00Z",
@@ -7,7 +7,7 @@
       "Example geographical reference dataset"
     ],
     "licence": "Example only — replace with the applicable dataset licence",
-    "scriptVersion": "2.0.0"
+    "scriptVersion": "3.0.0"
   },
   "timeVaryingCategories": [
     "National populations"
@@ -21,8 +21,7 @@
       "measurementBasis": "river length along the main channel",
       "category": "geography",
       "sourceUrl": "https://example.org/river-thames",
-      "sourceLabel": "Example geographical reference",
-      "difficulty": 2
+      "sourceLabel": "Example geographical reference"
     },
     {
       "id": "exampleland-resident-population-2024",
@@ -33,8 +32,7 @@
       "asOf": "2024-12-31",
       "category": "National populations",
       "sourceUrl": "https://example.org/exampleland-population-2024",
-      "sourceLabel": "Example statistics office",
-      "difficulty": 3
+      "sourceLabel": "Example statistics office"
     }
   ]
 }

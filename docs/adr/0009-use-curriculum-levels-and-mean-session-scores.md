@@ -22,6 +22,10 @@ There are two curriculum levels. Level 1 uses point estimates and `LogRelativeSc
 90 percent confidence intervals and the log interval score from ADR 0007. The authored difficulty
 from 1 to 5 remains an independent property of a question and can vary within both levels.
 
+The 2026-09-12 amendment to ADR 0011 supersedes that question-difficulty decision after external
+review showed that its sitelink-derived values measured obscurity rather than estimation difficulty.
+The two skill-based curriculum levels remain unchanged.
+
 Confidence intervals unlock after a point-estimate session with at least ten answered questions
 and at least 70 arithmetic-mean points. Both thresholds are inclusive. This is a deliberately
 simple first mastery rule; it is suitable for deterministic testing but does not claim that one
