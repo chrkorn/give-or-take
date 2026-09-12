@@ -1,6 +1,6 @@
 # Question bank JSON format
 
-[`question-bank.example.json`](question-bank.example.json) is the canonical example for version 3
+[`question-bank.example.json`](question-bank.example.json) is the canonical example for version 4
 of the bundled question-bank format. Generated question data must use the same field names, nesting,
 and JSON value types.
 
@@ -8,9 +8,8 @@ and JSON value types.
 
 | Field | JSON type | Rules |
 |---|---|---|
-| `version` | number | Required integer. Version 3 is the only currently supported value. |
+| `version` | number | Required integer. Version 4 is the only currently supported value. |
 | `metadata` | object | Required. Describes the provenance of the bank as a whole. |
-| `timeVaryingCategories` | array | Required. Contains unique, non-blank category names whose questions require an `asOf` date. |
 | `questions` | array | Required. Contains zero or more question objects. An empty bank is valid. |
 
 ## Metadata object
@@ -34,7 +33,8 @@ Every listed field except `asOf` is required. JSON `null` is not accepted for an
 | `trueValue` | number | Finite and greater than zero, matching the logarithmic scoring domain. A numeric string is not a number. |
 | `unit` | string | Non-blank unit in which answers are entered. |
 | `measurementBasis` | string | Required and non-blank. Defines what was measured, independently of its unit. |
-| `asOf` | string | Required ISO 8601 date in `YYYY-MM-DD` form when `category` occurs in `timeVaryingCategories`; forbidden otherwise. |
+| `timeVarying` | boolean | Required. States whether the authoritative value can change with time. |
+| `asOf` | string | Required ISO 8601 date in `YYYY-MM-DD` form when `timeVarying` is `true`; forbidden when it is `false`. |
 | `category` | string | Non-blank subject grouping. |
 | `sourceUrl` | string | Non-blank absolute `http` or `https` URL supporting the authoritative value. |
 | `sourceLabel` | string | Non-blank human-readable source name. |
@@ -43,7 +43,7 @@ JSON numbers must be unquoted. In particular, `"trueValue": "346.0"` is invalid 
 string contains digits. This keeps schema errors visible instead of silently coercing them.
 
 Whether unrecognised fields are rejected or ignored is a loader policy and is deliberately not part
-of the version 3 data shape. Generated data should never emit fields not documented above.
+of the version 4 data shape. Generated data should never emit fields not documented above.
 
 ## Prompt representation
 
@@ -55,11 +55,11 @@ visible in data-review diffs without moving English grammar and category excepti
 
 ## Version compatibility
 
-The bundled-asset loader accepts only version 3. Version 3 removes the version-2 `difficulty` field
-because its sitelink-derived value did not measure estimation difficulty. This is a schema-version
-change even though the bank has no external consumers: the strict version-2 reader required the
-field, while the strict version-3 reader rejects it as unknown. The version bump therefore exposes
-an accidentally mismatched reader and asset directly.
+The bundled-asset loader accepts only version 4. Version 4 replaces the root-level
+`timeVaryingCategories` declaration with a required per-question `timeVarying` flag. This permits a
+broad measurement family to contain both stable and changing quantities while preserving strict
+date validation. Version 3 remains relevant historically because it removed the unsupported
+per-question `difficulty` field.
 
 Earlier versions are not migrated at runtime because the application and its generated bank are
 released together. In particular, version 1 has no reliable value from which a required

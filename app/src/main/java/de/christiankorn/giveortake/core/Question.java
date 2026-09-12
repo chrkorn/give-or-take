@@ -16,6 +16,7 @@ public final class Question {
     private final double trueValue;
     private final String unit;
     private final String measurementBasis;
+    private final boolean timeVarying;
     private final LocalDate asOf;
     private final String category;
     private final String sourceUrl;
@@ -34,6 +35,17 @@ public final class Question {
             throw new IllegalArgumentException("trueValue must be greater than zero");
         }
         trueValue = builder.trueValue;
+        timeVarying = builder.timeVarying;
+        if (timeVarying && builder.asOf == null) {
+            throw new IllegalArgumentException(
+                    "asOf must not be null for a time-varying question"
+            );
+        }
+        if (!timeVarying && builder.asOf != null) {
+            throw new IllegalArgumentException(
+                    "asOf must be null for a time-independent question"
+            );
+        }
         asOf = builder.asOf;
         category = builder.category;
         sourceUrl = builder.sourceUrl;
@@ -92,6 +104,15 @@ public final class Question {
      */
     public String getMeasurementBasis() {
         return measurementBasis;
+    }
+
+    /**
+     * Reports whether the authoritative value can change with time.
+     *
+     * @return {@code true} when the question requires a reference date
+     */
+    public boolean isTimeVarying() {
+        return timeVarying;
     }
 
     /**
@@ -175,6 +196,7 @@ public final class Question {
         private double trueValue;
         private String unit;
         private String measurementBasis;
+        private boolean timeVarying;
         private LocalDate asOf;
         private String category;
         private String sourceUrl;
@@ -235,6 +257,20 @@ public final class Question {
          */
         public Builder measurementBasis(String measurementBasis) {
             this.measurementBasis = measurementBasis;
+            return this;
+        }
+
+        /**
+         * Sets whether the authoritative value can change with time.
+         *
+         * <p>A time-varying question must also supply an {@link #asOf(LocalDate)} date. A
+         * time-independent question must not supply one.</p>
+         *
+         * @param timeVarying whether the question requires a reference date
+         * @return this builder
+         */
+        public Builder timeVarying(boolean timeVarying) {
+            this.timeVarying = timeVarying;
             return this;
         }
 

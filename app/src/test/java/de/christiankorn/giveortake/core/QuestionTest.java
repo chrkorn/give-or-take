@@ -5,9 +5,11 @@ import org.junit.Test;
 import java.time.LocalDate;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests construction, validation, and identity semantics of {@link Question}.
@@ -22,6 +24,7 @@ public class QuestionTest {
         assertEquals(346.0, question.getTrueValue(), 0.0);
         assertEquals("km", question.getUnit());
         assertEquals("river length along the main channel", question.getMeasurementBasis());
+        assertFalse(question.isTimeVarying());
         assertNull(question.getAsOf());
         assertEquals("Geography", question.getCategory());
         assertEquals("https://example.com/river-thames", question.getSourceUrl());
@@ -33,10 +36,28 @@ public class QuestionTest {
         Question question = validQuestionBuilder()
                 .category("National populations")
                 .measurementBasis("resident population")
+                .timeVarying(true)
                 .asOf(LocalDate.of(2024, 12, 31))
                 .build();
 
+        assertTrue(question.isTimeVarying());
         assertEquals(LocalDate.of(2024, 12, 31), question.getAsOf());
+    }
+
+    @Test
+    public void build_withTimeVaryingValueWithoutDate_throwsUsefulException() {
+        assertInvalid(
+                validQuestionBuilder().timeVarying(true),
+                "asOf must not be null for a time-varying question"
+        );
+    }
+
+    @Test
+    public void build_withDateOnTimeIndependentValue_throwsUsefulException() {
+        assertInvalid(
+                validQuestionBuilder().asOf(LocalDate.of(2024, 12, 31)),
+                "asOf must be null for a time-independent question"
+        );
     }
 
     @Test

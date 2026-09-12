@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -31,6 +32,7 @@ public class QuestionBankTest {
         assertEquals(346.0, loaded.get(0).getTrueValue(), 0.0);
         assertEquals("units", loaded.get(0).getUnit());
         assertEquals("example measurement basis", loaded.get(0).getMeasurementBasis());
+        assertFalse(loaded.get(0).isTimeVarying());
         assertNull(loaded.get(0).getAsOf());
         assertEquals("Example category", loaded.get(0).getCategory());
         assertEquals("https://example.org/river-thames", loaded.get(0).getSourceUrl());
@@ -46,6 +48,7 @@ public class QuestionBankTest {
 
         Question question = bank.getQuestions().get(0);
         assertEquals("resident population", question.getMeasurementBasis());
+        assertTrue(question.isTimeVarying());
         assertEquals(LocalDate.of(2024, 12, 31), question.getAsOf());
     }
 
@@ -97,7 +100,7 @@ public class QuestionBankTest {
     }
 
     @Test
-    public void fromJson_withMissingAsOfInTimeVaryingCategory_rejectsWholeFile() {
+    public void fromJson_withMissingAsOfWhenTimeVarying_rejectsWholeFile() {
         String missingAsOf = validPopulationQuestion("missing-date", "2024-12-31")
                 .replace("\"asOf\":\"2024-12-31\",", "");
 
@@ -117,7 +120,7 @@ public class QuestionBankTest {
     }
 
     @Test
-    public void fromJson_withAsOfInTimeIndependentCategory_rejectsWholeFile() {
+    public void fromJson_withAsOfWhenTimeVaryingIsFalse_rejectsWholeFile() {
         String unexpectedAsOf = validQuestion("unexpected-date", 10.0)
                 .replace(
                         "\"measurementBasis\":\"example measurement basis\",",
@@ -128,31 +131,54 @@ public class QuestionBankTest {
         assertInvalid(
                 validBank(unexpectedAsOf),
                 "Invalid question bank at $.questions[0].asOf: "
-                        + "must be absent for a time-independent category"
+                        + "must be absent when timeVarying is false"
+        );
+    }
+
+    @Test
+    public void fromJson_withMissingTimeVaryingFlag_rejectsWholeFile() {
+        String missingFlag = validQuestion("missing-flag", 10.0)
+                .replace("\"timeVarying\":false,", "");
+
+        assertInvalid(
+                validBank(missingFlag),
+                "Invalid question bank at $.questions[0].timeVarying: missing required field"
+        );
+    }
+
+    @Test
+    public void fromJson_withNonBooleanTimeVaryingFlag_rejectsWholeFile() {
+        String wrongType = validQuestion("wrong-flag-type", 10.0)
+                .replace("\"timeVarying\":false", "\"timeVarying\":\"false\"");
+
+        assertInvalid(
+                validBank(wrongType),
+                "Invalid question bank at $.questions[0].timeVarying: expected a boolean"
         );
     }
 
     @Test
     public void fromJson_withPreviousSchemaVersion_rejectsWholeFile() {
-        String versionTwoQuestion = validQuestion("version-two", 10.0)
+        String versionThreeQuestion = validQuestion("version-three", 10.0)
                 .replace(
-                        "\"sourceLabel\":\"Example source\"",
-                        "\"sourceLabel\":\"Example source\",\"difficulty\":2"
+                        "\"timeVarying\":false,",
+                        ""
                 );
-        String versionTwoBank = validBank(versionTwoQuestion)
-                .replace("\"version\":3", "\"version\":2");
+        String versionThreeBank = validBank(versionThreeQuestion)
+                .replace("\"version\":4", "\"version\":3")
+                .replace(",\"questions\"", ",\"timeVaryingCategories\":[],\"questions\"");
 
         assertInvalid(
-                versionTwoBank,
-                "Invalid question bank at $.version: unsupported version 2"
+                versionThreeBank,
+                "Invalid question bank at $.version: unsupported version 3"
         );
     }
 
     @Test
     public void fromJson_withFutureSchemaVersion_rejectsWholeFile() {
         assertInvalid(
-                validBank("").replace("\"version\":3", "\"version\":4"),
-                "Invalid question bank at $.version: unsupported version 4"
+                validBank("").replace("\"version\":4", "\"version\":5"),
+                "Invalid question bank at $.version: unsupported version 5"
         );
     }
 
@@ -269,7 +295,7 @@ public class QuestionBankTest {
 
     private static String validBank(String questions) {
         return "{"
-                + "\"version\":3,"
+                + "\"version\":4,"
                 + "\"metadata\":{"
                 + "\"generationDate\":\"2026-09-10\","
                 + "\"generationTimestamp\":\"2026-09-10T12:30:00Z\","
@@ -277,7 +303,6 @@ public class QuestionBankTest {
                 + "\"licence\":\"Example licence\","
                 + "\"scriptVersion\":\"1.0.0\""
                 + "},"
-                + "\"timeVaryingCategories\":[\"National populations\"],"
                 + "\"questions\":[" + questions + "]"
                 + "}";
     }
@@ -289,6 +314,7 @@ public class QuestionBankTest {
                 + "\"trueValue\":" + trueValue + ","
                 + "\"unit\":\"units\","
                 + "\"measurementBasis\":\"example measurement basis\","
+                + "\"timeVarying\":false,"
                 + "\"category\":\"Example category\","
                 + "\"sourceUrl\":\"https://example.org/" + id + "\","
                 + "\"sourceLabel\":\"Example source\""
@@ -304,6 +330,7 @@ public class QuestionBankTest {
                 + "\"trueValue\":1234567,"
                 + "\"unit\":\"people\","
                 + "\"measurementBasis\":\"resident population\","
+                + "\"timeVarying\":true,"
                 + "\"asOf\":\"" + asOf + "\","
                 + "\"category\":\"National populations\","
                 + "\"sourceUrl\":\"https://example.org/" + id + "\","

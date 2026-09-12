@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "metadata": {
     "generationDate": "2026-09-10",
     "generationTimestamp": "2026-09-10T12:30:00Z",
@@ -7,11 +7,8 @@
       "Example geographical reference dataset"
     ],
     "licence": "Example only — replace with the applicable dataset licence",
-    "scriptVersion": "3.0.0"
+    "scriptVersion": "4.0.0"
   },
-  "timeVaryingCategories": [
-    "National populations"
-  ],
   "questions": [
     {
       "id": "geography-river-thames-length",
@@ -19,6 +16,7 @@
       "trueValue": 346.0,
       "unit": "kilometres",
       "measurementBasis": "river length along the main channel",
+      "timeVarying": false,
       "category": "geography",
       "sourceUrl": "https://example.org/river-thames",
       "sourceLabel": "Example geographical reference"
@@ -29,6 +27,7 @@
       "trueValue": 1234567,
       "unit": "people",
       "measurementBasis": "resident population",
+      "timeVarying": true,
       "asOf": "2024-12-31",
       "category": "National populations",
       "sourceUrl": "https://example.org/exampleland-population-2024",

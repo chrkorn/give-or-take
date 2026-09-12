@@ -88,3 +88,18 @@ category mix.
 **Force equal counts in every matrix cell.** Rejected because this would manufacture a uniform
 distribution, promote weak source candidates merely to fill quotas, and repeat the quota-driven
 obscurity problem removed under ADR 0011.
+
+## Amendments
+
+**2026-09-12 — volatility moved from category to question.** A live feasibility query showed that
+requiring a point-in-time qualifier on every P2046 statement removes most islands, lakes, and
+national parks and leaves too few defensible candidates to span the intended magnitudes. Directly
+referenced, familiar P2046 candidates without that qualifier do span `10^0`–`10^7` square
+kilometres. Treating their retrieval date as the measurement date was rejected because it would
+make the prompt more precise-looking without adding evidence.
+
+The earlier decision that every Areas question is time-varying is superseded. Question-bank version
+4 records volatility per question. Stable, source-reviewed physical measurements may omit `asOf`;
+changing jurisdictional boundaries and protected areas still require a genuine reference date.
+This preserves one broad Areas category without weakening date validation for the records that need
+it.

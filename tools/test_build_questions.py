@@ -279,7 +279,7 @@ class BuildQuestionsTest(unittest.TestCase):
             ),
         )
 
-    def test_question_document_matches_version_three_schema(self):
+    def test_question_document_matches_version_four_schema(self):
         candidate = candidate_for("Q42", decimal.Decimal("123.5"), "Mountain elevations")
         document = build_questions.question_document(
             [candidate],
@@ -292,24 +292,41 @@ class BuildQuestionsTest(unittest.TestCase):
             "2026-09-11T12:00:00Z",
         )
 
-        self.assertEqual(3, document["version"])
+        self.assertEqual(4, document["version"])
         self.assertEqual("2026-09-11", document["metadata"]["generationDate"])
-        self.assertEqual("3.0.0", document["metadata"]["scriptVersion"])
-        self.assertEqual(
-            ["National populations"], document["timeVaryingCategories"]
-        )
+        self.assertEqual("4.0.0", document["metadata"]["scriptVersion"])
         self.assertEqual(123.5, document["questions"][0]["trueValue"])
         self.assertEqual("metres", document["questions"][0]["unit"])
         self.assertEqual(
             "elevation above sea level",
             document["questions"][0]["measurementBasis"],
         )
+        self.assertFalse(document["questions"][0]["timeVarying"])
         self.assertNotIn("asOf", document["questions"][0])
         self.assertNotIn("difficulty", document["questions"][0])
         self.assertEqual(
             "https://www.wikidata.org/w/index.php?title=Q42&oldid=987654321#P2044",
             document["questions"][0]["sourceUrl"],
         )
+
+    def test_question_document_marks_dated_question_as_time_varying(self):
+        candidate = candidate_for(
+            "Q42", decimal.Decimal("1234567"), "National populations"
+        )
+        document = build_questions.question_document(
+            [candidate],
+            {
+                candidate.identifier: (
+                    "According to Wikidata, what was the resident population of Example "
+                    "on 1 January 2024? Give your answer as a number of people."
+                )
+            },
+            {"Q42": 987654321},
+            "2026-09-11T12:00:00Z",
+        )
+
+        self.assertTrue(document["questions"][0]["timeVarying"])
+        self.assertEqual("2024-01-01", document["questions"][0]["asOf"])
 
     def test_queries_require_references_and_expected_qualifier(self):
         for spec in build_questions.CATEGORY_SPECS:
