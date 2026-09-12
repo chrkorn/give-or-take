@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "note": "Question ids excluded by editorial review after generation. The generator must honour this list so that regeneration reproduces the shipped bank. Each entry records why the record was rejected; see docs/question-bank-review-2026-09-12.md.",
+  "reviewedOn": "2026-09-12",
+  "excluded": [
+    {
+      "id": "wikidata-q4168-mountains",
+      "subject": "Loreley",
+      "reason": "Value 109 m does not correspond to the feature; the regional tourism authority gives 193.14 m above sea level and roughly 125-132 m above the Rhine."
+    },
+    {
+      "id": "wikidata-q158526-mountains",
+      "subject": "Monte Titano",
+      "reason": "Unresolved source disagreement: the same Wikidata revision carries an alternative 739 m statement, and other sources give 739 m or 749 m but not 756 m."
+    },
+    {
+      "id": "wikidata-q193785-mountains",
+      "subject": "Mount Tabor",
+      "reason": "Value 530 m conflicts with Israel's Nature and Parks Authority, which gives a maximum elevation of 562 m."
+    },
+    {
+      "id": "wikidata-q680161-mountains",
+      "subject": "Mount Nebo",
+      "reason": "Irredeemably ambiguous: the site distinguishes a high point near 802 m, the religious site at 710 m and a further peak at 790 m. The prompt identifies none of them."
+    },
+    {
+      "id": "wikidata-q9188-buildings",
+      "subject": "Empire State Building",
+      "reason": "Transcription failure against the cited source: 453 m is labelled architectural height citing the Skyscraper Center, which gives 381 m architectural and 443.2 m to tip. May return once the admission rules can accept it with an explicit measurement basis."
+    },
+    {
+      "id": "wikidata-q191161-buildings",
+      "subject": "30 St Mary Axe",
+      "reason": "Value 250 m is simply wrong; the architectural height is 179.8 m."
+    },
+    {
+      "id": "wikidata-q1453542-buildings",
+      "subject": "Freedom Tower",
+      "reason": "Identity ambiguity: the name is widely used for One World Trade Center, while this record describes the Miami building."
+    },
+    {
+      "id": "wikidata-q222-populations",
+      "subject": "Albania 2023",
+      "reason": "Two materially different answers are defensible: the annual estimate of 2,811,655 and the 2023 resident census count of 2,402,113."
+    },
+    {
+      "id": "wikidata-q1030463-buildings",
+      "subject": "Mode Gakuen Cocoon Tower",
+      "reason": "Recognition trivia rather than estimation, and rated difficulty 1 without any basis for a non-expert to reason from."
+    },
+    {
+      "id": "wikidata-q499019-mountains",
+      "subject": "Jebel Barkal",
+      "reason": "Almost no estimation basis from the prompt text, and invites confusion between elevation above sea level and the roughly 100 m local rise."
+    },
+    {
+      "id": "wikidata-q3090555-buildings",
+      "subject": "Tour Legende",
+      "reason": "Obscure and locationless; recognition rather than estimation."
+    },
+    {
+      "id": "wikidata-q2564383-buildings",
+      "subject": "90 West Street",
+      "reason": "Locationless and obscure; little estimation basis."
+    },
+    {
+      "id": "wikidata-q525790-buildings",
+      "subject": "Cadillac Place",
+      "reason": "Unfamiliar name offering almost no estimation basis."
+    },
+    {
+      "id": "wikidata-q206161-mountains",
+      "subject": "Mount Herzl",
+      "reason": "Urban hill whose extent and summit are not self-evident; recognition rather than estimation."
+    },
+    {
+      "id": "wikidata-q1288751-mountains",
+      "subject": "Mount Gerizim",
+      "reason": "Little basis for a user unfamiliar with it; recognition rather than estimation."
+    },
+    {
+      "id": "wikidata-q1011-populations",
+      "subject": "Cape Verde 2020",
+      "reason": "World Bank estimate presented as a single truth; the 2021 census found 491,233 residents, illustrating the estimate-versus-census method problem."
+    }
+  ]
+}

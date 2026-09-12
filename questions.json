@@ -7,7 +7,16 @@
       "Wikidata main namespace (Q-item and revision identifiers recorded per question)"
     ],
     "licence": "Wikidata structured data — CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/)",
-    "scriptVersion": "1.0.0"
+    "scriptVersion": "1.0.0",
+    "curation": {
+      "reviewedOn": "2026-09-12",
+      "review": "docs/question-bank-review-2026-09-12.md",
+      "generatedCount": 80,
+      "removedCount": 16,
+      "remainingCount": 64,
+      "exclusions": "tools/exclusions.json",
+      "note": "This file is generator output with editorially excluded records removed. Re-running the generator without honouring tools/exclusions.json would restore them."
+    }
   },
   "questions": [
     {
@@ -49,16 +58,6 @@
       "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q1374&oldid=2528730381#P2044",
       "sourceLabel": "Wikidata",
       "difficulty": 2
-    },
-    {
-      "id": "wikidata-q4168-mountains",
-      "prompt": "What is the elevation of Loreley above sea level?",
-      "trueValue": 109,
-      "unit": "metres above sea level",
-      "category": "Mountain elevations",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q4168&oldid=2533898024#P2044",
-      "sourceLabel": "Wikidata",
-      "difficulty": 4
     },
     {
       "id": "wikidata-q39231-mountains",
@@ -141,26 +140,6 @@
       "difficulty": 5
     },
     {
-      "id": "wikidata-q158526-mountains",
-      "prompt": "What is the elevation of Monte Titano above sea level?",
-      "trueValue": 756,
-      "unit": "metres above sea level",
-      "category": "Mountain elevations",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q158526&oldid=2528683035#P2044",
-      "sourceLabel": "Wikidata",
-      "difficulty": 4
-    },
-    {
-      "id": "wikidata-q193785-mountains",
-      "prompt": "What is the elevation of Mount Tabor above sea level?",
-      "trueValue": 530,
-      "unit": "metres above sea level",
-      "category": "Mountain elevations",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q193785&oldid=2528313427#P2044",
-      "sourceLabel": "Wikidata",
-      "difficulty": 3
-    },
-    {
       "id": "wikidata-q205976-mountains",
       "prompt": "What is the elevation of Mount of Olives above sea level?",
       "trueValue": 826,
@@ -169,16 +148,6 @@
       "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q205976&oldid=2538852552#P2044",
       "sourceLabel": "Wikidata",
       "difficulty": 3
-    },
-    {
-      "id": "wikidata-q206161-mountains",
-      "prompt": "What is the elevation of Mount Herzl above sea level?",
-      "trueValue": 834,
-      "unit": "metres above sea level",
-      "category": "Mountain elevations",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q206161&oldid=2528285422#P2044",
-      "sourceLabel": "Wikidata",
-      "difficulty": 4
     },
     {
       "id": "wikidata-q210722-mountains",
@@ -221,16 +190,6 @@
       "difficulty": 4
     },
     {
-      "id": "wikidata-q499019-mountains",
-      "prompt": "What is the elevation of Jebel Barkal above sea level?",
-      "trueValue": 287,
-      "unit": "metres above sea level",
-      "category": "Mountain elevations",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q499019&oldid=2503270828#P2044",
-      "sourceLabel": "Wikidata",
-      "difficulty": 5
-    },
-    {
       "id": "wikidata-q506938-mountains",
       "prompt": "What is the elevation of Corcovado above sea level?",
       "trueValue": 710,
@@ -239,36 +198,6 @@
       "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q506938&oldid=2540599195#P2044",
       "sourceLabel": "Wikidata",
       "difficulty": 5
-    },
-    {
-      "id": "wikidata-q680161-mountains",
-      "prompt": "What is the elevation of Mount Nebo above sea level?",
-      "trueValue": 808,
-      "unit": "metres above sea level",
-      "category": "Mountain elevations",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q680161&oldid=2540853365#P2044",
-      "sourceLabel": "Wikidata",
-      "difficulty": 5
-    },
-    {
-      "id": "wikidata-q1288751-mountains",
-      "prompt": "What is the elevation of Mount Gerizim above sea level?",
-      "trueValue": 881,
-      "unit": "metres above sea level",
-      "category": "Mountain elevations",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q1288751&oldid=2522185728#P2044",
-      "sourceLabel": "Wikidata",
-      "difficulty": 5
-    },
-    {
-      "id": "wikidata-q9188-buildings",
-      "prompt": "How tall is Empire State Building?",
-      "trueValue": 453,
-      "unit": "metres",
-      "category": "Building heights",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q9188&oldid=2529508250#P2048",
-      "sourceLabel": "Wikidata",
-      "difficulty": 1
     },
     {
       "id": "wikidata-q11245-buildings",
@@ -361,16 +290,6 @@
       "difficulty": 3
     },
     {
-      "id": "wikidata-q191161-buildings",
-      "prompt": "How tall is 30 St Mary Axe?",
-      "trueValue": 250,
-      "unit": "metres",
-      "category": "Building heights",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q191161&oldid=2516725727#P2048",
-      "sourceLabel": "Wikidata",
-      "difficulty": 3
-    },
-    {
       "id": "wikidata-q192680-buildings",
       "prompt": "How tall is New York Times Building?",
       "trueValue": 318.8,
@@ -441,62 +360,12 @@
       "difficulty": 5
     },
     {
-      "id": "wikidata-q525790-buildings",
-      "prompt": "How tall is Cadillac Place?",
-      "trueValue": 67.1,
-      "unit": "metres",
-      "category": "Building heights",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q525790&oldid=2541603455#P2048",
-      "sourceLabel": "Wikidata",
-      "difficulty": 5
-    },
-    {
       "id": "wikidata-q868772-buildings",
       "prompt": "How tall is Trump Tower?",
       "trueValue": 202,
       "unit": "metres",
       "category": "Building heights",
       "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q868772&oldid=2541997064#P2048",
-      "sourceLabel": "Wikidata",
-      "difficulty": 4
-    },
-    {
-      "id": "wikidata-q1030463-buildings",
-      "prompt": "How tall is Mode Gakuen Cocoon Tower?",
-      "trueValue": 204,
-      "unit": "metres",
-      "category": "Building heights",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q1030463&oldid=2485958996#P2048",
-      "sourceLabel": "Wikidata",
-      "difficulty": 1
-    },
-    {
-      "id": "wikidata-q1453542-buildings",
-      "prompt": "How tall is Freedom Tower?",
-      "trueValue": 78,
-      "unit": "metres",
-      "category": "Building heights",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q1453542&oldid=2530479276#P2048",
-      "sourceLabel": "Wikidata",
-      "difficulty": 5
-    },
-    {
-      "id": "wikidata-q2564383-buildings",
-      "prompt": "How tall is 90 West Street?",
-      "trueValue": 99,
-      "unit": "metres",
-      "category": "Building heights",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q2564383&oldid=2540634341#P2048",
-      "sourceLabel": "Wikidata",
-      "difficulty": 5
-    },
-    {
-      "id": "wikidata-q3090555-buildings",
-      "prompt": "How tall is Tour Légende?",
-      "trueValue": 70,
-      "unit": "metres",
-      "category": "Building heights",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q3090555&oldid=2485962143#P2048",
       "sourceLabel": "Wikidata",
       "difficulty": 4
     },
@@ -661,16 +530,6 @@
       "difficulty": 1
     },
     {
-      "id": "wikidata-q222-populations",
-      "prompt": "What was the population of Albania in 2023?",
-      "trueValue": 2811655,
-      "unit": "people",
-      "category": "National populations",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q222&oldid=2540617470#P1082",
-      "sourceLabel": "Wikidata",
-      "difficulty": 3
-    },
-    {
       "id": "wikidata-q228-populations",
       "prompt": "What was the population of Andorra in 2026?",
       "trueValue": 89752,
@@ -797,16 +656,6 @@
       "unit": "people",
       "category": "National populations",
       "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q921&oldid=2532533719#P1082",
-      "sourceLabel": "Wikidata",
-      "difficulty": 5
-    },
-    {
-      "id": "wikidata-q1011-populations",
-      "prompt": "What was the population of Cape Verde in 2020?",
-      "trueValue": 555988,
-      "unit": "people",
-      "category": "National populations",
-      "sourceUrl": "https://www.wikidata.org/w/index.php?title=Q1011&oldid=2542095039#P1082",
       "sourceLabel": "Wikidata",
       "difficulty": 5
     }
