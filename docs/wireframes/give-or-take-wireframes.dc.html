@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<style>
+body{margin:0;background:#ebebe9;font-family:"Helvetica Neue",Helvetica,sans-serif;color:#1a1a1a}
+a{color:#1a1a1a}a:hover{color:#5a5a5a}
+.hd{padding:40px 44px 26px}
+.h1{font:700 22px/1.1 ui-monospace,"SF Mono",Menlo,monospace;letter-spacing:.01em;margin:0 0 8px}
+.hsub{font:400 12.5px/1.6 ui-monospace,"SF Mono",Menlo,monospace;color:#5a5a5a;max-width:760px;margin:0}
+.legend{display:flex;gap:26px;flex-wrap:wrap;margin-top:18px;font:400 11px/1.3 ui-monospace,Menlo,monospace;color:#4a4a4a}
+.lg{display:flex;align-items:center;gap:7px}
+.row{display:flex;gap:36px;align-items:flex-start;padding:0 44px 70px}
+.col{display:flex;flex-direction:column;gap:9px;width:360px;flex:none;scroll-margin-top:16px}
+.t{font:700 13px/1.2 ui-monospace,Menlo,monospace;letter-spacing:.04em;display:flex;align-items:center;gap:8px}
+.oid{font:700 10.5px/1 ui-monospace,Menlo,monospace;padding:4px 6px;background:#1a1a1a;color:#fff;text-decoration:none;border-radius:3px}
+.sub{font:400 11px/1.4 ui-monospace,Menlo,monospace;color:#6e6e6e;margin:-4px 0 0}
+.ab{width:360px;height:800px;border:1.5px solid #1a1a1a;background:#fff;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.sb{height:20px;flex:none;border-bottom:1px solid #c6c6c6;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font:10px/1 ui-monospace,Menlo,monospace;color:#8a8a8a}
+.tb{height:46px;flex:none;border-bottom:1.5px solid #1a1a1a;display:flex;align-items:center;gap:10px;padding:0 12px;font:600 15px/1 "Helvetica Neue",Helvetica,sans-serif;position:relative}
+.bd{flex:1;padding:14px;display:flex;flex-direction:column;gap:12px;min-height:0}
+.bx{border:1.5px solid #1a1a1a;background:#fff;position:relative}
+.mk{position:absolute;width:18px;height:18px;border-radius:50%;border:1.5px solid #1a1a1a;background:#fff;font:700 10px/1 ui-monospace,Menlo,monospace;display:flex;align-items:center;justify-content:center;right:5px;top:50%;transform:translateY(-50%);z-index:3}
+.btn{border:1.5px solid #1a1a1a;background:#fff;height:44px;flex:none;display:flex;align-items:center;justify-content:center;font:600 15px/1 "Helvetica Neue",Helvetica,sans-serif;position:relative}
+.btnp{background:#d7d7d7;height:54px;font-size:17px}
+.btnd{border-style:dashed;border-color:#9b9b9b;color:#9b9b9b;background:#f5f5f5}
+.fld{border:1.5px solid #1a1a1a;height:46px;flex:none;display:flex;align-items:center;padding:0 10px;font:400 16px/1 "Helvetica Neue",Helvetica,sans-serif;background:#fff;position:relative;gap:8px}
+.cap{font:400 11.5px/1.4 "Helvetica Neue",Helvetica,sans-serif;color:#6a6a6a}
+.lbl{font:700 10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#4a4a4a}
+.xb{background-image:linear-gradient(to top right,transparent calc(50% - .75px),#a2a2a2 calc(50% - .75px),#a2a2a2 calc(50% + .75px),transparent calc(50% + .75px)),linear-gradient(to bottom right,transparent calc(50% - .75px),#a2a2a2 calc(50% - .75px),#a2a2a2 calc(50% + .75px),transparent calc(50% + .75px));border:1.5px solid #1a1a1a}
+.bar{background:#d6d6d6;height:9px}
+.kbd{flex:none;background:#f2f2f2;border-top:1.5px solid #1a1a1a}
+.kcap{font:400 9.5px/1 ui-monospace,Menlo,monospace;color:#8a8a8a;text-align:center;padding:5px 0 3px;letter-spacing:.06em}
+.kgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 8px 8px}
+.key{border:1px solid #a0a0a0;background:#e6e6e6;display:flex;align-items:center;justify-content:center;height:36px;font:400 15px/1 "Helvetica Neue",Helvetica,sans-serif;color:#3a3a3a}
+.notes{display:flex;flex-direction:column;gap:6px;padding-top:9px;border-top:1px solid #c9c9c9;margin-top:3px}
+.nt{display:flex;gap:8px;align-items:flex-start;font:400 11.5px/1.45 ui-monospace,Menlo,monospace;color:#333}
+.nn{flex:none;width:16px;height:16px;border-radius:50%;border:1.2px solid #1a1a1a;font:700 9.5px/1 ui-monospace,Menlo,monospace;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.tradeoff{font:400 11.5px/1.5 ui-monospace,Menlo,monospace;color:#1a1a1a;border:1.5px solid #1a1a1a;padding:9px 10px;background:#f6f6f6}
+.tick{position:absolute;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px}
+.tickline{width:1px;height:6px;background:#6a6a6a}
+.ticklbl{font:400 10px/1 ui-monospace,Menlo,monospace;color:#6a6a6a}
+.seg{flex:1;display:flex;align-items:center;justify-content:center;height:40px;font:600 14px/1 "Helvetica Neue",Helvetica,sans-serif;border-right:1.5px solid #1a1a1a}
+.flowbox{position:absolute;border:1.5px solid #1a1a1a;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:600 14px/1.2 "Helvetica Neue",Helvetica,sans-serif;text-align:center}
+.flowsub{font:400 10px/1.2 ui-monospace,Menlo,monospace;color:#6a6a6a}
+.flowlbl{position:absolute;font:400 10.5px/1.25 ui-monospace,Menlo,monospace;color:#1a1a1a;background:#fff;padding:2px 4px;max-width:150px}
+</style>
+</helmet>
+
+<div class="hd">
+<h1 class="h1">Give or Take — wireframes</h1>
+<p class="hsub">Android phone, portrait only. Artboards 360 × 800 dp, 1 px = 1 dp. Greyscale, structure only — spacing, weights and type are indicative, not specified. Numbered markers on each artboard are explained in the list underneath it. The range input is resolved to <b>04-quiz-range</b>; the two rejected alternatives <a class="oid" href="#4a">4a</a> and <a class="oid" href="#4b">4b</a> are kept at the far right of the canvas.</p>
+<div class="legend">
+<div class="lg"><span style="width:26px;height:14px;border:1.5px solid #1a1a1a;display:block"></span>control / container</div>
+<div class="lg"><span style="width:26px;height:14px;border:1.5px solid #1a1a1a;background:#d7d7d7;display:block"></span>filled = selected or primary</div>
+<div class="lg"><span style="width:26px;height:14px;border:1.5px dashed #9b9b9b;background:#f5f5f5;display:block"></span>disabled / suppressed</div>
+<div class="lg"><span class="xb" style="width:26px;height:14px;display:block"></span>image or chart placeholder</div>
+<div class="lg"><span class="bar" style="width:26px;display:block"></span>text whose wording is not yet decided</div>
+</div>
+</div>
+
+<div class="row">
+
+<div class="col" id="s01">
+<div class="t">01-home</div>
+<div class="ab">
+<sc-if value="{{ showStatusBars }}" hint-placeholder-val="{{ true }}"><div class="sb"><span>9:41</span><span>▮▮▮ ▮▮</span></div></sc-if>
+<div class="bd" style="gap:16px">
+<div style="position:relative;padding:16px 0 4px"><div style="font:700 30px/1.1 'Helvetica Neue',Helvetica,sans-serif">Give or Take</div><span class="mk" style="top:24px;transform:none">1</span></div>
+<div class="bx" style="padding:12px 34px 12px 12px"><div class="lbl">CURRENT LEVEL</div><div style="font:600 19px/1.2 'Helvetica Neue',Helvetica,sans-serif;margin-top:6px">Level 2 — 90% ranges</div><div class="cap" style="margin-top:6px">Levels change the answer mode, not the questions.</div><span class="mk">2</span></div>
+<div class="bx" style="padding:12px 34px 12px 12px"><div class="lbl">PERSONAL BEST</div><div style="font:600 26px/1.1 'Helvetica Neue',Helvetica,sans-serif;margin-top:6px">8 410</div><div class="cap" style="margin-top:5px">10 questions · 4 Sep 2026</div><span class="mk">3</span></div>
+<div style="flex:1"></div>
+<div class="btn btnp">Start session<span class="mk">4</span></div>
+<div style="display:flex;gap:12px;position:relative"><div class="btn" style="flex:1">Statistics</div><div class="btn" style="flex:1">Settings</div><span class="mk" style="right:-1px;top:-12px;transform:none">5</span></div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}">
+<div class="notes">
+<div class="nt"><span class="nn">1</span><span>App name only. No sign-in, no drawer — this is the whole top level.</span></div>
+<div class="nt"><span class="nn">2</span><span>Level is stated as the answer mode it unlocks, so the label explains itself. Not tappable; the mode can still be overridden in Settings.</span></div>
+<div class="nt"><span class="nn">3</span><span>Best score across all sessions. On first run this reads "—" rather than 0.</span></div>
+<div class="nt"><span class="nn">4</span><span>Starts a session with the length and answer mode held in Settings. No configuration step in between.</span></div>
+<div class="nt"><span class="nn">5</span><span>Both are leaves: Back from either returns here.</span></div>
+</div>
+</sc-if>
+</div>
+
+<div class="col" id="s02">
+<div class="t">02-quiz-number</div>
+<div class="ab">
+<sc-if value="{{ showStatusBars }}" hint-placeholder-val="{{ true }}"><div class="sb"><span>9:41</span><span>▮▮▮ ▮▮</span></div></sc-if>
+<div class="tb"><span style="font:400 18px/1 'Helvetica Neue',Helvetica,sans-serif">←</span><span>Question 3 of 10</span><span class="mk">1</span></div>
+<div style="height:6px;flex:none;border-bottom:1.5px solid #1a1a1a;background:#f0f0f0"><div style="width:30%;height:100%;background:#9a9a9a"></div></div>
+<div class="bd">
+<div class="bx" style="padding:12px 34px 12px 12px;height:132px;overflow:hidden"><div style="font:400 17px/1.35 'Helvetica Neue',Helvetica,sans-serif">According to statistik-nord.de, what was the land area of Sylt in Nordfriesland district on 1 July 2017, in square kilometres?</div><span class="mk" style="top:9px;transform:none">2</span></div>
+<div class="lbl" style="margin-top:2px">YOUR ANSWER</div>
+<div class="fld" style="padding-right:34px"><span style="flex:1">99<span style="border-left:1.5px solid #1a1a1a;margin-left:1px">&nbsp;</span></span><span style="color:#5a5a5a;font-size:15px">km²</span><span class="mk">3</span></div>
+<div class="cap">Unit is fixed by the question — enter the number only.</div>
+<div style="flex:1"></div>
+<div class="btn btnp" style="height:48px">Submit<span class="mk">4</span></div>
+</div>
+<div class="kbd" style="position:relative">
+<div class="kcap">SOFT KEYBOARD — NUMBER PAD</div>
+<div class="kgrid"><div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key">.</div><div class="key">0</div><div class="key">⌫</div></div>
+<span class="mk" style="top:10px;transform:none">5</span>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}">
+<div class="notes">
+<div class="nt"><span class="nn">1</span><span>Position in the session as text plus a bar. Nothing is timed.</span></div>
+<div class="nt"><span class="nn">2</span><span>Prompt block is a fixed 132 dp — about 5 lines at 17 sp. Longer prompts scroll inside this box, so the field and Submit never move down the screen. Sized on the 148-character example shown; holds 200.</span></div>
+<div class="nt"><span class="nn">3</span><span>numberDecimal field. Unit is a static right-aligned suffix, never editable.</span></div>
+<div class="nt"><span class="nn">4</span><span>Submit is pinned directly above the IME, not at the bottom of the window, so it is reachable with the keyboard open. Enabled here because the input is valid.</span></div>
+<div class="nt"><span class="nn">5</span><span>Keyboard is open on entry (field auto-focused). windowSoftInputMode=adjustResize; only the prompt box gives up height.</span></div>
+</div>
+</sc-if>
+</div>
+
+<div class="col" id="s03">
+<div class="t">03-quiz-number-invalid</div>
+<div class="ab">
+<sc-if value="{{ showStatusBars }}" hint-placeholder-val="{{ true }}"><div class="sb"><span>9:41</span><span>▮▮▮ ▮▮</span></div></sc-if>
+<div class="tb"><span style="font:400 18px/1 'Helvetica Neue',Helvetica,sans-serif">←</span><span>Question 3 of 10</span></div>
+<div style="height:6px;flex:none;border-bottom:1.5px solid #1a1a1a;background:#f0f0f0"><div style="width:30%;height:100%;background:#9a9a9a"></div></div>
+<div class="bd">
+<div class="bx" style="padding:12px;height:132px;overflow:hidden"><div style="font:400 17px/1.35 'Helvetica Neue',Helvetica,sans-serif">According to statistik-nord.de, what was the land area of Sylt in Nordfriesland district on 1 July 2017, in square kilometres?</div></div>
+<div class="lbl" style="margin-top:2px">YOUR ANSWER</div>
+<div class="fld" style="border-width:3px;padding-right:34px"><span style="flex:1">0<span style="border-left:1.5px solid #1a1a1a;margin-left:1px">&nbsp;</span></span><span style="color:#5a5a5a;font-size:15px">km²</span><span class="mk">1</span></div>
+<div style="display:flex;gap:6px;align-items:flex-start;position:relative;padding-right:30px"><span style="flex:none;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid #1a1a1a;margin-top:2px"></span><span style="font:400 12.5px/1.3 'Helvetica Neue',Helvetica,sans-serif">Enter a number greater than zero</span><span class="mk" style="top:0;transform:none">2</span></div>
+<div style="flex:1"></div>
+<div class="btn btnp btnd" style="height:48px;background:#f5f5f5">Submit<span class="mk">3</span></div>
+</div>
+<div class="kbd">
+<div class="kcap">SOFT KEYBOARD — NUMBER PAD</div>
+<div class="kgrid"><div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key">.</div><div class="key">0</div><div class="key">⌫</div></div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}">
+<div class="notes">
+<div class="nt"><span class="nn">1</span><span>Error state is carried by border weight (1.5 → 3 dp) and the triangle glyph, never by colour alone.</span></div>
+<div class="nt"><span class="nn">2</span><span>Inline message sits under the field, above the button. Appears on the first Submit attempt, then validates on every keystroke and clears as soon as the value is valid.</span></div>
+<div class="nt"><span class="nn">3</span><span>Submit stays visible but dashed and greyed rather than being hidden, so the blocked state and its reason are on screen together.</span></div>
+</div>
+</sc-if>
+</div>
+
+<div class="col" id="4c">
+<div class="t">04-quiz-range</div>
+<div class="sub">Chosen design — one guess, one uncertainty dial; bounds derived</div>
+<div class="ab">
+<sc-if value="{{ showStatusBars }}" hint-placeholder-val="{{ true }}"><div class="sb"><span>9:41</span><span>▮▮▮ ▮▮</span></div></sc-if>
+<div class="tb"><span style="font:400 18px/1 'Helvetica Neue',Helvetica,sans-serif">←</span><span>Question 3 of 10</span></div>
+<div style="height:6px;flex:none;border-bottom:1.5px solid #1a1a1a;background:#f0f0f0"><div style="width:30%;height:100%;background:#9a9a9a"></div></div>
+<div class="bd" style="gap:11px">
+<div class="bx" style="padding:12px;height:92px;overflow:hidden"><div style="font:400 17px/1.35 'Helvetica Neue',Helvetica,sans-serif">What is the architectural height of the Shanghai Tower in Shanghai, in metres?</div></div>
+<div><div class="lbl">BEST GUESS</div><div class="fld" style="height:52px;margin-top:5px;padding-right:34px"><span style="flex:1;font-size:20px">500<span style="border-left:1.5px solid #1a1a1a;margin-left:1px">&nbsp;</span></span><span style="color:#5a5a5a;font-size:14px">m</span><span class="mk">1</span></div></div>
+<div class="lbl" style="margin-top:2px">HOW SURE ARE YOU?</div>
+<div style="position:relative;padding-top:26px">
+<div style="position:relative;height:38px;border:1.5px solid #1a1a1a;background:#fff">
+<div style="position:absolute;left:0;width:23.6%;top:0;bottom:0;background:#d4d4d4;border-right:1.5px solid #1a1a1a"></div>
+<div style="position:absolute;left:23.6%;margin-left:-7px;top:-5px;width:14px;height:46px;border:1.5px solid #1a1a1a;background:#fff"></div>
+<div style="position:absolute;left:23.6%;top:-25px;transform:translateX(-50%);border:1.5px solid #1a1a1a;background:#fff;padding:2px 6px;font:700 12px/1 ui-monospace,Menlo,monospace">×3.4</div>
+</div>
+<div style="position:relative;height:34px;margin:7px 20px 0">
+<div class="tick" style="left:0"><div class="tickline"></div><div class="ticklbl">×1.2</div></div>
+<div class="tick" style="left:5%"><div class="tickline" style="height:18px"></div><div class="ticklbl">×1.5</div></div>
+<div class="tick" style="left:11.6%"><div class="tickline"></div><div class="ticklbl">×2</div></div>
+<div class="tick" style="left:20.7%"><div class="tickline" style="height:18px"></div><div class="ticklbl">×3</div></div>
+<div class="tick" style="left:32.3%"><div class="tickline"></div><div class="ticklbl">×5</div></div>
+<div class="tick" style="left:47.9%"><div class="tickline" style="height:18px"></div><div class="ticklbl">×10</div></div>
+<div class="tick" style="left:72.8%"><div class="tickline"></div><div class="ticklbl">×30</div></div>
+<div class="tick" style="left:100%"><div class="tickline" style="height:18px"></div><div class="ticklbl">×100</div></div>
+</div>
+<span class="mk" style="top:38px;transform:none">2</span>
+</div>
+<div class="cap" style="position:relative;padding-right:26px">Continuous — the thumb rests anywhere between the labelled factors.<span class="mk" style="top:-1px;right:0;transform:none">3</span></div>
+<div class="bx" style="padding:11px 34px 11px 11px"><div class="lbl">SO YOUR 90% RANGE IS</div><div style="font:600 19px/1.25 'Helvetica Neue',Helvetica,sans-serif;margin-top:6px">147 m – 1 700 m</div><div class="cap" style="margin-top:5px">Within a factor of 3.4 of 500 m.</div><span class="mk">4</span></div>
+<div style="position:relative;padding-right:30px"><span style="font:400 12.5px/1.3 'Helvetica Neue',Helvetica,sans-serif;text-decoration:underline">Set the two bounds myself</span><span class="mk" style="top:-2px;transform:none">5</span></div>
+<div style="flex:1"></div>
+<div class="btn btnp" style="height:48px">Submit range</div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}">
+<div class="notes">
+<div class="nt"><span class="nn">1</span><span>Identical field to the single-number screen, so the step up to Level 2 adds one control rather than replacing the screen.</span></div>
+<div class="nt"><span class="nn">2</span><span>One thumb on a multiplier dial, not on the answer axis — it has no end stops in answer space, so it can neither clip a true value nor hint at its magnitude. The dial runs over uncertainty factors rather than over the answer axis, so unlike <a class="oid" href="#4a">4a</a> it cannot leak the answer's order of magnitude at all.</span></div>
+<div class="nt"><span class="nn">3</span><span>Continuous, not detented: the thumb rests at any factor and the live label reads it back. Coarse steps would quantise the very coverage the app measures, making the instrument partly responsible for the result — a user whose honest uncertainty is ×4 must not be forced to claim ×3 or ×10.</span></div>
+<div class="nt"><span class="nn">4</span><span>Bounds are derived and shown live, so the user sees the actual claim being scored, in the same words the Feedback screen will use.</span></div>
+<div class="nt"><span class="nn">5</span><span>Escape hatch to the two-field entry of <a class="oid" href="#4b">4b</a> for asymmetric ranges. Same answer, recorded identically.</span></div>
+</div>
+<div class="tradeoff"><b>Trade-off.</b> Sidesteps the log-scale problem: nothing is ever off-scale, the axis cannot leak an order of magnitude, and the dial's unit — "within a factor of N" — is the quantity the app is teaching. But it forces ranges symmetric in log space, which is wrong for bounded quantities (a percentage cannot exceed 100), and the bounds the user is judged on are one derivation away from what they typed.</div>
+</sc-if>
+</div>
+
+<div class="col" id="s05">
+<div class="t">05-feedback</div>
+<div class="ab">
+<sc-if value="{{ showStatusBars }}" hint-placeholder-val="{{ true }}"><div class="sb"><span>9:41</span><span>▮▮▮ ▮▮</span></div></sc-if>
+<div class="tb"><span>Question 3 of 10</span></div>
+<div class="bd" style="gap:12px">
+<div class="cap" style="line-height:1.35">Architectural height of the Shanghai Tower, in metres</div>
+<div style="display:flex;border:1.5px solid #1a1a1a;position:relative">
+<div class="seg" style="color:#9a9a9a;gap:6px"><span style="width:11px;height:11px;border-radius:50%;background:#1a1a1a"></span>CORRECT</div>
+<div class="seg" style="background:#d7d7d7;border-left:1.5px solid #1a1a1a;border-right:1.5px solid #1a1a1a;gap:6px;box-shadow:inset 0 0 0 2px #1a1a1a"><span style="width:0;height:0;border-left:6.5px solid transparent;border-right:6.5px solid transparent;border-bottom:11px solid #1a1a1a"></span>CLOSE</div>
+<div class="seg" style="color:#9a9a9a;border-right:none;gap:6px">✕ WRONG</div>
+<span class="mk" style="top:-9px;right:-9px;transform:none">1</span>
+</div>
+<div class="bx" style="padding:0">
+<div style="display:flex;justify-content:space-between;padding:11px 34px 11px 12px;border-bottom:1px solid #c6c6c6;position:relative"><span class="cap" style="font-size:13px">Your answer</span><span style="font:600 17px/1 'Helvetica Neue',Helvetica,sans-serif">420 m</span></div>
+<div style="display:flex;justify-content:space-between;padding:11px 34px 11px 12px;position:relative"><span class="cap" style="font-size:13px">True value</span><span style="font:700 17px/1 'Helvetica Neue',Helvetica,sans-serif">632 m</span><span class="mk" style="top:-12px">2</span></div>
+</div>
+<div class="bx" style="padding:12px 12px 14px;position:relative">
+<div style="display:flex;align-items:center;gap:8px"><span style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:13px solid #1a1a1a"></span><span style="font:700 18px/1 'Helvetica Neue',Helvetica,sans-serif">1.5× TOO LOW</span></div>
+<div style="position:relative;height:34px;margin-top:12px">
+<div style="position:absolute;left:0;right:0;top:16px;height:1.5px;background:#1a1a1a"></div>
+<div style="position:absolute;left:30%;top:10px;width:13px;height:13px;border-radius:50%;background:#1a1a1a;margin-left:-6.5px"></div>
+<div style="position:absolute;left:30%;top:-2px;transform:translateX(-50%);font:400 10px/1 ui-monospace,Menlo,monospace">you</div>
+<div style="position:absolute;left:62%;top:6px;width:2.5px;height:22px;background:#1a1a1a"></div>
+<div style="position:absolute;left:62%;top:-2px;transform:translateX(-50%);font:400 10px/1 ui-monospace,Menlo,monospace">true</div>
+<div style="position:absolute;left:0;top:26px;font:400 9.5px/1 ui-monospace,Menlo,monospace;color:#7a7a7a">100</div>
+<div style="position:absolute;right:0;top:26px;font:400 9.5px/1 ui-monospace,Menlo,monospace;color:#7a7a7a">1 000</div>
+</div>
+<span class="mk" style="top:14px;transform:none">3</span>
+</div>
+<div style="position:relative;padding-right:30px"><span style="font:400 12.5px/1.35 'Helvetica Neue',Helvetica,sans-serif;text-decoration:underline">Source: skyscrapercenter.com ↗</span><span class="mk" style="top:-2px;transform:none">4</span></div>
+<div style="flex:1"></div>
+<div class="cap">Score this question: 74 / 100</div>
+<div class="btn btnp" style="height:48px">Next<span class="mk">5</span></div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}">
+<div class="notes">
+<div class="nt"><span class="nn">1</span><span>Band uses three redundant channels — word, shape (circle / triangle / cross) and a fixed slot position — so it survives greyscale print and colour-blind viewing. The unreached bands stay visible, greyed, so the scale is legible at a glance.</span></div>
+<div class="nt"><span class="nn">2</span><span>Answer above truth, same units, same formatting, so the comparison is direct.</span></div>
+<div class="nt"><span class="nn">3</span><span>Direction is stated twice: the ×-factor sentence with a down-pointing triangle, and a log number line placing the guess relative to the truth. Reading only the magnitude is not possible.</span></div>
+<div class="nt"><span class="nn">4</span><span>Every true value is attributed. Tapping fires a plain implicit ACTION_VIEW intent and hands the URL to whatever browser the device has — no androidx.browser dependency. If nothing resolves the intent the app catches it and shows the URL as copyable text instead of crashing.</span></div>
+<div class="nt"><span class="nn">5</span><span>Only forward action. Back is intercepted — see <a class="oid" href="#s11">11</a>. In range mode this screen swaps rows 2–3 for "Your range: 147 – 1 700 m · contained the true value ✓" and a band strip showing the true value inside or outside the range.</span></div>
+</div>
+</sc-if>
+</div>
+
+<div class="col" id="s06">
+<div class="t">06-result</div>
+<div class="ab">
+<sc-if value="{{ showStatusBars }}" hint-placeholder-val="{{ true }}"><div class="sb"><span>9:41</span><span>▮▮▮ ▮▮</span></div></sc-if>
+<div class="tb"><span>Session complete</span></div>
+<div class="bd" style="gap:14px">
+<div class="bx" style="padding:14px 34px 14px 12px"><div class="lbl">SESSION SCORE</div><div style="font:700 40px/1 'Helvetica Neue',Helvetica,sans-serif;margin-top:8px">6 240</div><span class="mk">1</span></div>
+<div class="bx" style="border-width:3px;padding:10px 34px 10px 12px;display:flex;align-items:center;gap:9px"><span style="flex:none;width:12px;height:12px;background:#1a1a1a;transform:rotate(45deg)"></span><div><div style="font:700 14px/1.2 'Helvetica Neue',Helvetica,sans-serif">NEW PERSONAL BEST</div><div class="cap" style="margin-top:3px">Previous 5 980</div></div><span class="mk">2</span></div>
+<div style="display:flex;border:1.5px solid #1a1a1a;position:relative">
+<div class="seg" style="flex-direction:column;gap:4px;height:64px"><span style="width:11px;height:11px;border-radius:50%;background:#1a1a1a"></span><span style="font-size:13px">4 correct</span></div>
+<div class="seg" style="flex-direction:column;gap:4px;height:64px"><span style="width:0;height:0;border-left:6.5px solid transparent;border-right:6.5px solid transparent;border-bottom:11px solid #1a1a1a"></span><span style="font-size:13px">3 close</span></div>
+<div class="seg" style="flex-direction:column;gap:4px;height:64px;border-right:none"><span style="font-size:12px">✕</span><span style="font-size:13px">3 wrong</span></div>
+<span class="mk" style="top:-9px;right:-9px;transform:none">3</span>
+</div>
+<div class="bx" style="padding:12px 12px 14px;position:relative">
+<div class="lbl">THIS SESSION'S CALIBRATION</div>
+<div style="font:600 15px/1.35 'Helvetica Neue',Helvetica,sans-serif;margin-top:7px;padding-right:22px">6 of 10 of your ranges contained the true value.</div>
+<div style="display:flex;gap:6px;margin-top:11px">
+<span style="width:18px;height:18px;border-radius:50%;background:#1a1a1a"></span><span style="width:18px;height:18px;border-radius:50%;background:#1a1a1a"></span><span style="width:18px;height:18px;border-radius:50%;border:1.5px solid #1a1a1a"></span><span style="width:18px;height:18px;border-radius:50%;background:#1a1a1a"></span><span style="width:18px;height:18px;border-radius:50%;background:#1a1a1a"></span><span style="width:18px;height:18px;border-radius:50%;border:1.5px solid #1a1a1a"></span><span style="width:18px;height:18px;border-radius:50%;border:1.5px solid #1a1a1a"></span><span style="width:18px;height:18px;border-radius:50%;background:#1a1a1a"></span><span style="width:18px;height:18px;border-radius:50%;background:#1a1a1a"></span><span style="width:18px;height:18px;border-radius:50%;border:1.5px solid #1a1a1a"></span>
+</div>
+<div class="cap" style="margin-top:9px">Filled = contained the answer. Aiming for 9 in 10.</div>
+<span class="mk" style="top:14px;transform:none">4</span>
+</div>
+<div style="flex:1"></div>
+<div class="btn btnp">Play again</div>
+<div style="display:flex;gap:12px;position:relative"><div class="btn" style="flex:1">Home</div><div class="btn" style="flex:1">Share ↗</div><span class="mk" style="right:-1px;top:-12px;transform:none">5</span></div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}">
+<div class="notes">
+<div class="nt"><span class="nn">1</span><span>Score first and largest — it is what the user came back for.</span></div>
+<div class="nt"><span class="nn">2</span><span>Only present when the best was beaten; otherwise this row reads "Personal best 8 410" in the plain 1.5 dp box. Heavier border, not colour, marks it.</span></div>
+<div class="nt"><span class="nn">3</span><span>Same three shapes and same slot order as Feedback <a class="oid" href="#s05">05</a>, so the vocabulary is learned once.</span></div>
+<div class="nt"><span class="nn">4</span><span>Range mode only — hidden entirely after a single-number session. Ten dots turn 6/10 into a picture rather than another number, and the target is stated so a bad result is interpretable without opening Statistics.</span></div>
+<div class="nt"><span class="nn">5</span><span>Share opens the system sheet with a one-line text summary. Back from this screen goes Home, not into the finished session — see <a class="oid" href="#s11">11</a>.</span></div>
+</div>
+</sc-if>
+</div>
+
+<div class="col" id="s07">
+<div class="t">07-statistics</div>
+<div class="ab">
+<sc-if value="{{ showStatusBars }}" hint-placeholder-val="{{ true }}"><div class="sb"><span>9:41</span><span>▮▮▮ ▮▮</span></div></sc-if>
+<div class="tb"><span style="font:400 18px/1 'Helvetica Neue',Helvetica,sans-serif">←</span><span>Statistics</span></div>
+<div class="bd" style="gap:12px;overflow:hidden">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative">
+<div class="bx" style="padding:9px 10px"><div class="lbl">SESSIONS</div><div style="font:700 21px/1 'Helvetica Neue',Helvetica,sans-serif;margin-top:5px">37</div></div>
+<div class="bx" style="padding:9px 10px"><div class="lbl">QUESTIONS</div><div style="font:700 21px/1 'Helvetica Neue',Helvetica,sans-serif;margin-top:5px">412</div></div>
+<div class="bx" style="padding:9px 10px"><div class="lbl">BEST SCORE</div><div style="font:700 21px/1 'Helvetica Neue',Helvetica,sans-serif;margin-top:5px">8 410</div></div>
+<div class="bx" style="padding:9px 10px"><div class="lbl">MEAN CLOSENESS</div><div style="font:700 21px/1 'Helvetica Neue',Helvetica,sans-serif;margin-top:5px">1.8×</div></div>
+<span class="mk" style="right:-9px;top:-9px;transform:none">1</span>
+</div>
+<div class="bx" style="border-width:2.5px;padding:11px 11px 13px;position:relative">
+<div style="font:700 15px/1 'Helvetica Neue',Helvetica,sans-serif">Confidently Wrong</div>
+<div style="font:400 13px/1.4 'Helvetica Neue',Helvetica,sans-serif;margin-top:7px;padding-right:20px">Your 90% ranges contained the true value <b>61%</b> of the time. They are too narrow — you are more confident than the answers justify.</div>
+<div style="position:relative;height:20px;border:1.5px solid #1a1a1a;margin-top:11px;background:#fff">
+<div style="position:absolute;left:0;top:0;bottom:0;width:61%;background:#c9c9c9"></div>
+<div style="position:absolute;left:90%;top:-5px;bottom:-5px;width:0;border-left:2px dashed #1a1a1a"></div>
+</div>
+<div style="display:flex;justify-content:space-between;margin-top:5px"><span class="ticklbl">empirical 61%</span><span class="ticklbl">nominal 90%</span></div>
+<div style="display:flex;justify-content:space-between;margin-top:9px;border-top:1px solid #c6c6c6;padding-top:9px"><span class="cap" style="font-size:12px">Mean range width</span><span style="font:600 13px/1 'Helvetica Neue',Helvetica,sans-serif">×12</span></div>
+<span class="mk" style="top:12px;transform:none">2</span>
+</div>
+<div class="bx" style="padding:10px 10px 8px;position:relative">
+<div class="lbl">COVERAGE OVER TIME</div>
+<div style="display:flex;gap:6px;margin-top:8px">
+<div style="position:relative;width:22px;height:78px;flex:none;font:400 9px/1 ui-monospace,Menlo,monospace;color:#7a7a7a">
+<span style="position:absolute;right:0;top:7.8px;transform:translateY(-50%)">90</span>
+<span style="position:absolute;right:0;top:39px;transform:translateY(-50%)">50</span>
+<span style="position:absolute;right:0;top:78px;transform:translateY(-50%)">0</span>
+</div>
+<div style="flex:1">
+<div style="position:relative;height:78px;border-left:1.5px solid #1a1a1a;border-bottom:1.5px solid #1a1a1a">
+<div class="xb" style="position:absolute;left:5px;right:2px;top:14px;bottom:4px;border-width:1px;border-color:#b4b4b4"></div>
+<div style="position:absolute;left:0;right:0;top:7.8px;border-top:2px dashed #1a1a1a"></div>
+</div>
+<div style="display:flex;justify-content:space-between;margin-top:4px"><span class="ticklbl">session 18</span><span class="ticklbl">37</span></div>
+</div>
+</div>
+<span class="mk" style="top:12px;transform:none">3</span>
+</div>
+<div style="position:relative">
+<div class="lbl">PAST SESSIONS</div>
+<span class="mk" style="top:-4px;right:0;transform:none">4</span>
+</div>
+<div class="bx" style="border-bottom:none;padding:0;margin-bottom:-14px;flex:1;overflow:hidden">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 10px;border-bottom:1px solid #c6c6c6"><div><div style="font:600 13px/1 'Helvetica Neue',Helvetica,sans-serif">9 Sep 2026</div><div class="cap" style="margin-top:4px;font-size:11px">4 correct · 3 close · 3 wrong</div></div><div style="display:flex;align-items:center;gap:8px"><span style="font:700 15px/1 'Helvetica Neue',Helvetica,sans-serif">6 240</span><span style="color:#8a8a8a">›</span></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 10px;border-bottom:1px solid #c6c6c6"><div><div style="font:600 13px/1 'Helvetica Neue',Helvetica,sans-serif">7 Sep 2026</div><div class="cap" style="margin-top:4px;font-size:11px">2 correct · 4 close · 4 wrong</div></div><div style="display:flex;align-items:center;gap:8px"><span style="font:700 15px/1 'Helvetica Neue',Helvetica,sans-serif">4 810</span><span style="color:#8a8a8a">›</span></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 10px;border-bottom:1px solid #c6c6c6"><div><div style="font:600 13px/1 'Helvetica Neue',Helvetica,sans-serif">4 Sep 2026</div><div class="cap" style="margin-top:4px;font-size:11px">7 correct · 2 close · 1 wrong</div></div><div style="display:flex;align-items:center;gap:8px"><span style="font:700 15px/1 'Helvetica Neue',Helvetica,sans-serif">8 410</span><span style="color:#8a8a8a">›</span></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 10px"><div><div style="font:600 13px/1 'Helvetica Neue',Helvetica,sans-serif">2 Sep 2026</div><div class="cap" style="margin-top:4px;font-size:11px">3 correct · 3 close · 4 wrong</div></div><div style="display:flex;align-items:center;gap:8px"><span style="font:700 15px/1 'Helvetica Neue',Helvetica,sans-serif">5 100</span><span style="color:#8a8a8a">›</span></div></div>
+</div>
+</div>
+<div style="position:absolute;right:2px;top:120px;width:3px;height:150px;background:#c0c0c0"></div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}">
+<div class="notes">
+<div class="nt"><span class="nn">1</span><span>Four headline figures, no sparklines. Mean closeness is a factor, not a percentage, because scoring is ratio-based.</span></div>
+<div class="nt"><span class="nn">2</span><span>Panel heading is fixed; the sentence under it is generated and reads correctly at any calibration — "…contained the true value 88% of the time. That is close to the 90% you aim for: well calibrated." / "…97% of the time. Your ranges are wider than they need to be." Only the emphasis moves, never the structure.</span></div>
+<div class="nt"><span class="nn">3</span><span>Coverage per rolling window of 10 range answers, with the dashed 90% reference carried over from the bar above. Crossed box = plot placeholder; the axes and reference line are the specified part.</span></div>
+<div class="nt"><span class="nn">4</span><span>List scrolls under the panels (whole screen is one scroll view; the bar at the right edge shows position). Rows open a per-question breakdown.</span></div>
+</div>
+</sc-if>
+</div>
+
+<div class="col" id="s08">
+<div class="t">08-statistics-empty</div>
+<div class="ab">
+<sc-if value="{{ showStatusBars }}" hint-placeholder-val="{{ true }}"><div class="sb"><span>9:41</span><span>▮▮▮ ▮▮</span></div></sc-if>
+<div class="tb"><span style="font:400 18px/1 'Helvetica Neue',Helvetica,sans-serif">←</span><span>Statistics</span></div>
+<div class="bd" style="gap:14px;padding:22px 16px 16px">
+<div style="position:relative"><div style="font:700 22px/1.25 'Helvetica Neue',Helvetica,sans-serif;padding-right:26px">Nothing to measure yet</div><span class="mk" style="top:2px;transform:none">1</span></div>
+<div style="font:400 14px/1.5 'Helvetica Neue',Helvetica,sans-serif">Play one session and this screen fills in. Calibration — whether the ranges you call "90% sure" really do contain the answer nine times in ten — needs about ten range answers before it means anything.</div>
+<div class="bx" style="padding:12px 12px 14px;position:relative;margin-top:2px">
+<div class="lbl">WHAT WILL APPEAR HERE</div>
+<div style="display:flex;flex-direction:column;gap:11px;margin-top:11px">
+<div style="display:flex;gap:9px;align-items:flex-start"><span style="flex:none;width:11px;height:11px;border-radius:50%;border:1.5px solid #9a9a9a;margin-top:2px"></span><span style="font:400 13px/1.35 'Helvetica Neue',Helvetica,sans-serif">How often your 90% ranges actually contain the answer</span></div>
+<div style="display:flex;gap:9px;align-items:flex-start"><span style="flex:none;width:11px;height:11px;border-radius:50%;border:1.5px solid #9a9a9a;margin-top:2px"></span><span style="font:400 13px/1.35 'Helvetica Neue',Helvetica,sans-serif">How close your estimates are on average</span></div>
+<div style="display:flex;gap:9px;align-items:flex-start"><span style="flex:none;width:11px;height:11px;border-radius:50%;border:1.5px solid #9a9a9a;margin-top:2px"></span><span style="font:400 13px/1.35 'Helvetica Neue',Helvetica,sans-serif">Every session you have played, scored and dated</span></div>
+</div>
+<span class="mk" style="top:14px;transform:none">2</span>
+</div>
+<div style="flex:1"></div>
+<div class="btn btnp">Start a session<span class="mk">3</span></div>
+<div class="btn">How scoring works</div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}">
+<div class="notes">
+<div class="nt"><span class="nn">1</span><span>No zeroed figures and no empty axes — an empty chart reads as a broken chart, and a row of 0s reads as failure rather than absence.</span></div>
+<div class="nt"><span class="nn">2</span><span>The empty state is the only place with room to explain what calibration is, so it does that job: what will be measured and how much play it takes.</span></div>
+<div class="nt"><span class="nn">3</span><span>The screen carries the action that fills it, so the user is never parked on a dead end. Back still returns Home.</span></div>
+</div>
+</sc-if>
+</div>
+
+<div class="col" id="s09">
+<div class="t">09-statistics-insufficient</div>
+<div class="ab">
+<sc-if value="{{ showStatusBars }}" hint-placeholder-val="{{ true }}"><div class="sb"><span>9:41</span><span>▮▮▮ ▮▮</span></div></sc-if>
+<div class="tb"><span style="font:400 18px/1 'Helvetica Neue',Helvetica,sans-serif">←</span><span>Statistics</span></div>
+<div class="bd" style="gap:12px;overflow:hidden">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative">
+<div class="bx" style="padding:9px 10px"><div class="lbl">SESSIONS</div><div style="font:700 21px/1 'Helvetica Neue',Helvetica,sans-serif;margin-top:5px">2</div></div>
+<div class="bx" style="padding:9px 10px"><div class="lbl">QUESTIONS</div><div style="font:700 21px/1 'Helvetica Neue',Helvetica,sans-serif;margin-top:5px">20</div></div>
+<div class="bx" style="padding:9px 10px"><div class="lbl">BEST SCORE</div><div style="font:700 21px/1 'Helvetica Neue',Helvetica,sans-serif;margin-top:5px">5 100</div></div>
+<div class="bx" style="padding:9px 10px"><div class="lbl">MEAN CLOSENESS</div><div style="font:700 21px/1 'Helvetica Neue',Helvetica,sans-serif;margin-top:5px">2.4×</div></div>
+<span class="mk" style="right:-9px;top:-9px;transform:none">1</span>
+</div>
+<div class="bx" style="border-width:2.5px;padding:11px 11px 13px;position:relative">
+<div style="font:700 15px/1 'Helvetica Neue',Helvetica,sans-serif">Confidently Wrong</div>
+<div style="border:1.5px dashed #9b9b9b;background:#f5f5f5;padding:11px;margin-top:9px">
+<div style="font:600 15px/1.2 'Helvetica Neue',Helvetica,sans-serif;color:#6a6a6a">Coverage — not shown yet</div>
+<div style="font:400 12.5px/1.45 'Helvetica Neue',Helvetica,sans-serif;color:#4a4a4a;margin-top:7px">You have given <b>4</b> ranges. Below ten, one answer moves the percentage by 10–25 points, so the figure would say more about luck than about you.</div>
+</div>
+<div style="display:flex;gap:4px;margin-top:11px">
+<span style="flex:1;height:12px;background:#1a1a1a"></span><span style="flex:1;height:12px;background:#1a1a1a"></span><span style="flex:1;height:12px;background:#1a1a1a"></span><span style="flex:1;height:12px;background:#1a1a1a"></span><span style="flex:1;height:12px;border:1.5px solid #9b9b9b"></span><span style="flex:1;height:12px;border:1.5px solid #9b9b9b"></span><span style="flex:1;height:12px;border:1.5px solid #9b9b9b"></span><span style="flex:1;height:12px;border:1.5px solid #9b9b9b"></span><span style="flex:1;height:12px;border:1.5px solid #9b9b9b"></span><span style="flex:1;height:12px;border:1.5px solid #9b9b9b"></span>
+</div>
+<div class="cap" style="margin-top:6px;position:relative;padding-right:26px">6 more range answers — about one session in 90% range mode.<span class="mk" style="top:-1px;right:0;transform:none">3</span></div>
+<div style="display:flex;justify-content:space-between;margin-top:10px;border-top:1px solid #c6c6c6;padding-top:9px"><span class="cap" style="font-size:12px">Mean range width</span><span style="font:600 13px/1 'Helvetica Neue',Helvetica,sans-serif">×9</span></div>
+<span class="mk" style="top:12px;transform:none">2</span>
+</div>
+<div class="bx" style="padding:10px;position:relative">
+<div class="lbl">COVERAGE OVER TIME</div>
+<div style="border:1.5px dashed #9b9b9b;background:#f5f5f5;height:74px;margin-top:8px;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 16px"><span style="font:400 12.5px/1.4 'Helvetica Neue',Helvetica,sans-serif;color:#6a6a6a">The chart starts once there are two points to join.</span></div>
+<span class="mk" style="top:12px;transform:none">4</span>
+</div>
+<div class="lbl">PAST SESSIONS</div>
+<div class="bx" style="padding:0;flex:1;overflow:hidden">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #c6c6c6"><div><div style="font:600 13px/1 'Helvetica Neue',Helvetica,sans-serif">9 Sep 2026</div><div class="cap" style="margin-top:4px;font-size:11px">3 correct · 3 close · 4 wrong</div></div><div style="display:flex;align-items:center;gap:8px"><span style="font:700 15px/1 'Helvetica Neue',Helvetica,sans-serif">5 100</span><span style="color:#8a8a8a">›</span></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px"><div><div style="font:600 13px/1 'Helvetica Neue',Helvetica,sans-serif">8 Sep 2026</div><div class="cap" style="margin-top:4px;font-size:11px">1 correct · 4 close · 5 wrong</div></div><div style="display:flex;align-items:center;gap:8px"><span style="font:700 15px/1 'Helvetica Neue',Helvetica,sans-serif">3 420</span><span style="color:#8a8a8a">›</span></div></div>
+</div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}">
+<div class="notes">
+<div class="nt"><span class="nn">1</span><span>Figures that are valid at n = 20 are shown normally. Only the statistic that is noisy gets withheld.</span></div>
+<div class="nt"><span class="nn">2</span><span>The percentage is suppressed, not rounded, hedged or shown with a caveat: dashed box, greyed, with the reason in one sentence in the user's terms.</span></div>
+<div class="nt"><span class="nn">3</span><span>Progress to the threshold, so the suppression has a visible end and a stated cost — "about one session".</span></div>
+<div class="nt"><span class="nn">4</span><span>Chart suppressed for the same reason; its caption says what unlocks it rather than showing empty axes.</span></div>
+</div>
+</sc-if>
+</div>
+
+<div class="col" id="s10">
+<div class="t">10-settings</div>
+<div class="ab">
+<sc-if value="{{ showStatusBars }}" hint-placeholder-val="{{ true }}"><div class="sb"><span>9:41</span><span>▮▮▮ ▮▮</span></div></sc-if>
+<div class="tb"><span style="font:400 18px/1 'Helvetica Neue',Helvetica,sans-serif">←</span><span>Settings</span></div>
+<div class="bd" style="gap:14px">
+<div>
+<div class="lbl">SESSION LENGTH</div>
+<div style="display:flex;border:1.5px solid #1a1a1a;margin-top:7px;position:relative">
+<div class="seg">5</div><div class="seg" style="background:#d7d7d7;box-shadow:inset 0 0 0 2px #1a1a1a">10</div><div class="seg" style="border-right:none">20</div>
+<span class="mk" style="right:-9px;top:50%">1</span>
+</div>
+<div class="cap" style="margin-top:6px">Questions per session.</div>
+</div>
+<div>
+<div class="lbl">ANSWER MODE</div>
+<div class="bx" style="margin-top:7px;padding:0">
+<div style="display:flex;align-items:center;gap:10px;padding:11px;border-bottom:1px solid #c6c6c6"><span style="flex:none;width:16px;height:16px;border-radius:50%;border:1.5px solid #1a1a1a"></span><span style="font:400 14px/1 'Helvetica Neue',Helvetica,sans-serif">Single number</span></div>
+<div style="display:flex;align-items:center;gap:10px;padding:11px;border-bottom:1px solid #c6c6c6"><span style="flex:none;width:16px;height:16px;border-radius:50%;border:1.5px solid #1a1a1a"></span><span style="font:400 14px/1 'Helvetica Neue',Helvetica,sans-serif">90% range</span></div>
+<div style="display:flex;align-items:center;gap:10px;padding:11px;position:relative;padding-right:34px"><span style="flex:none;width:16px;height:16px;border-radius:50%;border:1.5px solid #1a1a1a;display:flex;align-items:center;justify-content:center"><span style="width:8px;height:8px;border-radius:50%;background:#1a1a1a"></span></span><span style="font:400 14px/1 'Helvetica Neue',Helvetica,sans-serif">Follow my level</span><span class="mk">2</span></div>
+</div>
+<div class="cap" style="margin-top:6px">Level 2 → 90% ranges.</div>
+</div>
+<div>
+<div class="lbl">CATEGORIES</div>
+<div class="bx" style="margin-top:7px;padding:0;position:relative">
+<div style="display:flex;align-items:center;gap:10px;padding:10px 11px;border-bottom:1px solid #c6c6c6"><span style="flex:none;width:16px;height:16px;border:1.5px solid #1a1a1a;background:#1a1a1a;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center">✓</span><span style="font:400 14px/1 'Helvetica Neue',Helvetica,sans-serif">Areas</span></div>
+<div style="display:flex;align-items:center;gap:10px;padding:10px 11px;border-bottom:1px solid #c6c6c6"><span style="flex:none;width:16px;height:16px;border:1.5px solid #1a1a1a;background:#1a1a1a;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center">✓</span><span style="font:400 14px/1 'Helvetica Neue',Helvetica,sans-serif">Building heights</span></div>
+<div style="display:flex;align-items:center;gap:10px;padding:10px 11px;border-bottom:1px solid #c6c6c6"><span style="flex:none;width:16px;height:16px;border:1.5px solid #1a1a1a"></span><span style="font:400 14px/1 'Helvetica Neue',Helvetica,sans-serif">Mountain elevations</span></div>
+<div style="display:flex;align-items:center;gap:10px;padding:10px 11px"><span style="flex:none;width:16px;height:16px;border:1.5px solid #1a1a1a;background:#1a1a1a;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center">✓</span><span style="font:400 14px/1 'Helvetica Neue',Helvetica,sans-serif">National populations</span></div>
+<span class="mk" style="top:10px;transform:none">3</span>
+</div>
+<div class="cap" style="margin-top:6px">At least one must stay selected.</div>
+</div>
+<div style="flex:1"></div>
+<div style="border-top:1px solid #c6c6c6;padding-top:13px">
+<div class="btn" style="border-width:2.5px;position:relative">Reset statistics<span class="mk">4</span></div>
+</div>
+</div>
+<div style="position:absolute;inset:0;background:rgba(26,26,26,.42);display:flex;align-items:center;justify-content:center;padding:22px">
+<div style="background:#fff;border:2.5px solid #1a1a1a;padding:16px;width:100%;position:relative">
+<div style="font:700 17px/1.2 'Helvetica Neue',Helvetica,sans-serif">Reset statistics?</div>
+<div style="font:400 13px/1.45 'Helvetica Neue',Helvetica,sans-serif;margin-top:9px">This deletes 37 sessions, 412 answers and your personal best of 8 410. It cannot be undone.</div>
+<div style="display:flex;gap:10px;margin-top:16px"><div class="btn" style="flex:1;height:42px;font-size:14px">Cancel</div><div class="btn" style="flex:1;height:42px;font-size:14px;border-width:2.5px">Reset</div></div>
+<span class="mk" style="top:-9px;right:-9px;transform:none">5</span>
+</div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}">
+<div class="notes">
+<div class="nt"><span class="nn">1</span><span>Segmented control, applies to the next session started, never to one in progress.</span></div>
+<div class="nt"><span class="nn">2</span><span>Default is "Follow my level", so the level system stays meaningful; the two explicit modes are an override and do not change the level.</span></div>
+<div class="nt"><span class="nn">3</span><span>Multi-select. Unchecking the last remaining category is refused rather than allowed to empty the question pool.</span></div>
+<div class="nt"><span class="nn">4</span><span>Destructive action below a rule, outlined not filled, at the end of the scroll.</span></div>
+<div class="nt"><span class="nn">5</span><span>Confirmation drawn over this artboard for compactness — it is a dialog, not part of the screen. It names the exact quantity being destroyed; the destructive verb is the right-hand button and is not pre-focused.</span></div>
+</div>
+</sc-if>
+</div>
+
+<div class="col" id="s11" style="width:920px">
+<div class="t">11-screen-flow</div>
+<div class="sub">Not a phone artboard — screens, transitions and back-stack behaviour</div>
+<div style="width:920px;height:800px;border:1.5px solid #1a1a1a;background:#fff;position:relative;overflow:hidden">
+<svg width="920" height="800" style="position:absolute;left:0;top:0" viewBox="0 0 920 800">
+<defs>
+<marker id="ah" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1a1a1a"></path></marker>
+</defs>
+<g fill="none" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#ah)">
+<polyline points="210,362 322,362"></polyline>
+<polyline points="510,362 592,362"></polyline>
+<polyline points="690,330 690,262 450,262 450,322"></polyline>
+<polyline points="690,394 690,532"></polyline>
+<polyline points="660,540 660,500 470,500 470,402"></polyline>
+<polyline points="600,590 250,590 250,300 125,300 125,322"></polyline>
+<polyline points="420,394 420,672"></polyline>
+<polyline points="780,362 860,362 860,710 538,710"></polyline>
+<polyline points="330,710 20,710 20,346 32,346"></polyline>
+<polyline points="105,330 105,184"></polyline>
+<polyline points="105,394 105,532"></polyline>
+</g>
+<g fill="none" stroke="#1a1a1a" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#ah)">
+<polyline points="150,176 150,322"></polyline>
+<polyline points="150,540 150,402"></polyline>
+</g>
+</svg>
+<div class="flowbox" style="left:40px;top:120px;width:170px;height:56px">Statistics<span class="flowsub">07 / 08 / 09</span></div>
+<div class="flowbox" style="left:40px;top:330px;width:170px;height:64px;border-width:3px">Home<span class="flowsub">01 · task root</span></div>
+<div class="flowbox" style="left:40px;top:540px;width:170px;height:56px">Settings<span class="flowsub">10</span></div>
+<div class="flowbox" style="left:330px;top:330px;width:180px;height:64px">Question<span class="flowsub">02 / 03 / 04</span></div>
+<div class="flowbox" style="left:600px;top:330px;width:180px;height:64px">Feedback<span class="flowsub">05</span></div>
+<div class="flowbox" style="left:600px;top:540px;width:180px;height:64px">Result<span class="flowsub">06</span></div>
+<div class="flowbox" style="left:330px;top:680px;width:208px;height:60px;border-style:dashed">Quit session?<span class="flowsub">dialog</span></div>
+<div class="flowlbl" style="left:214px;top:338px;width:104px;text-align:center;padding:2px 0">tap Start<br>session</div>
+<div class="flowlbl" style="left:514px;top:338px;width:76px;text-align:center;padding:2px 0">answer<br>submitted</div>
+<div class="flowlbl" style="left:462px;top:212px;width:128px;padding:2px 4px">tap Next · questions remain — always a new question</div>
+<div class="flowlbl" style="left:700px;top:440px">tap Next · last<br>question answered</div>
+<div class="flowlbl" style="left:482px;top:476px">tap Play again · fresh session</div>
+<div class="flowlbl" style="left:268px;top:596px">tap Home · session finished and cleared from the stack</div>
+<div class="flowlbl" style="left:428px;top:600px">Back<br>(system)</div>
+<div class="flowlbl" style="left:600px;top:660px">Back (system)</div>
+<div class="flowlbl" style="left:44px;top:660px">Discard</div>
+<div class="flowlbl" style="left:6px;top:196px;width:92px">tap Statistics</div>
+<div class="flowlbl" style="left:160px;top:230px">Back</div>
+<div class="flowlbl" style="left:6px;top:452px;width:92px">tap Settings</div>
+<div class="flowlbl" style="left:160px;top:462px">Back</div>
+<div style="position:absolute;left:600px;top:624px;font:400 10.5px/1.3 ui-monospace,Menlo,monospace;color:#5a5a5a;width:180px">Share ↗ opens the system sheet; stack unchanged</div>
+<div style="position:absolute;left:600px;top:120px;width:280px;border:1.5px solid #1a1a1a;padding:10px;font:400 10.5px/1.45 ui-monospace,Menlo,monospace;background:#fff">
+<b>BACK STACK</b><br>
+— solid arrow = forward transition<br>
+— dashed arrow = system Back<br>
+— Question and Feedback intercept Back and raise the dialog; they never pop to each other<br>
+— Result finishes the session activities, so Back from Result lands on Home
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}">
+<div class="notes">
+<div class="nt"><span class="nn">1</span><span>Forward path is one line: Home → Question → Feedback → (loop) → Result. Nothing else branches.</span></div>
+<div class="nt"><span class="nn">2</span><span>Next from Feedback always advances to a NEW question. The answered question is destroyed, so there is no stale state to return to.</span></div>
+<div class="nt"><span class="nn">3</span><span>Back from Question or Feedback is intercepted and raises "Quit session?". Confirming discards the session and returns to Home; cancelling stays where it was. Back from Feedback therefore never re-shows the question that was just answered.</span></div>
+<div class="nt"><span class="nn">4</span><span>On reaching Result, the Question and Feedback activities are finished, so the session is off the stack: Back from Result goes Home and cannot re-enter a completed session. Play again starts a fresh one from the top.</span></div>
+<div class="nt"><span class="nn">5</span><span>Statistics and Settings are leaves off Home; Back from either returns Home and nowhere else.</span></div>
+</div>
+</sc-if>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px;flex:none;border-left:1.5px dashed #9b9b9b;padding-left:36px">
+<div style="font:700 16px/1.2 ui-monospace,Menlo,monospace">Rejected alternatives</div>
+<div style="font:400 11.5px/1.5 ui-monospace,Menlo,monospace;color:#5a5a5a;max-width:700px;margin:-4px 0 2px">Two other treatments of the range input, considered and not chosen. Kept for the record with their trade-offs as written.</div>
+<div style="display:flex;gap:36px;align-items:flex-start">
+<div class="col" id="4a">
+<div class="t"><a class="oid" href="#4a">4a</a>04a-range-two-thumb-slider</div>
+<div class="sub">Variant A — slider primary, fixed full-scale axis</div>
+<div class="ab">
+<sc-if value="{{ showStatusBars }}" hint-placeholder-val="{{ true }}"><div class="sb"><span>9:41</span><span>▮▮▮ ▮▮</span></div></sc-if>
+<div class="tb"><span style="font:400 18px/1 'Helvetica Neue',Helvetica,sans-serif">←</span><span>Question 3 of 10</span></div>
+<div style="height:6px;flex:none;border-bottom:1.5px solid #1a1a1a;background:#f0f0f0"><div style="width:30%;height:100%;background:#9a9a9a"></div></div>
+<div class="bd">
+<div class="bx" style="padding:12px;height:92px;overflow:hidden"><div style="font:400 17px/1.35 'Helvetica Neue',Helvetica,sans-serif">What is the architectural height of the Shanghai Tower in Shanghai, in metres?</div></div>
+<div class="lbl" style="position:relative;padding-right:26px">RANGE YOU ARE 90% SURE CONTAINS THE ANSWER<span class="mk" style="top:-4px;transform:none;right:0">1</span></div>
+<div style="position:relative;margin-top:8px">
+<div style="position:relative;height:44px;border:1.5px solid #1a1a1a;background:#fff">
+<div style="position:absolute;left:23%;width:14%;top:0;bottom:0;background:#d4d4d4;border-left:1.5px solid #1a1a1a;border-right:1.5px solid #1a1a1a"></div>
+<div style="position:absolute;left:23%;margin-left:-7px;top:-5px;width:14px;height:52px;border:1.5px solid #1a1a1a;background:#fff"></div>
+<div style="position:absolute;left:37%;margin-left:-7px;top:-5px;width:14px;height:52px;border:1.5px solid #1a1a1a;background:#fff"></div>
+</div>
+<div style="position:relative;height:24px;margin-top:8px;margin-left:8px;margin-right:8px">
+<div class="tick" style="left:0"><div class="tickline"></div><div class="ticklbl">1</div></div>
+<div class="tick" style="left:11.1%"><div class="tickline"></div></div>
+<div class="tick" style="left:22.2%"><div class="tickline"></div></div>
+<div class="tick" style="left:33.3%"><div class="tickline"></div><div class="ticklbl">1k</div></div>
+<div class="tick" style="left:44.4%"><div class="tickline"></div></div>
+<div class="tick" style="left:55.6%"><div class="tickline"></div></div>
+<div class="tick" style="left:66.7%"><div class="tickline"></div><div class="ticklbl">1M</div></div>
+<div class="tick" style="left:77.8%"><div class="tickline"></div></div>
+<div class="tick" style="left:88.9%"><div class="tickline"></div></div>
+<div class="tick" style="left:100%"><div class="tickline"></div><div class="ticklbl">1B</div></div>
+</div>
+<span class="mk" style="top:22px;right:6px;transform:translateY(-50%)">2</span>
+</div>
+<div class="cap" style="margin-top:2px">Log scale, one tick per decade. Same 1 – 1 000 000 000 axis on every question.</div>
+<div style="display:flex;gap:10px;position:relative;margin-top:2px">
+<div style="flex:1"><div class="lbl">LOWER</div><div class="fld" style="margin-top:5px;font-size:15px"><span style="flex:1">120</span><span style="color:#5a5a5a;font-size:13px">m</span></div></div>
+<div style="flex:1"><div class="lbl">UPPER</div><div class="fld" style="margin-top:5px;font-size:15px"><span style="flex:1">2 000</span><span style="color:#5a5a5a;font-size:13px">m</span></div></div>
+<span class="mk" style="right:-1px;top:4px;transform:none">3</span>
+</div>
+<div class="cap">Range width ×17. Narrower ranges score more when they contain the answer.</div>
+<div style="flex:1"></div>
+<div class="btn btnp" style="height:48px">Submit range</div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}">
+<div class="notes">
+<div class="nt"><span class="nn">1</span><span>The instruction is restated every question; "90% sure" is the thing being trained, so it is never reduced to an icon.</span></div>
+<div class="nt"><span class="nn">2</span><span>Axis is identical on every question, so its bounds carry no information about this answer. Decade labels tell the user what the slider covers without anchoring them.</span></div>
+<div class="nt"><span class="nn">3</span><span>Fields and slider are two views of one value, bound both ways: dragging retypes the fields, typing moves the thumbs. Typing a value above 1B is allowed — the thumb parks at the end stop and the track shows a "»" overflow chevron.</span></div>
+</div>
+<div class="tradeoff"><b>Trade-off.</b> One gesture sets both bounds and the whole scale is visible at once, so the user always knows what is on offer. But at 360 dp a decade is ~35 dp: a 3 dp slip changes the bound by ~20%, so precise ranges have to be finished in the fields — and the fixed end stops mean the axis can, in principle, clip an answer.</div>
+</sc-if>
+</div>
+
+<div class="col" id="4b">
+<div class="t"><a class="oid" href="#4b">4b</a>04b-range-fields-primary</div>
+<div class="sub">Variant B — typed bounds, slider demoted to a read-out</div>
+<div class="ab">
+<sc-if value="{{ showStatusBars }}" hint-placeholder-val="{{ true }}"><div class="sb"><span>9:41</span><span>▮▮▮ ▮▮</span></div></sc-if>
+<div class="tb"><span style="font:400 18px/1 'Helvetica Neue',Helvetica,sans-serif">←</span><span>Question 3 of 10</span></div>
+<div style="height:6px;flex:none;border-bottom:1.5px solid #1a1a1a;background:#f0f0f0"><div style="width:30%;height:100%;background:#9a9a9a"></div></div>
+<div class="bd" style="gap:10px">
+<div class="bx" style="padding:12px;height:92px;overflow:hidden"><div style="font:400 17px/1.35 'Helvetica Neue',Helvetica,sans-serif">What is the architectural height of the Shanghai Tower in Shanghai, in metres?</div></div>
+<div class="lbl">90% RANGE — TYPE BOTH BOUNDS</div>
+<div style="display:flex;gap:10px;position:relative">
+<div style="flex:1"><div class="cap" style="margin-bottom:4px">At least</div><div class="fld" style="height:52px;border-width:3px"><span style="flex:1">120<span style="border-left:1.5px solid #1a1a1a;margin-left:1px">&nbsp;</span></span><span style="color:#5a5a5a;font-size:14px">m</span></div></div>
+<div style="flex:1"><div class="cap" style="margin-bottom:4px">At most</div><div class="fld" style="height:52px"><span style="flex:1;color:#9a9a9a">2 000</span><span style="color:#5a5a5a;font-size:14px">m</span></div></div>
+<span class="mk" style="right:-1px;top:16px;transform:none">1</span>
+</div>
+<div class="bx" style="padding:10px 10px 12px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span class="lbl">WHERE THAT SITS</span></div>
+<div style="position:relative;height:16px;border:1.5px solid #1a1a1a;background:#fff;margin-top:8px">
+<div style="position:absolute;left:23%;width:14%;top:0;bottom:0;background:#d4d4d4;border-left:1.5px solid #1a1a1a;border-right:1.5px solid #1a1a1a"></div>
+</div>
+<div style="position:relative;height:22px;margin:6px 8px 0">
+<div class="tick" style="left:0"><div class="tickline"></div><div class="ticklbl">1</div></div>
+<div class="tick" style="left:11.1%"><div class="tickline"></div></div>
+<div class="tick" style="left:22.2%"><div class="tickline"></div></div>
+<div class="tick" style="left:33.3%"><div class="tickline"></div><div class="ticklbl">1k</div></div>
+<div class="tick" style="left:44.4%"><div class="tickline"></div></div>
+<div class="tick" style="left:55.6%"><div class="tickline"></div></div>
+<div class="tick" style="left:66.7%"><div class="tickline"></div><div class="ticklbl">1M</div></div>
+<div class="tick" style="left:77.8%"><div class="tickline"></div></div>
+<div class="tick" style="left:88.9%"><div class="tickline"></div></div>
+<div class="tick" style="left:100%"><div class="tickline"></div><div class="ticklbl">1B</div></div>
+</div>
+<div class="cap">Read-only · spans 1.2 decades of the 1 – 1B scale · width ×17</div>
+<span class="mk" style="top:13px;right:6px;transform:none">2</span>
+</div>
+<div style="flex:1"></div>
+<div class="btn" style="height:44px;position:relative">Next field →<span class="mk">3</span></div>
+<div class="btn btnp" style="height:48px">Submit range</div>
+</div>
+<div class="kbd">
+<div class="kcap">SOFT KEYBOARD — NUMBER PAD</div>
+<div class="kgrid" style="padding-bottom:6px"><div class="key" style="height:32px">1</div><div class="key" style="height:32px">2</div><div class="key" style="height:32px">3</div><div class="key" style="height:32px">4</div><div class="key" style="height:32px">5</div><div class="key" style="height:32px">6</div><div class="key" style="height:32px">7</div><div class="key" style="height:32px">8</div><div class="key" style="height:32px">9</div><div class="key" style="height:32px">.</div><div class="key" style="height:32px">0</div><div class="key" style="height:32px">⌫</div></div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}">
+<div class="notes">
+<div class="nt"><span class="nn">1</span><span>Two fields, "At least" / "At most" rather than lower/upper. Focus is on the first; the second is a hint until typed. Same keyboard-first model as the single-number screen, so one habit covers both modes.</span></div>
+<div class="nt"><span class="nn">2</span><span>Strip is a read-out only — it moves when the numbers change and cannot be dragged, which is why it can show the full 1 – 1B scale without inviting the user to fish for an answer on it.</span></div>
+<div class="nt"><span class="nn">3</span><span>IME action moves to the second field, then to Submit, so the whole answer can be given without leaving the keyboard.</span></div>
+</div>
+<div class="tradeoff"><b>Trade-off.</b> Exact at any magnitude, no gesture precision to learn, and it reuses the single-number screen's mechanics. But two numbers cost more taps than one drag, and because the strip is passive the <i>width</i> of a 90% range never becomes tangible — the user is less likely to feel that a range is too narrow, which is the habit the app is trying to break.</div>
+</sc-if>
+</div>
+
+</div>
+</div>
+
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showCallouts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Figure output&quot;},&quot;showStatusBars&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Figure output&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      showCallouts: this.props.showCallouts ?? true,
+      showStatusBars: this.props.showStatusBars ?? true
+    };
+  }
+}
+</script>
+</body>
+</html>
