@@ -186,3 +186,27 @@ Everest's published values differ by a few metres between surveys, and Mont Blan
 snow-and-ice summit varies between measurements; neither is a source disagreement. Monte
 Titano's two values differ by 2.3%, which is. The unit tests encode all three cases, so
 changing the tolerance without re-reading them will fail the suite.
+
+## Exporting the wireframes
+
+`docs/wireframes/give-or-take-wireframes.dc.html` is the editable canvas holding every
+screen. `export_wireframes.py` renders each artboard to its own PNG, so a re-run after any
+edit regenerates the whole set consistently instead of producing thirteen slightly
+different manual screenshots.
+
+```bash
+pip install playwright && playwright install chromium   # development tooling only
+python3 tools/export_wireframes.py \
+    --input docs/wireframes/give-or-take-wireframes.dc.html \
+    --output docs/wireframes
+```
+
+Two sets are written:
+
+| Path | Contents | Use |
+|---|---|---|
+| `docs/wireframes/*.png` | the artboard alone | figures for the project report |
+| `docs/wireframes/annotated/*.png` | the artboard with its numbered design notes | the repository, and the report appendix |
+
+Playwright is not a dependency of the app and is not referenced by the Gradle build. It is
+required only to regenerate these images.
