@@ -236,3 +236,9 @@
   regress. The report-ready before/after tables record the improvement from 46/64 testable questions
   and zero compliant bands to 74/80 and two compliant bands, together with every unclosed gap.
 - All 53 offline tooling tests and all 120 Java unit tests pass.
+
+## 2026-09-15 — View-access proposal
+
+- Wrote ADR 0015 comparing `findViewById` with ViewBinding for Java activities and XML layouts.
+- Recommended the course-taught `findViewById` approach because direct evidence for the Transfer
+  criterion outweighs ViewBinding's compile-time safety and reduced boilerplate in this project.
