@@ -8,12 +8,195 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:id="@+id/app_title"
+        android:layout_width="@dimen/constraint_match"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginStart="@dimen/home_horizontal_margin"
+        android:layout_marginTop="@dimen/home_top_margin"
+        android:layout_marginEnd="@dimen/home_horizontal_margin"
+        android:text="@string/app_name"
+        android:textColor="@color/home_on_background"
+        android:textSize="@dimen/home_title_text_size"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/current_level_card"
+        android:layout_width="@dimen/constraint_match"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/home_horizontal_margin"
+        android:layout_marginTop="@dimen/home_section_spacing"
+        android:layout_marginEnd="@dimen/home_horizontal_margin"
+        app:cardBackgroundColor="@color/home_card_background"
+        app:cardCornerRadius="@dimen/home_card_corner_radius"
+        app:cardElevation="@dimen/elevation_none"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/app_title"
+        app:strokeColor="@color/home_card_outline"
+        app:strokeWidth="@dimen/home_card_stroke_width">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/home_card_padding">
+
+            <TextView
+                android:id="@+id/current_level_label"
+                android:layout_width="@dimen/constraint_match"
+                android:layout_height="wrap_content"
+                android:text="@string/current_level_label"
+                android:textAllCaps="true"
+                android:textColor="@color/home_secondary_text"
+                android:textSize="@dimen/home_label_text_size"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/current_level_value"
+                android:layout_width="@dimen/constraint_match"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/home_text_spacing_small"
+                android:text="@string/current_level_value"
+                android:textColor="@color/home_card_content"
+                android:textSize="@dimen/home_value_text_size"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/current_level_label" />
+
+            <TextView
+                android:id="@+id/current_level_explanation"
+                android:layout_width="@dimen/constraint_match"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/home_text_spacing_medium"
+                android:text="@string/current_level_explanation"
+                android:textColor="@color/home_secondary_text"
+                android:textSize="@dimen/home_body_text_size"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/current_level_value" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/high_score_card"
+        android:layout_width="@dimen/constraint_match"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/home_horizontal_margin"
+        android:layout_marginTop="@dimen/home_card_spacing"
+        android:layout_marginEnd="@dimen/home_horizontal_margin"
+        app:cardBackgroundColor="@color/home_card_background"
+        app:cardCornerRadius="@dimen/home_card_corner_radius"
+        app:cardElevation="@dimen/elevation_none"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/current_level_card"
+        app:strokeColor="@color/home_card_outline"
+        app:strokeWidth="@dimen/home_card_stroke_width">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/home_card_padding">
+
+            <TextView
+                android:id="@+id/high_score_label"
+                android:layout_width="@dimen/constraint_match"
+                android:layout_height="wrap_content"
+                android:text="@string/high_score_label"
+                android:textAllCaps="true"
+                android:textColor="@color/home_secondary_text"
+                android:textSize="@dimen/home_label_text_size"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/high_score_value"
+                android:layout_width="@dimen/constraint_match"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/home_text_spacing_small"
+                android:text="@string/high_score_empty_value"
+                android:textColor="@color/home_card_content"
+                android:textSize="@dimen/home_score_text_size"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/high_score_label" />
+
+            <TextView
+                android:id="@+id/high_score_explanation"
+                android:layout_width="@dimen/constraint_match"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/home_text_spacing_medium"
+                android:text="@string/high_score_empty_explanation"
+                android:textColor="@color/home_secondary_text"
+                android:textSize="@dimen/home_body_text_size"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/high_score_value" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/start_session_button"
+        style="@style/Widget.Material3.Button"
+        android:layout_width="@dimen/constraint_match"
+        android:layout_height="@dimen/home_primary_button_height"
+        android:layout_marginStart="@dimen/home_horizontal_margin"
+        android:layout_marginEnd="@dimen/home_horizontal_margin"
+        android:layout_marginBottom="@dimen/home_button_spacing"
+        android:text="@string/start_session"
+        android:textSize="@dimen/home_button_text_size"
+        app:backgroundTint="@color/home_primary_button"
+        app:cornerRadius="@dimen/home_button_corner_radius"
+        app:layout_constraintBottom_toTopOf="@id/stats_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/stats_button"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="@dimen/constraint_match"
+        android:layout_height="@dimen/home_secondary_button_height"
+        android:layout_marginStart="@dimen/home_horizontal_margin"
+        android:layout_marginEnd="@dimen/home_secondary_button_gap_half"
+        android:layout_marginBottom="@dimen/home_bottom_margin"
+        android:text="@string/stats"
+        android:textColor="@color/home_secondary_button_content"
+        android:textSize="@dimen/home_button_text_size"
+        app:cornerRadius="@dimen/home_button_corner_radius"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/settings_button"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toStartOf="parent"
+        app:strokeColor="@color/home_secondary_button_outline" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/settings_button"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="@dimen/constraint_match"
+        android:layout_height="@dimen/home_secondary_button_height"
+        android:layout_marginStart="@dimen/home_secondary_button_gap_half"
+        android:layout_marginEnd="@dimen/home_horizontal_margin"
+        android:layout_marginBottom="@dimen/home_bottom_margin"
+        android:text="@string/settings"
+        android:textColor="@color/home_secondary_button_content"
+        android:textSize="@dimen/home_button_text_size"
+        app:cornerRadius="@dimen/home_button_corner_radius"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/stats_button"
+        app:strokeColor="@color/home_secondary_button_outline" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

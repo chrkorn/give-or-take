@@ -242,3 +242,16 @@
 - Wrote ADR 0015 comparing `findViewById` with ViewBinding for Java activities and XML layouts.
 - Recommended the course-taught `findViewById` approach because direct evidence for the Transfer
   criterion outweighs ViewBinding's compile-time safety and reduced boilerplate in this project.
+
+## 2026-09-15 — Home screen and explicit Activity navigation
+
+- Replaced the generated placeholder with the wireframed home screen using ConstraintLayout,
+  Material cards and buttons, resource-backed text, dimensions, and light/dark colour palettes.
+- Kept the initial level and personal-best display honest for the pre-persistence state: level 1
+  point estimates and an em dash until a completed session supplies a score.
+- Added empty quiz, feedback, result, statistics, and settings Activity stubs and registered the
+  internal destinations as non-exported in the manifest.
+- Wired the home actions with `findViewById` listeners and explicit Intents so the destination
+  component is visible in the Java code used as evidence for the course's Transfer criterion.
+- Verified the debug APK build, all JVM unit tests, and Android lint with the bundled Android
+  Studio Java runtime.

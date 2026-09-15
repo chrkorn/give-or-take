@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Give or Take</string>
+    <string name="current_level_label">Current level</string>
+    <string name="current_level_value">Level 1 — Point estimates</string>
+    <string name="current_level_explanation">Levels change the answer mode, not the questions.</string>
+    <string name="high_score_label">Personal best</string>
+    <string name="high_score_empty_value">—</string>
+    <string name="high_score_empty_explanation">Complete a session to set your first score.</string>
+    <string name="start_session">Start session</string>
+    <string name="stats">Stats</string>
+    <string name="settings">Settings</string>
 </resources>

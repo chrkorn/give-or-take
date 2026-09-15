@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="home_background">#FFF9F2</color>
+    <color name="home_on_background">#1C1C18</color>
+    <color name="home_card_background">#FFFFFBFF</color>
+    <color name="home_card_content">#1C1C18</color>
+    <color name="home_card_outline">#74796F</color>
+    <color name="home_secondary_text">#5B6158</color>
+    <color name="home_primary_button">#2F634B</color>
+    <color name="home_secondary_button_content">#2F634B</color>
+    <color name="home_secondary_button_outline">#74796F</color>
+
+    <color name="theme_primary">#2F634B</color>
+    <color name="theme_on_primary">#FFFFFFFF</color>
+    <color name="theme_secondary">#52634F</color>
+    <color name="theme_background">#FFF9F2</color>
+    <color name="theme_on_background">#1C1C18</color>
+    <color name="theme_surface">#FFF9F2</color>
+    <color name="theme_on_surface">#1C1C18</color>
 </resources>
