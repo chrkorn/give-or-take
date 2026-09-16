@@ -255,3 +255,15 @@
   component is visible in the Java code used as evidence for the course's Transfer criterion.
 - Verified the debug APK build, all JVM unit tests, and Android lint with the bundled Android
   Studio Java runtime.
+
+## 2026-09-16 — Point-estimate quiz fallback screen
+
+- Implemented the first Java/XML quiz screen with a question counter, wrapping prompt, unit-labelled
+  Material input, and Submit button, retaining `findViewById` as decided in ADR 0015.
+- Added immediate validation for empty, malformed, zero, negative, and implausibly large values;
+  validation errors use the input layout and Submit remains disabled until the value is valid.
+- Used a resizing window and scroll container so long prompts and the Submit button remain reachable
+  above the soft keyboard on small screens.
+- Kept submission deliberately limited to a log statement until the scoring/session increment.
+- Added JVM boundary tests for input validation and Espresso coverage for control state, the input
+  error, and a 200-character wrapping prompt.

@@ -9,4 +9,15 @@
     <string name="start_session">Start session</string>
     <string name="stats">Stats</string>
     <string name="settings">Settings</string>
+    <string name="quiz_default_counter">3 of 10</string>
+    <string name="quiz_question_counter">%1$d of %2$d</string>
+    <string name="quiz_default_prompt">How long is the River Thames?</string>
+    <string name="quiz_default_unit">km</string>
+    <string name="quiz_answer_hint">Your estimate</string>
+    <string name="quiz_submit">Submit</string>
+    <string name="quiz_error_empty">Enter an estimate.</string>
+    <string name="quiz_error_unparseable">Enter a valid decimal number.</string>
+    <string name="quiz_error_zero">Your estimate must be greater than zero.</string>
+    <string name="quiz_error_negative">Your estimate cannot be negative.</string>
+    <string name="quiz_error_too_large">Enter a value no greater than 1,000,000,000,000,000.</string>
 </resources>

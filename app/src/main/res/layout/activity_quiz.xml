@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/quiz_scroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/home_background"
+    tools:context=".QuizActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/quiz_horizontal_margin"
+        android:paddingTop="@dimen/quiz_top_margin"
+        android:paddingEnd="@dimen/quiz_horizontal_margin"
+        android:paddingBottom="@dimen/quiz_bottom_margin">
+
+        <TextView
+            android:id="@+id/question_counter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/quiz_default_counter"
+            android:textColor="@color/home_secondary_text"
+            android:textSize="@dimen/quiz_counter_text_size"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/question_prompt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/quiz_prompt_spacing"
+            android:text="@string/quiz_default_prompt"
+            android:textColor="@color/home_on_background"
+            android:textSize="@dimen/quiz_prompt_text_size"
+            android:textStyle="bold" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/answer_input_layout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/quiz_input_spacing"
+            android:hint="@string/quiz_answer_hint"
+            app:errorEnabled="true"
+            app:expandedHintEnabled="false"
+            app:suffixText="@string/quiz_default_unit">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/answer_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="numberDecimal"
+                android:maxLines="1"
+                android:selectAllOnFocus="false" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/submit_button"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/quiz_submit_button_height"
+            android:layout_marginTop="@dimen/quiz_button_spacing"
+            android:enabled="false"
+            android:text="@string/quiz_submit"
+            android:textSize="@dimen/home_button_text_size"
+            app:cornerRadius="@dimen/home_button_corner_radius" />
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>
