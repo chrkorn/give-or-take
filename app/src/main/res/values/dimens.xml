@@ -25,4 +25,14 @@
     <dimen name="home_score_text_size">36sp</dimen>
     <dimen name="home_body_text_size">16sp</dimen>
     <dimen name="home_button_text_size">16sp</dimen>
+
+    <dimen name="quiz_horizontal_margin">24dp</dimen>
+    <dimen name="quiz_top_margin">32dp</dimen>
+    <dimen name="quiz_bottom_margin">24dp</dimen>
+    <dimen name="quiz_prompt_spacing">20dp</dimen>
+    <dimen name="quiz_input_spacing">32dp</dimen>
+    <dimen name="quiz_button_spacing">20dp</dimen>
+    <dimen name="quiz_submit_button_height">56dp</dimen>
+    <dimen name="quiz_counter_text_size">14sp</dimen>
+    <dimen name="quiz_prompt_text_size">28sp</dimen>
 </resources>
