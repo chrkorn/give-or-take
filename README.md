@@ -114,7 +114,7 @@ Further decisions are recorded in [`docs/adr/`](docs/adr/) as the implementation
 
 The generated candidate bank uses structured data from Wikidata. Its exact retrieval timestamp,
 source dataset identifier, generator version, and CC0 1.0 licence are recorded in
-[`questions.json`](questions.json); every question links to the immutable Wikidata item revision
+[`questions.json`](app/src/main/assets/questions.json); every question links to the immutable Wikidata item revision
 used for that generation. [`tools/README.md`](tools/README.md) documents extraction, filtering,
 prompt overrides, and the required manual-curation step.
 

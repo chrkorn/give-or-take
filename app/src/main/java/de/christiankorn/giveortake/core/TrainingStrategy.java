@@ -52,6 +52,39 @@ public final class TrainingStrategy {
         );
     }
 
+    TrainingStrategy(List<Question> pendingQuestions, Question currentQuestion) {
+        if (pendingQuestions == null) {
+            throw new IllegalArgumentException("pendingQuestions must not be null");
+        }
+        for (Question question : pendingQuestions) {
+            if (question == null) {
+                throw new IllegalArgumentException(
+                        "pendingQuestions must not contain null questions"
+                );
+            }
+        }
+        if (currentQuestion == null && !pendingQuestions.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "an incomplete restored strategy must have a current question"
+            );
+        }
+
+        this.pendingQuestions = new ArrayList<>(pendingQuestions);
+        this.currentQuestion = currentQuestion;
+    }
+
+    List<Question> getPendingQuestionsSnapshot() {
+        return new ArrayList<>(pendingQuestions);
+    }
+
+    Question getCurrentQuestionSnapshot() {
+        return currentQuestion;
+    }
+
+    int getRemainingQuestionCount() {
+        return pendingQuestions.size() + (currentQuestion == null ? 0 : 1);
+    }
+
     /**
      * Returns and marks the next scheduled question as awaiting an answer.
      *

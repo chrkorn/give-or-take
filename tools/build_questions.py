@@ -1523,7 +1523,11 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     repository = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true", help="print statistics without writing")
-    parser.add_argument("--output", type=Path, default=repository / "questions.json")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=repository / "app" / "src" / "main" / "assets" / "questions.json",
+    )
     parser.add_argument(
         "--exclusions",
         type=Path,

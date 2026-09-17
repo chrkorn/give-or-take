@@ -97,7 +97,12 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     """Parse paths while keeping repository defaults independent of the current directory."""
     repository = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("bank", nargs="?", type=Path, default=repository / "questions.json")
+    parser.add_argument(
+        "bank",
+        nargs="?",
+        type=Path,
+        default=repository / "app" / "src" / "main" / "assets" / "questions.json",
+    )
     parser.add_argument(
         "--ratchet",
         type=Path,
