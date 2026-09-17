@@ -267,3 +267,24 @@
 - Kept submission deliberately limited to a log statement until the scoring/session increment.
 - Added JVM boundary tests for input validation and Espresso coverage for control state, the input
   error, and a 200-character wrapping prompt.
+
+## 2026-09-17 — Core-backed quiz sessions and Activity restoration
+
+- Recorded ADR 0016: active quiz attempts use an explicit plain-Java snapshot saved as primitive
+  Activity instance state, preserving rotation and system-initiated process recreation without
+  introducing Android types into `core`.
+- Added a core `QuizSession` boundary that atomically scores a `Guess`, classifies correctness,
+  updates delayed-repeat scheduling, accumulates scores, and selects the next question. The
+  Activity performs no scoring or scheduling arithmetic.
+- Moved the generated version-4 bank into `app/src/main/assets/questions.json`, updated generator
+  defaults and documentation, and added a build-time test of the exact packaged data.
+- Added an Android asset loader with caller-owned stream closure and instrumented fail-fast tests
+  for a missing or malformed asset; an empty bundled bank also fails as a programming error.
+- Wired `QuizActivity` to load or restore a ten-question point-estimate session, submit
+  `PointGuess` values, and display the chosen dynamic progress form: answered guesses and currently
+  remaining scheduled questions.
+- Added JUnit coverage for orchestration, wrong-answer repeats, snapshot round-trips, incompatible
+  question IDs, and progress counts. Expanded Espresso coverage for submission and Activity
+  recreation; the Android-test APK compiles, but no emulator or device was connected to execute it.
+- Verified all 140 JVM tests, all 53 offline tooling tests, Android lint, the debug APK, and Android
+  test compilation.

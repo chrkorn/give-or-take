@@ -3,7 +3,6 @@ package de.christiankorn.giveortake;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.inputmethod.EditorInfo;
 import android.widget.TextView;
 
@@ -17,28 +16,33 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import de.christiankorn.giveortake.core.CorrectnessClassifier;
+import de.christiankorn.giveortake.core.LogRelativeScore;
+import de.christiankorn.giveortake.core.PointGuess;
+import de.christiankorn.giveortake.core.Question;
+import de.christiankorn.giveortake.core.QuestionBank;
+import de.christiankorn.giveortake.core.QuizSession;
+import de.christiankorn.giveortake.core.QuizSessionSnapshot;
+import de.christiankorn.giveortake.core.QuizSubmission;
+import de.christiankorn.giveortake.data.AssetQuestionBankLoader;
+
 import java.math.BigDecimal;
 import java.text.DecimalFormatSymbols;
+import java.util.Random;
 
 /**
- * Displays one point-estimation question and validates the player's numeric answer.
- *
- * <p>This first quiz screen deliberately stops at a logging placeholder. A later increment will
- * pass the validated value to the scoring engine and advance the session.</p>
+ * Runs a point-estimation quiz while delegating scoring and scheduling to the core session.
  */
 public class QuizActivity extends AppCompatActivity {
+    private static final int SESSION_LENGTH = 10;
 
-    static final String EXTRA_CURRENT_QUESTION = "currentQuestion";
-    static final String EXTRA_QUESTION_COUNT = "questionCount";
-    static final String EXTRA_QUESTION_PROMPT = "questionPrompt";
-    static final String EXTRA_QUESTION_UNIT = "questionUnit";
-
-    private static final String TAG = "QuizActivity";
-
+    private TextView questionCounter;
+    private TextView questionPrompt;
     private TextInputLayout answerInputLayout;
     private TextInputEditText answerInput;
     private MaterialButton submitButton;
     private char decimalSeparator;
+    private QuizSession quizSession;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,22 +56,20 @@ public class QuizActivity extends AppCompatActivity {
             return insets;
         });
 
-        TextView questionCounter = findViewById(R.id.question_counter);
-        TextView questionPrompt = findViewById(R.id.question_prompt);
+        questionCounter = findViewById(R.id.question_counter);
+        questionPrompt = findViewById(R.id.question_prompt);
         answerInputLayout = findViewById(R.id.answer_input_layout);
         answerInput = findViewById(R.id.answer_input);
         submitButton = findViewById(R.id.submit_button);
         decimalSeparator = DecimalFormatSymbols.getInstance().getDecimalSeparator();
 
-        int currentQuestion = getIntent().getIntExtra(EXTRA_CURRENT_QUESTION, 3);
-        int questionCount = getIntent().getIntExtra(EXTRA_QUESTION_COUNT, 10);
-        String prompt = getIntent().getStringExtra(EXTRA_QUESTION_PROMPT);
-        String unit = getIntent().getStringExtra(EXTRA_QUESTION_UNIT);
-
-        questionCounter.setText(getString(R.string.quiz_question_counter, currentQuestion,
-                questionCount));
-        questionPrompt.setText(prompt == null ? getString(R.string.quiz_default_prompt) : prompt);
-        answerInputLayout.setSuffixText(unit == null ? getString(R.string.quiz_default_unit) : unit);
+        QuestionBank questionBank = new AssetQuestionBankLoader(getAssets()).load();
+        quizSession = createOrRestoreSession(questionBank, savedInstanceState);
+        if (quizSession.isComplete()) {
+            finish();
+            return;
+        }
+        renderCurrentQuestion();
 
         submitButton.setEnabled(false);
         answerInput.addTextChangedListener(new TextWatcher() {
@@ -95,6 +97,53 @@ public class QuizActivity extends AppCompatActivity {
             }
             return false;
         });
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        QuizSessionState.write(outState, quizSession.snapshot());
+    }
+
+    private QuizSession createOrRestoreSession(
+            QuestionBank questionBank,
+            Bundle savedInstanceState
+    ) {
+        QuizSessionSnapshot snapshot = QuizSessionState.read(savedInstanceState);
+        if (snapshot == null) {
+            return new QuizSession(
+                    questionBank.getQuestions(),
+                    SESSION_LENGTH,
+                    new Random(),
+                    new LogRelativeScore(),
+                    new CorrectnessClassifier()
+            );
+        }
+
+        try {
+            return QuizSession.restore(
+                    questionBank.getQuestions(),
+                    snapshot,
+                    new LogRelativeScore(),
+                    new CorrectnessClassifier()
+            );
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalStateException(
+                    "Saved quiz session is incompatible with the bundled question bank",
+                    exception
+            );
+        }
+    }
+
+    private void renderCurrentQuestion() {
+        Question question = quizSession.getCurrentQuestion();
+        questionCounter.setText(getString(
+                R.string.quiz_question_progress,
+                quizSession.getAnsweredQuestionCount(),
+                quizSession.getRemainingQuestionCount()
+        ));
+        questionPrompt.setText(question.getPrompt());
+        answerInputLayout.setSuffixText(question.getUnit());
     }
 
     private boolean updateValidation(boolean showError) {
@@ -135,6 +184,17 @@ public class QuizActivity extends AppCompatActivity {
                 answerInput.getText().toString().trim(), decimalSeparator
         );
         BigDecimal estimate = new BigDecimal(normalisedInput);
-        Log.i(TAG, "Validated estimate submitted: " + estimate.toPlainString());
+        PointGuess guess = new PointGuess(estimate.doubleValue());
+        QuizSubmission submission = quizSession.submit(guess);
+
+        if (submission.isSessionComplete()) {
+            finish();
+            return;
+        }
+
+        answerInput.setText("");
+        answerInputLayout.setError(null);
+        submitButton.setEnabled(false);
+        renderCurrentQuestion();
     }
 }

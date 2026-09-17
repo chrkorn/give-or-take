@@ -1,6 +1,6 @@
 # Question-bank generator
 
-`build_questions.py` creates the version-4 `questions.json` consumed by Give or Take. It queries
+`build_questions.py` creates the version-4 `app/src/main/assets/questions.json` consumed by Give or Take. It queries
 referenced, non-deprecated Wikidata statements selected under ADR 0011. It uses only the Python 3
 standard library; `requirements.txt` exists to make that absence of third-party dependencies
 explicit.
@@ -48,7 +48,7 @@ python3 tools/build_questions.py
 ```
 
 The dry run performs the Wikidata queries and prints counts and magnitude distributions without
-writing a file. A normal run writes `questions.json` in the repository root. Use `--output` to
+writing a file. A normal run writes `app/src/main/assets/questions.json`. Use `--output` to
 choose another location. Candidate drops and their reasons are logged to standard error.
 
 The generator identifies itself with a project-specific User-Agent, waits one second between
