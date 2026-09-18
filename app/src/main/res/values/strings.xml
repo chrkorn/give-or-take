@@ -20,4 +20,33 @@
     <string name="quiz_error_zero">Your estimate must be greater than zero.</string>
     <string name="quiz_error_negative">Your estimate cannot be negative.</string>
     <string name="quiz_error_too_large">Enter a value no greater than 1,000,000,000,000,000.</string>
+
+    <string name="feedback_answer_number">Answer %1$d</string>
+    <string name="feedback_guess_label">Your estimate</string>
+    <string name="feedback_true_value_label">True value</string>
+    <string name="feedback_value_with_unit">%1$s %2$s</string>
+    <string name="feedback_band_correct">CORRECT</string>
+    <string name="feedback_band_correct_description">Within 1.5× of the true value.</string>
+    <string name="feedback_band_close">CLOSE</string>
+    <string name="feedback_band_close_description">Between 1.5× and 3× from the true value.</string>
+    <string name="feedback_band_wrong">WRONG</string>
+    <string name="feedback_band_wrong_description">More than 3× from the true value. This question will return later.</string>
+    <string name="feedback_comparison_exact">Your estimate matched the true value.</string>
+    <string name="feedback_comparison_high">Your estimate was about %1$s× too high.</string>
+    <string name="feedback_comparison_low">Your estimate was about %1$s× too low.</string>
+    <string name="feedback_source">Source: %1$s ↗</string>
+    <string name="feedback_source_content_description">Open source %1$s in a browser</string>
+    <string name="feedback_source_unavailable">No browser is available to open this source.</string>
+    <string name="feedback_next">Next</string>
+    <plurals name="feedback_score">
+        <item quantity="one">%1$d point out of 100</item>
+        <item quantity="other">%1$d points out of 100</item>
+    </plurals>
+
+    <string name="feedback_default_answer_number">Answer 3</string>
+    <string name="feedback_default_guess">420 m</string>
+    <string name="feedback_default_truth">632 m</string>
+    <string name="feedback_default_comparison">Your estimate was about 1.5× too low.</string>
+    <string name="feedback_default_source">Source: example.org ↗</string>
+    <string name="feedback_default_score">74 points out of 100</string>
 </resources>

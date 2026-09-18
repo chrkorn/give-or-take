@@ -17,4 +17,11 @@
     <color name="theme_on_background">#1C1C18</color>
     <color name="theme_surface">#FFF9F2</color>
     <color name="theme_on_surface">#1C1C18</color>
+
+    <color name="feedback_correct_background">#DCEFE3</color>
+    <color name="feedback_correct_content">#174D30</color>
+    <color name="feedback_close_background">#F8E8C4</color>
+    <color name="feedback_close_content">#584000</color>
+    <color name="feedback_wrong_background">#F9DEDC</color>
+    <color name="feedback_wrong_content">#6D1B1B</color>
 </resources>

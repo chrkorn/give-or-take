@@ -288,3 +288,21 @@
   recreation; the Android-test APK compiles, but no emulator or device was connected to execute it.
 - Verified all 140 JVM tests, all 53 offline tooling tests, Android lint, the debug APK, and Android
   test compilation.
+
+## 2026-09-18 — Directed point-estimate feedback
+
+- Compared factor, percentage, raw-error, and visual-scale explanations before selecting directed
+  factor wording: feedback now says that an estimate was approximately a given factor too high or
+  too low, preserving information intentionally discarded by the absolute scoring metric.
+- Implemented the XML-based `FeedbackActivity` with the question, estimate, true value, score,
+  correctness label and threshold explanation, source link, and Next action. Band colours have
+  light and dark variants, while visible labels and descriptions keep the result understandable
+  without colour perception.
+- Passed immutable primitives and strings through an explicit Intent factory. The quiz advances
+  before opening feedback and waits for that Activity to finish, so both Next and system Back
+  reveal the next scheduled question rather than the answered one.
+- Opened sources with an `ACTION_VIEW` implicit Intent and show an in-app message when no handler is
+  installed. No dependency was added.
+- Added pure-Java tests for directed multiplicative comparison and Espresso coverage for feedback
+  rendering, recreation, and Back navigation. Verified the JVM suite, debug APK, Android-test
+  compilation, and Android lint.
