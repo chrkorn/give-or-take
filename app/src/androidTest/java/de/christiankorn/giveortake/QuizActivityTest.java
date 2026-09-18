@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.Espresso.pressBack;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.clearText;
 import static androidx.test.espresso.action.ViewActions.replaceText;
@@ -64,9 +65,9 @@ public class QuizActivityTest {
         }
     }
 
-    /** Verifies that submission advances the core session and updates dynamic progress. */
+    /** Verifies that Back from feedback resumes the already-advanced core session. */
     @Test
-    public void submitValidGuess_advancesQuestionAndProgress() {
+    public void submitValidGuess_thenBackFromFeedback_advancesQuestionAndProgress() {
         AtomicReference<String> firstPrompt = new AtomicReference<>();
         try (ActivityScenario<QuizActivity> scenario = ActivityScenario.launch(QuizActivity.class)) {
             scenario.onActivity(activity -> firstPrompt.set(
@@ -75,6 +76,10 @@ public class QuizActivityTest {
 
             onView(withId(R.id.answer_input)).perform(replaceText("1"));
             onView(withId(R.id.submit_button)).perform(click());
+
+            onView(withId(R.id.feedback_next_button)).check(matches(isDisplayed()));
+            onView(withText(firstPrompt.get())).check(matches(isDisplayed()));
+            pressBack();
 
             onView(withId(R.id.question_counter)).check(matches(withText(startsWith("1 answered · "))));
             onView(withId(R.id.question_prompt)).check(matches(not(withText(firstPrompt.get()))));
@@ -90,6 +95,7 @@ public class QuizActivityTest {
         try (ActivityScenario<QuizActivity> scenario = ActivityScenario.launch(QuizActivity.class)) {
             onView(withId(R.id.answer_input)).perform(replaceText("1"));
             onView(withId(R.id.submit_button)).perform(click());
+            pressBack();
             scenario.onActivity(activity -> {
                 expectedPrompt.set(
                         ((TextView) activity.findViewById(R.id.question_prompt)).getText().toString()
