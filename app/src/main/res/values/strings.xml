@@ -6,6 +6,11 @@
     <string name="high_score_label">Personal best</string>
     <string name="high_score_empty_value">—</string>
     <string name="high_score_empty_explanation">Complete a session to set your first score.</string>
+    <string name="high_score_point_value">%1$s / 100</string>
+    <plurals name="high_score_answer_count">
+        <item quantity="one">Set across %1$d answer.</item>
+        <item quantity="other">Set across %1$d answers.</item>
+    </plurals>
     <string name="start_session">Start session</string>
     <string name="stats">Stats</string>
     <string name="settings">Settings</string>
@@ -49,4 +54,46 @@
     <string name="feedback_default_comparison">Your estimate was about 1.5× too low.</string>
     <string name="feedback_default_source">Source: example.org ↗</string>
     <string name="feedback_default_score">74 points out of 100</string>
+
+    <string name="result_title">Session complete</string>
+    <string name="result_session_score_label">Session score</string>
+    <string name="result_point_score">%1$s / 100</string>
+    <string name="result_interval_score">%1$s average loss</string>
+    <string name="result_average_closeness">On average, your estimates were within a factor of %1$s of the truth.</string>
+    <string name="result_interval_score_explanation">Lower is better. The interval score penalises both wide ranges and misses.</string>
+    <string name="result_high_score_icon">◆</string>
+    <string name="result_new_personal_best">New personal best</string>
+    <string name="result_personal_best">Personal best</string>
+    <string name="result_previous_personal_best">Previous: %1$s</string>
+    <string name="result_first_personal_best">This is your first recorded score.</string>
+    <string name="result_correct_shape">●</string>
+    <string name="result_close_shape">▲</string>
+    <string name="result_wrong_shape">×</string>
+    <plurals name="result_correct_count">
+        <item quantity="one">%1$d correct</item>
+        <item quantity="other">%1$d correct</item>
+    </plurals>
+    <plurals name="result_close_count">
+        <item quantity="one">%1$d close</item>
+        <item quantity="other">%1$d close</item>
+    </plurals>
+    <plurals name="result_wrong_count">
+        <item quantity="one">%1$d wrong</item>
+        <item quantity="other">%1$d wrong</item>
+    </plurals>
+    <string name="result_calibration_label">This session’s calibration</string>
+    <plurals name="result_calibration_summary">
+        <item quantity="one">%1$d of %2$d range contained the true value (%3$s).</item>
+        <item quantity="other">%1$d of %2$d ranges contained the true value (%3$s).</item>
+    </plurals>
+    <string name="result_calibration_target">The target for 90% intervals is about 9 in 10.</string>
+    <plurals name="result_calibration_insufficient">
+        <item quantity="one">This session has only %1$d interval answer.</item>
+        <item quantity="other">This session has only %1$d interval answers.</item>
+    </plurals>
+    <string name="result_calibration_insufficient_explanation">That is too little evidence for a meaningful calibration percentage, so none is shown yet.</string>
+    <string name="result_play_again">Play again</string>
+    <string name="result_home">Home</string>
+    <string name="result_share">Share</string>
+    <string name="result_share_placeholder_description">Share results, coming in a later version</string>
 </resources>

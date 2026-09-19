@@ -9,6 +9,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.text.DecimalFormatSymbols;
+
+import de.christiankorn.giveortake.core.Question;
+import de.christiankorn.giveortake.core.QuestionBank;
+import de.christiankorn.giveortake.data.AssetQuestionBankLoader;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.Espresso.pressBack;
@@ -110,5 +115,52 @@ public class QuizActivityTest {
             onView(withId(R.id.question_prompt)).check(matches(withText(expectedPrompt.get())));
             onView(withId(R.id.question_counter)).check(matches(withText(expectedProgress.get())));
         }
+    }
+
+    /** Verifies Back from a completed result returns Home rather than the finished quiz. */
+    @Test
+    public void completeSession_thenBackFromResult_returnsHome() {
+        QuestionBank questionBank = new AssetQuestionBankLoader(
+                androidx.test.core.app.ApplicationProvider
+                        .getApplicationContext()
+                        .getAssets()
+        ).load();
+        char decimalSeparator = DecimalFormatSymbols.getInstance().getDecimalSeparator();
+
+        try (ActivityScenario<MainActivity> ignored = ActivityScenario.launch(MainActivity.class)) {
+            onView(withId(R.id.start_session_button)).perform(click());
+
+            for (int index = 0; index < 10; index++) {
+                AtomicReference<String> prompt = new AtomicReference<>();
+                onView(withId(R.id.question_prompt)).check((view, noViewFoundException) -> {
+                    if (noViewFoundException != null) {
+                        throw noViewFoundException;
+                    }
+                    prompt.set(((TextView) view).getText().toString());
+                });
+                Question question = findByPrompt(questionBank, prompt.get());
+                String answer = Double.toString(question.getTrueValue());
+                if (decimalSeparator != '.') {
+                    answer = answer.replace('.', decimalSeparator);
+                }
+
+                onView(withId(R.id.answer_input)).perform(replaceText(answer));
+                onView(withId(R.id.submit_button)).perform(click());
+                onView(withId(R.id.feedback_next_button)).perform(click());
+            }
+
+            onView(withText(R.string.result_title)).check(matches(isDisplayed()));
+            pressBack();
+            onView(withId(R.id.start_session_button)).check(matches(isDisplayed()));
+        }
+    }
+
+    private static Question findByPrompt(QuestionBank questionBank, String prompt) {
+        for (Question question : questionBank.getQuestions()) {
+            if (question.getPrompt().equals(prompt)) {
+                return question;
+            }
+        }
+        throw new AssertionError("Displayed question was not found in the bundled bank");
     }
 }

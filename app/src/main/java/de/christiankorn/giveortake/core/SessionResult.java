@@ -20,17 +20,19 @@ public final class SessionResult {
     private final int answeredQuestionCount;
     private final double meanRawError;
     private final double meanPoints;
+    private final int correctCount;
+    private final int closeCount;
+    private final int wrongCount;
+    private final long calibrationHitCount;
+    private final long calibrationSampleSize;
+    private final boolean meaningfulCalibrationSampleSize;
 
-    /**
-     * Aggregates a session from its level and individual scores.
-     *
-     * @param level the curriculum stage played in the session
-     * @param scores the scores produced for each answered question, in any order
-     * @throws IllegalArgumentException if either argument is {@code null}, the list contains
-     *                                  {@code null}, or a score's points availability does not
-     *                                  match the level's scoring policy
-     */
-    public SessionResult(Level level, List<Score> scores) {
+    private SessionResult(
+            Level level,
+            List<Score> scores,
+            CorrectnessClassifier correctnessClassifier,
+            CalibrationTracker calibrationTracker
+    ) {
         if (level == null) {
             throw new IllegalArgumentException("level must not be null");
         }
@@ -43,6 +45,9 @@ public final class SessionResult {
 
         double runningRawMean = 0.0;
         double runningPointsMean = 0.0;
+        int runningCorrectCount = 0;
+        int runningCloseCount = 0;
+        int runningWrongCount = 0;
         for (int index = 0; index < scores.size(); index++) {
             Score score = scores.get(index);
             if (score == null) {
@@ -55,10 +60,102 @@ public final class SessionResult {
             if (score.hasPoints()) {
                 runningPointsMean += (score.getPoints() - runningPointsMean) / sampleSize;
             }
+
+            if (correctnessClassifier != null) {
+                Correctness correctness = correctnessClassifier.classify(score.getRawError());
+                switch (correctness) {
+                    case CORRECT:
+                        runningCorrectCount++;
+                        break;
+                    case CLOSE:
+                        runningCloseCount++;
+                        break;
+                    case WRONG:
+                        runningWrongCount++;
+                        break;
+                    default:
+                        throw new IllegalStateException(
+                                "Unsupported correctness band: " + correctness
+                        );
+                }
+            }
         }
 
         meanRawError = runningRawMean;
         meanPoints = runningPointsMean;
+        correctCount = runningCorrectCount;
+        closeCount = runningCloseCount;
+        wrongCount = runningWrongCount;
+        if (calibrationTracker == null) {
+            calibrationHitCount = 0L;
+            calibrationSampleSize = 0L;
+            meaningfulCalibrationSampleSize = false;
+        } else {
+            calibrationHitCount = calibrationTracker.getHitCount();
+            calibrationSampleSize = calibrationTracker.getSampleSize();
+            meaningfulCalibrationSampleSize = calibrationTracker.hasMeaningfulSampleSize();
+        }
+    }
+
+    /**
+     * Aggregates a completed or abandoned point-estimate session.
+     *
+     * <p>The shared classifier supplies the same correctness-band policy used for feedback and
+     * remedial scheduling. Reclassifying the retained raw errors here prevents the Activity from
+     * duplicating threshold arithmetic.</p>
+     *
+     * @param scores the point scores produced for each answered question
+     * @param correctnessClassifier classifier used to count the three result bands
+     * @return an immutable point-estimate result
+     * @throws IllegalArgumentException if an argument is {@code null}, a list item is
+     *                                  {@code null}, or a score has no points mapping
+     */
+    public static SessionResult forPointEstimates(
+            List<Score> scores,
+            CorrectnessClassifier correctnessClassifier
+    ) {
+        if (correctnessClassifier == null) {
+            throw new IllegalArgumentException("correctnessClassifier must not be null");
+        }
+        return new SessionResult(
+                Level.POINT_ESTIMATES,
+                scores,
+                correctnessClassifier,
+                null
+        );
+    }
+
+    /**
+     * Aggregates a completed or abandoned confidence-interval session.
+     *
+     * @param scores the interval losses produced for each answered question
+     * @param calibrationTracker tracker containing one outcome for every supplied score
+     * @return an immutable confidence-interval result
+     * @throws IllegalArgumentException if an argument is {@code null}, a list item is
+     *                                  {@code null}, a score has a points mapping, or the tracker
+     *                                  and score sample sizes differ
+     */
+    public static SessionResult forConfidenceIntervals(
+            List<Score> scores,
+            CalibrationTracker calibrationTracker
+    ) {
+        if (calibrationTracker == null) {
+            throw new IllegalArgumentException("calibrationTracker must not be null");
+        }
+        if (scores == null) {
+            throw new IllegalArgumentException("scores must not be null");
+        }
+        if (calibrationTracker.getSampleSize() != scores.size()) {
+            throw new IllegalArgumentException(
+                    "calibrationTracker must contain one outcome for every score"
+            );
+        }
+        return new SessionResult(
+                Level.CONFIDENCE_INTERVALS,
+                scores,
+                null,
+                calibrationTracker
+        );
     }
 
     /**
@@ -105,6 +202,60 @@ public final class SessionResult {
             return OptionalDouble.empty();
         }
         return OptionalDouble.of(meanPoints);
+    }
+
+    /**
+     * Returns how many point estimates fell in the correct band.
+     *
+     * @return the non-negative count, or zero for an interval session
+     */
+    public int getCorrectCount() {
+        return correctCount;
+    }
+
+    /**
+     * Returns how many point estimates fell in the close band.
+     *
+     * @return the non-negative count, or zero for an interval session
+     */
+    public int getCloseCount() {
+        return closeCount;
+    }
+
+    /**
+     * Returns how many point estimates fell in the wrong band.
+     *
+     * @return the non-negative count, or zero for an interval session
+     */
+    public int getWrongCount() {
+        return wrongCount;
+    }
+
+    /**
+     * Returns how many confidence intervals contained the true value.
+     *
+     * @return the non-negative hit count, or zero for a point-estimate session
+     */
+    public long getCalibrationHitCount() {
+        return calibrationHitCount;
+    }
+
+    /**
+     * Returns how many confidence intervals contributed to this session's calibration.
+     *
+     * @return the non-negative sample size, or zero for a point-estimate session
+     */
+    public long getCalibrationSampleSize() {
+        return calibrationSampleSize;
+    }
+
+    /**
+     * Reports whether the interval sample reached the tracker's meaningful-size rule.
+     *
+     * @return {@code true} only for a sufficiently large confidence-interval result
+     */
+    public boolean hasMeaningfulCalibrationSampleSize() {
+        return meaningfulCalibrationSampleSize;
     }
 
     private static void validatePointsAvailability(Level level, Score score) {

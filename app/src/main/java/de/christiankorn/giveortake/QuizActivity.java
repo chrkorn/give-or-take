@@ -20,6 +20,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import de.christiankorn.giveortake.core.CorrectnessClassifier;
+import de.christiankorn.giveortake.core.HighScore;
 import de.christiankorn.giveortake.core.LogRelativeScore;
 import de.christiankorn.giveortake.core.PointGuess;
 import de.christiankorn.giveortake.core.Question;
@@ -27,7 +28,9 @@ import de.christiankorn.giveortake.core.QuestionBank;
 import de.christiankorn.giveortake.core.QuizSession;
 import de.christiankorn.giveortake.core.QuizSessionSnapshot;
 import de.christiankorn.giveortake.core.QuizSubmission;
+import de.christiankorn.giveortake.core.SessionResult;
 import de.christiankorn.giveortake.data.AssetQuestionBankLoader;
+import de.christiankorn.giveortake.data.HighScorePreferences;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormatSymbols;
@@ -75,7 +78,7 @@ public class QuizActivity extends AppCompatActivity {
         QuestionBank questionBank = new AssetQuestionBankLoader(getAssets()).load();
         quizSession = createOrRestoreSession(questionBank, savedInstanceState);
         if (quizSession.isComplete()) {
-            finish();
+            showCompletedResult();
             return;
         }
         renderCurrentQuestion();
@@ -209,9 +212,27 @@ public class QuizActivity extends AppCompatActivity {
 
     private void continueAfterFeedback() {
         if (quizSession.isComplete()) {
-            finish();
+            showCompletedResult();
             return;
         }
         renderCurrentQuestion();
+    }
+
+    private void showCompletedResult() {
+        SessionResult sessionResult = quizSession.getResult();
+        HighScorePreferences highScorePreferences = new HighScorePreferences(this);
+        HighScore previousHighScore = highScorePreferences.load(sessionResult.getLevel());
+        HighScore updatedHighScore = previousHighScore.afterSession(sessionResult);
+        if (!updatedHighScore.equals(previousHighScore)) {
+            highScorePreferences.save(updatedHighScore);
+        }
+
+        startActivity(ResultActivity.createIntent(
+                this,
+                sessionResult,
+                previousHighScore
+        ));
+        // Removing the completed quiz means Back from Result returns to Home, never stale input.
+        finish();
     }
 }

@@ -61,7 +61,10 @@ public class HighScoreTest {
         HighScore empty = HighScore.empty(Level.POINT_ESTIMATES);
 
         HighScore unchanged = empty.afterSession(
-                new SessionResult(Level.POINT_ESTIMATES, Collections.emptyList())
+                SessionResult.forPointEstimates(
+                        Collections.emptyList(),
+                        new CorrectnessClassifier()
+                )
         );
 
         assertSame(empty, unchanged);
@@ -87,7 +90,10 @@ public class HighScoreTest {
         for (int index = 0; index < points.length; index++) {
             scores[index] = new Score(0.1, points[index]);
         }
-        return new SessionResult(Level.POINT_ESTIMATES, Arrays.asList(scores));
+        return SessionResult.forPointEstimates(
+                Arrays.asList(scores),
+                new CorrectnessClassifier()
+        );
     }
 
     private static SessionResult intervalSession(double... losses) {
@@ -95,6 +101,10 @@ public class HighScoreTest {
         for (int index = 0; index < losses.length; index++) {
             scores[index] = new Score(losses[index]);
         }
-        return new SessionResult(Level.CONFIDENCE_INTERVALS, Arrays.asList(scores));
+        CalibrationTracker tracker = new CalibrationTracker();
+        for (int index = 0; index < scores.length; index++) {
+            tracker.recordOutcome(true, 1.0);
+        }
+        return SessionResult.forConfidenceIntervals(Arrays.asList(scores), tracker);
     }
 }

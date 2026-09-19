@@ -65,6 +65,6 @@ public class LevelStateTest {
         for (int index = 0; index < answerCount; index++) {
             scores.add(new Score(0.1, pointsPerAnswer));
         }
-        return new SessionResult(Level.POINT_ESTIMATES, scores);
+        return SessionResult.forPointEstimates(scores, new CorrectnessClassifier());
     }
 }
