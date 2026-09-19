@@ -306,3 +306,21 @@
 - Added pure-Java tests for directed multiplicative comparison and Espresso coverage for feedback
   rendering, recreation, and Back navigation. Verified the JVM suite, debug APK, Android-test
   compilation, and Android lint.
+
+## 2026-09-19 — Completed-session result flow
+
+- Recorded ADR 0017 and implemented the selected primitive-extra result contract with explicit
+  format versioning and fail-fast validation; no dependency was added.
+- Extended the framework-independent session aggregate with correctness-band counts and immutable
+  calibration summary values sourced from `CalibrationTracker`'s meaningful-sample rule.
+- Implemented the XML/Material result screen with the ADR 0009 mean session score, multiplicative
+  average closeness, plural-aware band counts, level-specific personal-best treatment, an honest
+  small-sample calibration message, and a disabled Share placeholder.
+- Added a `SharedPreferences` data wrapper for level-specific high scores and refreshed the Home
+  personal-best card when returning from a session.
+- Finished the completed quiz below the result, made Play again replace the result with a fresh
+  quiz, and used `CLEAR_TOP | SINGLE_TOP` for Home so completed session screens cannot be re-entered.
+- Added JUnit coverage for result aggregation and calibration counts plus Espresso coverage for
+  result recreation, interval sufficiency, disabled sharing, Play again, the complete-session Back
+  path, and SharedPreferences round-trips.
+- Verified all 145 JVM tests, the debug APK, Android-test compilation, and Android lint. 

@@ -120,6 +120,15 @@ public final class CalibrationTracker {
     }
 
     /**
+     * Returns how many recorded intervals contained the true value.
+     *
+     * @return a value from zero through {@link #getSampleSize()}
+     */
+    public long getHitCount() {
+        return hitCount;
+    }
+
+    /**
      * Reports whether the calibration sample has reached the documented rule-of-thumb minimum.
      *
      * <p>This method only describes sample size. It does not prove that answers are independent,

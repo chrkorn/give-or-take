@@ -217,7 +217,7 @@ public final class QuizSession {
         if (!isComplete()) {
             throw new IllegalStateException("the quiz session is not complete");
         }
-        return new SessionResult(Level.POINT_ESTIMATES, scores);
+        return SessionResult.forPointEstimates(scores, correctnessClassifier);
     }
 
     /**

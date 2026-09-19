@@ -2,12 +2,19 @@ package de.christiankorn.giveortake;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import java.text.NumberFormat;
+
+import de.christiankorn.giveortake.core.HighScore;
+import de.christiankorn.giveortake.core.Level;
+import de.christiankorn.giveortake.data.HighScorePreferences;
 
 /**
  * Displays the application's home screen and starts its top-level destinations.
@@ -42,5 +49,34 @@ public class MainActivity extends AppCompatActivity {
             Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
             startActivity(settingsIntent);
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        renderHighScore();
+    }
+
+    private void renderHighScore() {
+        HighScore highScore = new HighScorePreferences(this).load(Level.POINT_ESTIMATES);
+        TextView valueView = findViewById(R.id.high_score_value);
+        TextView explanationView = findViewById(R.id.high_score_explanation);
+        if (!highScore.getBestValue().isPresent()) {
+            valueView.setText(R.string.high_score_empty_value);
+            explanationView.setText(R.string.high_score_empty_explanation);
+            return;
+        }
+
+        NumberFormat numberFormat = NumberFormat.getNumberInstance();
+        numberFormat.setMaximumFractionDigits(1);
+        valueView.setText(getString(
+                R.string.high_score_point_value,
+                numberFormat.format(highScore.getBestValue().getAsDouble())
+        ));
+        explanationView.setText(getResources().getQuantityString(
+                R.plurals.high_score_answer_count,
+                highScore.getAnsweredQuestionCount().getAsInt(),
+                highScore.getAnsweredQuestionCount().getAsInt()
+        ));
     }
 }

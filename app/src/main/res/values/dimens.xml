@@ -59,4 +59,30 @@
     <dimen name="feedback_body_text_size">16sp</dimen>
     <dimen name="feedback_value_text_size">20sp</dimen>
     <dimen name="feedback_comparison_text_size">20sp</dimen>
+
+    <dimen name="result_horizontal_margin">24dp</dimen>
+    <dimen name="result_top_margin">32dp</dimen>
+    <dimen name="result_bottom_margin">24dp</dimen>
+    <dimen name="result_content_bottom_padding">16dp</dimen>
+    <dimen name="result_section_spacing">24dp</dimen>
+    <dimen name="result_card_spacing">14dp</dimen>
+    <dimen name="result_card_padding">18dp</dimen>
+    <dimen name="result_card_corner_radius">12dp</dimen>
+    <dimen name="result_high_score_new_stroke_width">3dp</dimen>
+    <dimen name="result_small_spacing">4dp</dimen>
+    <dimen name="result_text_spacing">10dp</dimen>
+    <dimen name="result_icon_spacing">12dp</dimen>
+    <dimen name="result_band_height">88dp</dimen>
+    <dimen name="result_button_height">56dp</dimen>
+    <dimen name="result_button_spacing">12dp</dimen>
+    <dimen name="result_button_gap_half">6dp</dimen>
+
+    <dimen name="result_title_text_size">30sp</dimen>
+    <dimen name="result_label_text_size">14sp</dimen>
+    <dimen name="result_score_text_size">40sp</dimen>
+    <dimen name="result_body_text_size">16sp</dimen>
+    <dimen name="result_band_text_size">14sp</dimen>
+    <dimen name="result_shape_text_size">18sp</dimen>
+    <dimen name="result_high_score_icon_size">22sp</dimen>
+    <dimen name="result_calibration_text_size">20sp</dimen>
 </resources>

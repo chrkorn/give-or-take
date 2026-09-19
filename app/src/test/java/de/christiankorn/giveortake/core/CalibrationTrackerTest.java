@@ -22,6 +22,7 @@ public class CalibrationTrackerTest {
         CalibrationTracker tracker = trackerWithOutcomes(10, 0, ORDINARY_LOG_SCALE_WIDTH);
 
         assertEquals(10L, tracker.getSampleSize());
+        assertEquals(10L, tracker.getHitCount());
         assertEquals(1.0, valueOf(tracker.getEmpiricalCoverage()), PRECISE_COMPARISON);
         assertEquals(-0.10,
                 valueOf(tracker.getNominalMinusEmpiricalCoverageGap()), PRECISE_COMPARISON);
@@ -67,6 +68,7 @@ public class CalibrationTrackerTest {
         CalibrationTracker tracker = new CalibrationTracker();
 
         assertEquals(0L, tracker.getSampleSize());
+        assertEquals(0L, tracker.getHitCount());
         assertEquals(CalibrationTracker.NOMINAL_COVERAGE,
                 tracker.getNominalCoverage(), PRECISE_COMPARISON);
         assertFalse(tracker.getEmpiricalCoverage().isPresent());
