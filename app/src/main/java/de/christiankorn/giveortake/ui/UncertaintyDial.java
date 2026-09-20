@@ -4,8 +4,17 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
+import android.view.ViewParent;
+import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.SeekBar;
 
 import androidx.annotation.Nullable;
 
@@ -18,9 +27,9 @@ import de.christiankorn.giveortake.core.UncertaintyScale;
 /**
  * Displays a single-thumb logarithmic dial for choosing a multiplicative uncertainty factor.
  *
- * <p>This first implementation deliberately draws but does not yet respond to touch. The dial's
- * factor is independent of the user's best guess; another component can combine both values to
- * derive the interval {@code [guess / factor, guess * factor]}.</p>
+ * <p>The dial's factor is independent of the user's best guess; another component combines both
+ * values to derive the interval {@code [guess / factor, guess * factor]}. Pointer input remains
+ * continuous, while keyboard and accessibility actions move between labelled reference factors.</p>
  */
 public class UncertaintyDial extends View {
     private static final float DEFAULT_MINIMUM_FACTOR = 1.2f;
@@ -38,6 +47,8 @@ public class UncertaintyDial extends View {
     private float tickLength;
     private float labelSpacing;
     private float defaultWidth;
+    private float touchHitRadius;
+    private float horizontalTouchSlop;
     private float labelAscent;
     private float labelDescent;
     private float widestLabelWidth;
@@ -47,6 +58,27 @@ public class UncertaintyDial extends View {
     private Paint labelPaint;
     private float[] tickFactors;
     private String[] tickLabels;
+    private DecimalFormat factorFormat;
+    private CharSequence derivedRangeText;
+    @Nullable
+    private OnFactorChangeListener onFactorChangeListener;
+    private boolean dragging;
+
+    /**
+     * Receives factor changes so the containing screen can update its derived range immediately.
+     */
+    public interface OnFactorChangeListener {
+
+        /**
+         * Called after the dial's factor changes.
+         *
+         * @param dial the dial whose value changed
+         * @param factor the new multiplicative uncertainty factor
+         * @param fromUser {@code true} for touch, keyboard, or accessibility input; {@code false}
+         *         when application code called {@link #setFactor(double)}
+         */
+        void onFactorChanged(UncertaintyDial dial, double factor, boolean fromUser);
+    }
 
     /**
      * Creates a dial from application code.
@@ -146,6 +178,12 @@ public class UncertaintyDial extends View {
         tickLength = getResources().getDimension(R.dimen.uncertainty_dial_tick_length);
         labelSpacing = getResources().getDimension(R.dimen.uncertainty_dial_label_spacing);
         defaultWidth = getResources().getDimension(R.dimen.uncertainty_dial_default_width);
+        float minimumTouchTarget = getResources().getDimension(
+                R.dimen.uncertainty_dial_minimum_touch_target
+        );
+        float systemTouchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
+        touchHitRadius = Math.max(minimumTouchTarget / 2.0f, thumbRadius + systemTouchSlop);
+        horizontalTouchSlop = touchHitRadius;
         initialisePaints(trackColor, thumbColor, labelTextSize);
         initialiseTicks();
 
@@ -154,6 +192,12 @@ public class UncertaintyDial extends View {
         factor = isInEditMode()
                 ? Math.max(minimumFactor, Math.min(PREVIEW_FACTOR, maximumFactor))
                 : minimumFactor;
+        derivedRangeText = getResources().getString(
+                R.string.uncertainty_dial_range_unavailable
+        );
+        setFocusable(true);
+        setClickable(true);
+        updateContentDescription();
     }
 
     private void validateConfiguration(float labelTextSize) {
@@ -207,7 +251,7 @@ public class UncertaintyDial extends View {
 
         tickFactors = new float[referenceTickCount + 2];
         tickLabels = new String[referenceTickCount + 2];
-        DecimalFormat labelFormat = new DecimalFormat(
+        factorFormat = new DecimalFormat(
                 "0.##",
                 DecimalFormatSymbols.getInstance()
         );
@@ -223,7 +267,7 @@ public class UncertaintyDial extends View {
 
         widestLabelWidth = 0.0f;
         for (int index = 0; index < tickFactors.length; index++) {
-            tickLabels[index] = "×" + labelFormat.format(tickFactors[index]);
+            tickLabels[index] = "×" + factorFormat.format(tickFactors[index]);
             widestLabelWidth = Math.max(
                     widestLabelWidth,
                     labelPaint.measureText(tickLabels[index])
@@ -295,21 +339,10 @@ public class UncertaintyDial extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        float horizontalInset = Math.max(thumbRadius, widestLabelWidth / 2.0f);
-        float trackStartX = getPaddingLeft() + horizontalInset;
-        float trackEndX = Math.max(
-                trackStartX,
-                getWidth() - getPaddingRight() - horizontalInset
-        );
-
-        float markerExtent = Math.max(thumbRadius, tickLength / 2.0f);
-        float contentHeight = markerExtent * 2.0f
-                + labelSpacing
-                + labelDescent
-                - labelAscent;
-        float availableHeight = getHeight() - getPaddingTop() - getPaddingBottom();
-        float contentTop = getPaddingTop() + Math.max(0.0f, (availableHeight - contentHeight) / 2.0f);
-        float trackY = contentTop + markerExtent;
+        float trackStartX = getTrackStartX();
+        float trackEndX = getTrackEndX();
+        float trackY = getTrackY();
+        float markerExtent = getMarkerExtent();
         float labelBaseline = trackY + markerExtent + labelSpacing - labelAscent;
 
         canvas.drawLine(trackStartX, trackY, trackEndX, trackY, trackPaint);
@@ -345,11 +378,251 @@ public class UncertaintyDial extends View {
         canvas.drawCircle(thumbX, trackY, thumbRadius, thumbPaint);
     }
 
+    private float getHorizontalInset() {
+        return Math.max(thumbRadius, widestLabelWidth / 2.0f);
+    }
+
+    private float getTrackStartX() {
+        return getPaddingLeft() + getHorizontalInset();
+    }
+
+    private float getTrackEndX() {
+        return Math.max(
+                getTrackStartX(),
+                getWidth() - getPaddingRight() - getHorizontalInset()
+        );
+    }
+
+    private float getMarkerExtent() {
+        return Math.max(thumbRadius, tickLength / 2.0f);
+    }
+
+    private float getTrackY() {
+        float markerExtent = getMarkerExtent();
+        float contentHeight = markerExtent * 2.0f
+                + labelSpacing
+                + labelDescent
+                - labelAscent;
+        float availableHeight = getHeight() - getPaddingTop() - getPaddingBottom();
+        float contentTop = getPaddingTop()
+                + Math.max(0.0f, (availableHeight - contentHeight) / 2.0f);
+        return contentTop + markerExtent;
+    }
+
     private float positionToX(double positionFraction, float trackStartX, float trackEndX) {
         double visualFraction = getLayoutDirection() == LAYOUT_DIRECTION_RTL
                 ? 1.0 - positionFraction
                 : positionFraction;
         return (float) (trackStartX + visualFraction * (trackEndX - trackStartX));
+    }
+
+    private boolean isNearTrack(float x, float y) {
+        float trackStartX = getTrackStartX();
+        float trackEndX = getTrackEndX();
+        return trackEndX > trackStartX
+                && x >= trackStartX - horizontalTouchSlop
+                && x <= trackEndX + horizontalTouchSlop
+                && Math.abs(y - getTrackY()) <= touchHitRadius;
+    }
+
+    private void updateFactorFromX(float x) {
+        float trackStartX = getTrackStartX();
+        float trackWidth = getTrackEndX() - trackStartX;
+        if (trackWidth <= 0.0f) {
+            return;
+        }
+
+        double visualPosition = (x - trackStartX) / trackWidth;
+        double logicalPosition = getLayoutDirection() == LAYOUT_DIRECTION_RTL
+                ? 1.0 - visualPosition
+                : visualPosition;
+        setFactorInternal(
+                UncertaintyScale.positionFractionToFactor(
+                        logicalPosition,
+                        minimumFactor,
+                        maximumFactor
+                ),
+                true
+        );
+    }
+
+    /**
+     * Handles track taps and thumb drags with a finger-sized hit area around the thin track.
+     *
+     * <p>A completed touch calls {@link #performClick()} so click listeners and accessibility
+     * services receive the semantic click that a raw touch sequence would otherwise hide.</p>
+     *
+     * @param event the current pointer event
+     * @return {@code true} while this view owns a recognised dial gesture
+     */
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (!isEnabled()) {
+            return false;
+        }
+
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                if (!isNearTrack(event.getX(), event.getY())) {
+                    return false;
+                }
+                dragging = true;
+                setPressed(true);
+                ViewParent parent = getParent();
+                if (parent != null) {
+                    // A ScrollView may otherwise intercept MOVE events after this view accepted
+                    // DOWN, stealing the drag before the user can finish setting the answer.
+                    parent.requestDisallowInterceptTouchEvent(true);
+                }
+                updateFactorFromX(event.getX());
+                return true;
+
+            case MotionEvent.ACTION_MOVE:
+                if (!dragging) {
+                    return false;
+                }
+                updateFactorFromX(event.getX());
+                return true;
+
+            case MotionEvent.ACTION_UP:
+                if (!dragging) {
+                    return false;
+                }
+                updateFactorFromX(event.getX());
+                // ADR 0014 keeps pointer input continuous; labelled factors are not snap points.
+                finishDragging();
+                performClick();
+                return true;
+
+            case MotionEvent.ACTION_CANCEL:
+                if (!dragging) {
+                    return false;
+                }
+                finishDragging();
+                return true;
+
+            default:
+                return dragging;
+        }
+    }
+
+    private void finishDragging() {
+        dragging = false;
+        setPressed(false);
+        ViewParent parent = getParent();
+        if (parent != null) {
+            parent.requestDisallowInterceptTouchEvent(false);
+        }
+    }
+
+    /**
+     * Performs the dial's semantic click after a tap or drag completes.
+     *
+     * <p>Android Lint requires touch-driven custom views to delegate here because {@link
+     * View#performClick()} invokes registered click listeners and emits the accessibility event
+     * used by non-touch input and assistive technology.</p>
+     *
+     * @return {@code true}, because this clickable view handled the action
+     */
+    @Override
+    public boolean performClick() {
+        super.performClick();
+        return true;
+    }
+
+    /**
+     * Moves between labelled reference factors in response to keyboard or D-pad arrows.
+     *
+     * @param keyCode the pressed key
+     * @param event information about the key event
+     * @return {@code true} if the key is an arrow handled by this dial
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        int direction;
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_DPAD_UP:
+                direction = 1;
+                break;
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+                direction = -1;
+                break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                direction = getLayoutDirection() == LAYOUT_DIRECTION_RTL ? -1 : 1;
+                break;
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                direction = getLayoutDirection() == LAYOUT_DIRECTION_RTL ? 1 : -1;
+                break;
+            default:
+                return super.onKeyDown(keyCode, event);
+        }
+
+        stepToAdjacentReference(direction);
+        return true;
+    }
+
+    private boolean stepToAdjacentReference(int direction) {
+        if (direction > 0) {
+            for (float tickFactor : tickFactors) {
+                if (tickFactor > factor) {
+                    setFactorInternal(tickFactor, true);
+                    sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_SELECTED);
+                    return true;
+                }
+            }
+        } else {
+            for (int index = tickFactors.length - 1; index >= 0; index--) {
+                if (tickFactors[index] < factor) {
+                    setFactorInternal(tickFactors[index], true);
+                    sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_SELECTED);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Describes this custom control as one adjustable range to accessibility services.
+     *
+     * @param info the node populated for this view
+     */
+    @SuppressWarnings("deprecation") // The non-deprecated constructor requires API 30; min SDK is 26.
+    @Override
+    public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
+        super.onInitializeAccessibilityNodeInfo(info);
+        info.setClassName(SeekBar.class.getName());
+        info.setRangeInfo(AccessibilityNodeInfo.RangeInfo.obtain(
+                AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_FLOAT,
+                minimumFactor,
+                maximumFactor,
+                (float) factor
+        ));
+        if (isEnabled()) {
+            info.setScrollable(true);
+            info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
+            info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD);
+        }
+    }
+
+    /**
+     * Lets assistive technology adjust the factor through standard forward/backward actions.
+     *
+     * @param action the requested accessibility action
+     * @param arguments optional action arguments supplied by Android
+     * @return {@code true} when this dial handled the action
+     */
+    @Override
+    public boolean performAccessibilityAction(int action, @Nullable Bundle arguments) {
+        if (isEnabled()
+                && action == AccessibilityNodeInfo.ACTION_SCROLL_FORWARD) {
+            return stepToAdjacentReference(1);
+        }
+        if (isEnabled()
+                && action == AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD) {
+            return stepToAdjacentReference(-1);
+        }
+        return super.performAccessibilityAction(action, arguments);
     }
 
     /**
@@ -371,9 +644,56 @@ public class UncertaintyDial extends View {
         if (!Double.isFinite(factor) || factor < minimumFactor || factor > maximumFactor) {
             throw new IllegalArgumentException("factor must be finite and within the factor range");
         }
-        if (Double.compare(this.factor, factor) != 0) {
-            this.factor = factor;
-            invalidate();
+        setFactorInternal(factor, false);
+    }
+
+    private void setFactorInternal(double factor, boolean fromUser) {
+        if (Double.compare(this.factor, factor) == 0) {
+            return;
         }
+        this.factor = factor;
+        // Only the thumb position changes, so a redraw is enough; remeasurement and layout would
+        // waste work on every MOVE event.
+        invalidate();
+        if (onFactorChangeListener != null) {
+            onFactorChangeListener.onFactorChanged(this, factor, fromUser);
+        }
+        updateContentDescription();
+    }
+
+    /**
+     * Registers the listener that updates the screen's live derived-range preview.
+     *
+     * @param listener the listener to notify, or {@code null} to stop notifications
+     */
+    public void setOnFactorChangeListener(@Nullable OnFactorChangeListener listener) {
+        onFactorChangeListener = listener;
+    }
+
+    /**
+     * Supplies the same human-readable range text shown by the containing screen.
+     *
+     * <p>Keeping formatting in the Activity ensures sighted and accessibility users hear exactly
+     * the interval that will be submitted, including its unit and display rounding.</p>
+     *
+     * @param derivedRangeText the formatted lower-to-upper range, or {@code null} while no valid
+     *         best guess is available
+     */
+    public void setDerivedRangeText(@Nullable CharSequence derivedRangeText) {
+        CharSequence newText = derivedRangeText == null
+                ? getResources().getString(R.string.uncertainty_dial_range_unavailable)
+                : derivedRangeText;
+        if (!TextUtils.equals(this.derivedRangeText, newText)) {
+            this.derivedRangeText = newText.toString();
+            updateContentDescription();
+        }
+    }
+
+    private void updateContentDescription() {
+        setContentDescription(getResources().getString(
+                R.string.uncertainty_dial_content_description,
+                factorFormat.format(factor),
+                derivedRangeText
+        ));
     }
 }

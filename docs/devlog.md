@@ -335,3 +335,20 @@
 - Added JUnit coverage for endpoints, multiplicative spacing, round trips, and invalid inputs. No
   dependency was added.
 - Verified all 149 JVM tests, the debug APK build, and Android lint.
+
+## 2026-09-20 — Uncertainty-factor dial interaction and accessibility
+
+- Added continuous track taps and thumb dragging with a 48 dp minimum hit band, endpoint clamping,
+  parent-scroll interception protection, and redraw-only updates during movement. Pointer release
+  remains unsnapped, preserving ADR 0014's decision that labelled factors are references rather
+  than detents.
+- Added factor-change callbacks for the Activity's live derived-range preview. The Activity can
+  return that exact formatted range to the dial so its dynamic content description uses the same
+  units and rounding as the visible answer.
+- Made the dial one adjustable accessibility range with D-pad, keyboard, and standard
+  accessibility forward/backward actions between labelled reference factors. Completed touch
+  gestures delegate to `performClick()` so click listeners and accessibility services receive the
+  semantic action.
+- Changed the pure-Java position-to-factor mapping to clamp positions outside the track and added
+  JVM coverage for both exact endpoints and movement past each end. No dependency was added.
+- Verified all 150 JVM tests, Android lint, the debug APK build, and Android-test APK compilation.
