@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="UncertaintyDial">
+        <attr name="minimumFactor" format="float" />
+        <attr name="maximumFactor" format="float" />
+        <attr name="trackColor" format="color" />
+        <attr name="thumbColor" format="color" />
+        <attr name="thumbRadius" format="dimension" />
+        <attr name="trackThickness" format="dimension" />
+        <attr name="tickLabelTextSize" format="dimension" />
+    </declare-styleable>
+</resources>
