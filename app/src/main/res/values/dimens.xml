@@ -42,6 +42,7 @@
     <dimen name="uncertainty_dial_tick_length">8dp</dimen>
     <dimen name="uncertainty_dial_label_spacing">8dp</dimen>
     <dimen name="uncertainty_dial_tick_label_text_size">12sp</dimen>
+    <dimen name="uncertainty_dial_minimum_touch_target">48dp</dimen>
 
     <dimen name="feedback_horizontal_margin">24dp</dimen>
     <dimen name="feedback_top_margin">32dp</dimen>

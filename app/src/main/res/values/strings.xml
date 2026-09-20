@@ -25,6 +25,8 @@
     <string name="quiz_error_zero">Your estimate must be greater than zero.</string>
     <string name="quiz_error_negative">Your estimate cannot be negative.</string>
     <string name="quiz_error_too_large">Enter a value no greater than 1,000,000,000,000,000.</string>
+    <string name="uncertainty_dial_content_description">Uncertainty factor ×%1$s. 90%% range: %2$s.</string>
+    <string name="uncertainty_dial_range_unavailable">not available until a best guess is entered</string>
 
     <string name="feedback_answer_number">Answer %1$d</string>
     <string name="feedback_guess_label">Your estimate</string>

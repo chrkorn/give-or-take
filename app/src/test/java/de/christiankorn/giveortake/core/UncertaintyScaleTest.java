@@ -63,6 +63,33 @@ public class UncertaintyScaleTest {
     }
 
     /**
+     * Verifies that dragging past either physical end remains at that endpoint's exact factor.
+     */
+    @Test
+    public void positionFractionToFactor_pastTrackEnds_clampsToFactorEndpoints() {
+        assertEquals(
+                1.2,
+                UncertaintyScale.positionFractionToFactor(0.0, 1.2, 100.0),
+                0.0
+        );
+        assertEquals(
+                100.0,
+                UncertaintyScale.positionFractionToFactor(1.0, 1.2, 100.0),
+                0.0
+        );
+        assertEquals(
+                1.2,
+                UncertaintyScale.positionFractionToFactor(-0.25, 1.2, 100.0),
+                0.0
+        );
+        assertEquals(
+                100.0,
+                UncertaintyScale.positionFractionToFactor(1.25, 1.2, 100.0),
+                0.0
+        );
+    }
+
+    /**
      * Verifies that invalid ranges and values fail at the pure mapping boundary.
      */
     @Test
@@ -74,10 +101,6 @@ public class UncertaintyScaleTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> UncertaintyScale.factorToPositionFraction(101.0, 1.2, 100.0)
-        );
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> UncertaintyScale.positionFractionToFactor(-0.1, 1.2, 100.0)
         );
         assertThrows(
                 IllegalArgumentException.class,

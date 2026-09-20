@@ -40,15 +40,16 @@ public final class UncertaintyScale {
     }
 
     /**
-     * Maps a position fraction from {@code 0} to {@code 1} back to an uncertainty factor.
+     * Maps a position fraction back to an uncertainty factor, clamping positions outside the
+     * track to its nearest endpoint.
      *
-     * @param positionFraction the normalised position to map
+     * @param positionFraction the normalised position to map; values below {@code 0} or above
+     *         {@code 1} are clamped
      * @param minimumFactor the factor represented by position {@code 0}
      * @param maximumFactor the factor represented by position {@code 1}
      * @return the uncertainty factor at the logarithmic position
      * @throws IllegalArgumentException if any argument is non-finite, a factor is not positive,
-     *         the range does not increase, or {@code positionFraction} lies outside
-     *         {@code [0, 1]}
+     *         or the range does not increase
      */
     public static double positionFractionToFactor(
             double positionFraction,
@@ -56,10 +57,15 @@ public final class UncertaintyScale {
             double maximumFactor
     ) {
         validateRange(minimumFactor, maximumFactor);
-        if (!Double.isFinite(positionFraction)
-                || positionFraction < 0.0
-                || positionFraction > 1.0) {
-            throw new IllegalArgumentException("position fraction must be finite and within [0, 1]");
+        if (!Double.isFinite(positionFraction)) {
+            throw new IllegalArgumentException("position fraction must be finite");
+        }
+
+        if (positionFraction <= 0.0) {
+            return minimumFactor;
+        }
+        if (positionFraction >= 1.0) {
+            return maximumFactor;
         }
 
         double logarithmicMinimum = Math.log(minimumFactor);
