@@ -324,3 +324,14 @@
   result recreation, interval sufficiency, disabled sharing, Play again, the complete-session Back
   path, and SharedPreferences round-trips.
 - Verified all 145 JVM tests, the debug APK, Android-test compilation, and Android lint. 
+
+## 2026-09-20 — Uncertainty-factor dial skeleton
+
+- Added a Java/XML custom `View` skeleton for the single-thumb uncertainty-factor dial, with
+  theme-aware custom attributes, explicit measurement behaviour, reusable drawing objects, labelled
+  reference ticks, right-to-left rendering, and a dedicated Android Studio preview layout.
+- Kept the factor-to-position conversion in the framework-independent `core` package. Its
+  logarithmic mapping gives equal screen distance to equal ratios, such as ×2–×4 and ×4–×8.
+- Added JUnit coverage for endpoints, multiplicative spacing, round trips, and invalid inputs. No
+  dependency was added.
+- Verified all 149 JVM tests, the debug APK build, and Android lint.

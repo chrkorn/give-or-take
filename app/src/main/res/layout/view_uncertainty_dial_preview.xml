@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<de.christiankorn.giveortake.ui.UncertaintyDial
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/quiz_horizontal_margin"
+    app:maximumFactor="100"
+    app:minimumFactor="1.2"
+    app:thumbColor="@color/uncertainty_dial_thumb"
+    app:thumbRadius="@dimen/uncertainty_dial_thumb_radius"
+    app:tickLabelTextSize="@dimen/uncertainty_dial_tick_label_text_size"
+    app:trackColor="@color/uncertainty_dial_track"
+    app:trackThickness="@dimen/uncertainty_dial_track_thickness"
+    tools:ignore="UnusedResources" />

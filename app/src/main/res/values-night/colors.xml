@@ -18,6 +18,10 @@
     <color name="theme_surface">#111814</color>
     <color name="theme_on_surface">#E1E4DD</color>
 
+    <color name="uncertainty_dial_track">#8D9388</color>
+    <color name="uncertainty_dial_thumb">#91D5AE</color>
+    <color name="uncertainty_dial_label">#C2C9BF</color>
+
     <color name="feedback_correct_background">#173D29</color>
     <color name="feedback_correct_content">#B8E8C8</color>
     <color name="feedback_close_background">#443508</color>
