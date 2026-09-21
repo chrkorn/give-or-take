@@ -104,6 +104,7 @@
                         android:orientation="horizontal">
 
                         <TextView
+                            android:id="@+id/feedback_guess_label"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
@@ -113,9 +114,11 @@
 
                         <TextView
                             android:id="@+id/feedback_guess"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="@dimen/feedback_small_spacing"
+                            android:layout_weight="1"
+                            android:gravity="end"
                             android:textColor="@color/home_card_content"
                             android:textSize="@dimen/feedback_value_text_size"
                             android:textStyle="bold"

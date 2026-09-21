@@ -13,6 +13,9 @@ import java.util.Collections;
 import java.util.Random;
 
 import de.christiankorn.giveortake.core.CorrectnessClassifier;
+import de.christiankorn.giveortake.core.IntervalGuess;
+import de.christiankorn.giveortake.core.IntervalScore;
+import de.christiankorn.giveortake.core.Level;
 import de.christiankorn.giveortake.core.LogRelativeScore;
 import de.christiankorn.giveortake.core.PointGuess;
 import de.christiankorn.giveortake.core.Question;
@@ -25,6 +28,7 @@ import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.Matchers.startsWith;
 
 /**
  * Verifies that feedback translates a scored submission into accessible display text.
@@ -99,6 +103,36 @@ public class FeedbackActivityTest {
         }
     }
 
+    /** Verifies interval feedback shows bounds, containment outcome, raw loss, and direction. */
+    @Test
+    public void missedInterval_displaysModeSpecificFeedback() {
+        Context context = ApplicationProvider.getApplicationContext();
+        Question question = Question.builder()
+                .id("interval-question")
+                .prompt("Estimate the interval quantity")
+                .trueValue(100.0)
+                .unit("units")
+                .measurementBasis("test basis")
+                .build();
+        QuizSession session = new QuizSession(
+                Collections.singletonList(question),
+                1,
+                new Random(789L),
+                Level.CONFIDENCE_INTERVALS,
+                new IntervalScore()
+        );
+        IntervalGuess guess = new IntervalGuess(200.0, 300.0);
+        QuizSubmission submission = session.submit(guess);
+
+        try (ActivityScenario<FeedbackActivity> scenario = ActivityScenario.launch(
+                FeedbackActivity.createIntent(context, submission, guess, 1)
+        )) {
+            assertIntervalFeedbackIsVisible();
+            scenario.recreate();
+            assertIntervalFeedbackIsVisible();
+        }
+    }
+
     private static void assertFeedbackTextIsVisible() {
         onView(withText("Answer 1")).check(matches(isDisplayed()));
         onView(withText("Estimate the test quantity")).check(matches(isDisplayed()));
@@ -110,5 +144,17 @@ public class FeedbackActivityTest {
                 .check(matches(isDisplayed()));
         onView(withText("17 points out of 100")).check(matches(isDisplayed()));
         onView(withText("Source: example.org ↗")).check(matches(isDisplayed()));
+    }
+
+    private static void assertIntervalFeedbackIsVisible() {
+        onView(withText(R.string.feedback_interval_label)).check(matches(isDisplayed()));
+        onView(withId(R.id.feedback_guess)).check(matches(withText("200–300 units")));
+        onView(withText(R.string.feedback_interval_missed)).check(matches(isDisplayed()));
+        onView(withText(R.string.feedback_interval_missed_description))
+                .check(matches(isDisplayed()));
+        onView(withText(R.string.feedback_interval_above_truth_comparison))
+                .check(matches(isDisplayed()));
+        onView(withId(R.id.feedback_score))
+                .check(matches(withText(startsWith("Interval loss:"))));
     }
 }

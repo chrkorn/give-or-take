@@ -368,3 +368,21 @@
   direct-mode restoration. 
 - Verified all JVM tests, Android lint, the debug APK build, and Android-test APK compilation. No
   dependency was added.
+
+## 2026-09-21 — Wire point and interval quiz modes end to end
+
+- Recorded ADR 0018: interval containment is the discrete remedial-repeat signal, while the proper
+  log interval loss remains the separate performance measure.
+- Made the selected curriculum `Level` the explicit quiz-mode input. Policy selection remains one
+  polymorphic choice between `LogRelativeScore` and `IntervalScore`; no scoring arithmetic moved
+  into an Activity.
+- Extended the pure-Java session boundary to score interval guesses, record calibration outcomes,
+  schedule missed ranges for delayed repetition, aggregate the correct mode-specific result, and
+  preserve interval scores and calibration aggregates through Activity recreation.
+- Kept point and interval controls as explicit XML groups swapped by visibility. Interval
+  submissions now use the same feedback-and-resume flow as point estimates, with range-specific
+  containment, direction, and raw-loss wording.
+- Preserved the selected level when replaying from the result screen and added JUnit4 and Espresso
+  coverage for interval scheduling, restoration, feedback, navigation, and mode retention.
+- Verified the JVM suite, debug APK, Android-test APK compilation, and Android lint. No dependency
+  was added.

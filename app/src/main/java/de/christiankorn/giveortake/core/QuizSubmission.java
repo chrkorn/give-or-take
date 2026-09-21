@@ -1,7 +1,7 @@
 package de.christiankorn.giveortake.core;
 
 /**
- * Reports the domain result of submitting one point estimate to a quiz session.
+ * Reports the domain result of submitting one guess to a quiz session.
  */
 public final class QuizSubmission {
     private final Question answeredQuestion;
@@ -40,7 +40,10 @@ public final class QuizSubmission {
     }
 
     /**
-     * Returns the correctness band used by the training strategy.
+     * Returns the discrete outcome used by the training strategy.
+     *
+     * <p>Point estimates use the three correctness bands. Confidence intervals use
+     * {@link Correctness#CORRECT} for containment and {@link Correctness#WRONG} for a miss.</p>
      *
      * @return the classified correctness
      */

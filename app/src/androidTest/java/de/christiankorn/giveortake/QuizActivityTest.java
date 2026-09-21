@@ -212,6 +212,38 @@ public class QuizActivityTest {
         }
     }
 
+    /** Verifies interval submission uses feedback and then resumes the same core session. */
+    @Test
+    public void submitInterval_thenBackFromFeedback_advancesQuestionAndProgress() {
+        Context context = androidx.test.core.app.ApplicationProvider.getApplicationContext();
+        Intent intent = QuizActivity.createIntent(context, Level.CONFIDENCE_INTERVALS);
+        AtomicReference<String> firstPrompt = new AtomicReference<>();
+        try (ActivityScenario<QuizActivity> scenario = ActivityScenario.launch(intent)) {
+            scenario.onActivity(activity -> firstPrompt.set(
+                    ((TextView) activity.findViewById(R.id.question_prompt)).getText().toString()
+            ));
+            onView(withId(R.id.range_entry_mode_button)).perform(scrollTo(), click());
+            onView(withId(R.id.lower_bound_input)).perform(scrollTo(), replaceText("1"));
+            onView(withId(R.id.upper_bound_input))
+                    .perform(scrollTo(), replaceText("1000000000000000"));
+            onView(withId(R.id.submit_button)).perform(scrollTo(), click());
+
+            onView(withText(R.string.feedback_interval_contained)).check(matches(isDisplayed()));
+            pressBack();
+
+            onView(withId(R.id.question_counter))
+                    .check(matches(withText(startsWith("1 answered · "))));
+            onView(withId(R.id.question_prompt)).check(matches(not(withText(firstPrompt.get()))));
+            onView(withId(R.id.lower_bound_input)).check(matches(withText("")));
+            onView(withId(R.id.upper_bound_input)).check(matches(withText("")));
+
+            scenario.recreate();
+            onView(withId(R.id.question_counter))
+                    .check(matches(withText(startsWith("1 answered · "))));
+            onView(withId(R.id.range_answer_group)).check(matches(isDisplayed()));
+        }
+    }
+
     /** Verifies that Activity recreation restores the exact current core-session state. */
     @Test
     public void recreate_afterSubmission_restoresCurrentQuestionAndProgress() {

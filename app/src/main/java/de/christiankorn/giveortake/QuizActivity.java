@@ -21,9 +21,9 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
-import de.christiankorn.giveortake.core.CorrectnessClassifier;
 import de.christiankorn.giveortake.core.HighScore;
 import de.christiankorn.giveortake.core.IntervalGuess;
+import de.christiankorn.giveortake.core.IntervalScore;
 import de.christiankorn.giveortake.core.Level;
 import de.christiankorn.giveortake.core.LogRelativeScore;
 import de.christiankorn.giveortake.core.PointGuess;
@@ -32,6 +32,7 @@ import de.christiankorn.giveortake.core.QuestionBank;
 import de.christiankorn.giveortake.core.QuizSession;
 import de.christiankorn.giveortake.core.QuizSessionSnapshot;
 import de.christiankorn.giveortake.core.QuizSubmission;
+import de.christiankorn.giveortake.core.ScoringPolicy;
 import de.christiankorn.giveortake.core.SessionResult;
 import de.christiankorn.giveortake.data.AssetQuestionBankLoader;
 import de.christiankorn.giveortake.data.HighScorePreferences;
@@ -45,15 +46,13 @@ import java.util.Random;
 /**
  * Runs a numerical-estimation quiz and owns its point or interval answer controls.
  *
- * <p>Point submissions delegate scoring and scheduling to the current core session. Confidence
- * interval input is returned as one {@link IntervalGuess}; its later session-policy increment can
- * therefore remain independent of whether the user chose the factor dial or typed both bounds.</p>
+ * <p>Both answer modes produce a core {@code Guess} and delegate scoring, calibration, and
+ * scheduling to the current session. Visibility swaps keep the two XML input groups explicit
+ * while sharing the question, progress, and submission controls.</p>
  */
 public class QuizActivity extends AppCompatActivity {
     private static final int SESSION_LENGTH = 10;
     private static final String EXTRA_LEVEL = "quiz.level";
-    private static final String RESULT_LOWER_BOUND = "quiz.result.lowerBound";
-    private static final String RESULT_UPPER_BOUND = "quiz.result.upperBound";
     private static final String STATE_RANGE_ENTRY_MODE = "quiz.rangeEntryMode";
     private static final String STATE_DIRECT_BOUNDS_INITIALISED =
             "quiz.directBoundsInitialised";
@@ -99,9 +98,8 @@ public class QuizActivity extends AppCompatActivity {
      * Creates an explicit quiz Intent for a selected answer mode.
      *
      * <p>The point-estimate flow remains the default for callers that construct an Intent
-     * directly. The confidence-interval mode currently returns its submitted bounds as an Activity
-     * result so the later interval-session increment can consume the same {@link IntervalGuess}
-     * representation without coupling this input work to scheduling and feedback policy.</p>
+     * directly. Normal callers should use this factory so the selected level remains an explicit
+     * navigation input rather than hidden mutable Activity state.</p>
      *
      * @param context context used to identify this Activity
      * @param level answer mode to display
@@ -115,23 +113,6 @@ public class QuizActivity extends AppCompatActivity {
             throw new IllegalArgumentException("level must not be null");
         }
         return new Intent(context, QuizActivity.class).putExtra(EXTRA_LEVEL, level.name());
-    }
-
-    /**
-     * Recreates the interval submitted by a confidence-interval quiz screen.
-     *
-     * @param resultData result Intent returned by this Activity
-     * @return the submitted interval, using the same domain type as either entry path
-     * @throws IllegalArgumentException if the result is missing or invalid
-     */
-    public static IntervalGuess readIntervalGuessResult(Intent resultData) {
-        if (resultData == null) {
-            throw new IllegalArgumentException("resultData must not be null");
-        }
-        return new IntervalGuess(
-                resultData.getDoubleExtra(RESULT_LOWER_BOUND, Double.NaN),
-                resultData.getDoubleExtra(RESULT_UPPER_BOUND, Double.NaN)
-        );
     }
 
     @Override
@@ -464,11 +445,24 @@ public class QuizActivity extends AppCompatActivity {
             updateRangePreview(true);
             return;
         }
-        Intent resultData = new Intent()
-                .putExtra(RESULT_LOWER_BOUND, interval.getLowerBound())
-                .putExtra(RESULT_UPPER_BOUND, interval.getUpperBound());
-        setResult(RESULT_OK, resultData);
-        finish();
+        QuizSubmission submission = quizSession.submit(interval);
+
+        runWithoutRangeCallbacks(() -> {
+            bestGuessInput.setText("");
+            lowerBoundInput.setText("");
+            upperBoundInput.setText("");
+        });
+        directBoundsInitialised = false;
+        bestGuessInputLayout.setError(null);
+        lowerBoundInputLayout.setError(null);
+        upperBoundInputLayout.setError(null);
+        updateRangePreview(false);
+        feedbackLauncher.launch(FeedbackActivity.createIntent(
+                this,
+                submission,
+                interval,
+                quizSession.getAnsweredQuestionCount()
+        ));
     }
 
     IntervalGuess getCurrentIntervalGuess(boolean showErrors) {
@@ -489,23 +483,29 @@ public class QuizActivity extends AppCompatActivity {
             QuestionBank questionBank,
             Bundle savedInstanceState
     ) {
+        ScoringPolicy scoringPolicy = level == Level.POINT_ESTIMATES
+                ? new LogRelativeScore()
+                : new IntervalScore();
         QuizSessionSnapshot snapshot = QuizSessionState.read(savedInstanceState);
         if (snapshot == null) {
             return new QuizSession(
                     questionBank.getQuestions(),
                     SESSION_LENGTH,
                     new Random(),
-                    new LogRelativeScore(),
-                    new CorrectnessClassifier()
+                    level,
+                    scoringPolicy
             );
+        }
+
+        if (snapshot.getLevel() != level) {
+            throw new IllegalStateException("Saved quiz level does not match the Intent level");
         }
 
         try {
             return QuizSession.restore(
                     questionBank.getQuestions(),
                     snapshot,
-                    new LogRelativeScore(),
-                    new CorrectnessClassifier()
+                    scoringPolicy
             );
         } catch (IllegalArgumentException exception) {
             throw new IllegalStateException(

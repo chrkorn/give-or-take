@@ -13,6 +13,17 @@ import static org.junit.Assert.assertTrue;
  * Tests empirical interval calibration and width tracking with hand-constructed outcomes.
  */
 public class CalibrationTrackerTest {
+    /** Verifies persisted aggregates can continue the same incremental mean calculation. */
+    @Test
+    public void restore_thenRecordOutcome_continuesAggregateState() {
+        CalibrationTracker tracker = CalibrationTracker.restore(2L, 1L, 0.5);
+
+        tracker.recordOutcome(true, 1.1);
+
+        assertEquals(3L, tracker.getSampleSize());
+        assertEquals(2L, tracker.getHitCount());
+        assertEquals(0.7, tracker.getMeanLogScaleWidth().getAsDouble(), 1.0e-12);
+    }
     private static final double PRECISE_COMPARISON = 1.0e-12;
     private static final double ORDINARY_LOG_SCALE_WIDTH = 0.25;
 

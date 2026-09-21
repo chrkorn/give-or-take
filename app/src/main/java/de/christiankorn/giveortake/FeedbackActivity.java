@@ -23,6 +23,9 @@ import java.text.NumberFormat;
 
 import de.christiankorn.giveortake.core.Correctness;
 import de.christiankorn.giveortake.core.EstimateComparison;
+import de.christiankorn.giveortake.core.Guess;
+import de.christiankorn.giveortake.core.IntervalGuess;
+import de.christiankorn.giveortake.core.Level;
 import de.christiankorn.giveortake.core.PointGuess;
 import de.christiankorn.giveortake.core.Question;
 import de.christiankorn.giveortake.core.QuizSubmission;
@@ -36,11 +39,15 @@ import de.christiankorn.giveortake.core.QuizSubmission;
  */
 public class FeedbackActivity extends AppCompatActivity {
     private static final String EXTRA_ANSWER_NUMBER = "feedback.answerNumber";
+    private static final String EXTRA_LEVEL = "feedback.level";
     private static final String EXTRA_QUESTION = "feedback.question";
     private static final String EXTRA_GUESS = "feedback.guess";
+    private static final String EXTRA_LOWER_BOUND = "feedback.lowerBound";
+    private static final String EXTRA_UPPER_BOUND = "feedback.upperBound";
     private static final String EXTRA_TRUE_VALUE = "feedback.trueValue";
     private static final String EXTRA_UNIT = "feedback.unit";
     private static final String EXTRA_POINTS = "feedback.points";
+    private static final String EXTRA_RAW_SCORE = "feedback.rawScore";
     private static final String EXTRA_CORRECTNESS = "feedback.correctness";
     private static final String EXTRA_SOURCE_URL = "feedback.sourceUrl";
     private static final String EXTRA_SOURCE_LABEL = "feedback.sourceLabel";
@@ -53,7 +60,7 @@ public class FeedbackActivity extends AppCompatActivity {
      *
      * @param context context used to identify the destination Activity
      * @param submission scored submission to display
-     * @param guess point estimate entered by the user
+     * @param guess point estimate or confidence interval entered by the user
      * @param answerNumber one-based number of the recorded answer
      * @return an explicit Intent containing all feedback display data
      * @throws IllegalArgumentException if an argument is invalid
@@ -61,7 +68,7 @@ public class FeedbackActivity extends AppCompatActivity {
     public static Intent createIntent(
             Context context,
             QuizSubmission submission,
-            PointGuess guess,
+            Guess guess,
             int answerNumber
     ) {
         if (context == null) {
@@ -78,16 +85,37 @@ public class FeedbackActivity extends AppCompatActivity {
         }
 
         Question question = submission.getAnsweredQuestion();
-        return new Intent(context, FeedbackActivity.class)
+        Intent intent = new Intent(context, FeedbackActivity.class)
                 .putExtra(EXTRA_ANSWER_NUMBER, answerNumber)
                 .putExtra(EXTRA_QUESTION, question.getPrompt())
-                .putExtra(EXTRA_GUESS, guess.getValue())
                 .putExtra(EXTRA_TRUE_VALUE, question.getTrueValue())
                 .putExtra(EXTRA_UNIT, question.getUnit())
-                .putExtra(EXTRA_POINTS, submission.getScore().getPoints())
+                .putExtra(EXTRA_RAW_SCORE, submission.getScore().getRawError())
                 .putExtra(EXTRA_CORRECTNESS, submission.getCorrectness().name())
                 .putExtra(EXTRA_SOURCE_URL, question.getSourceUrl())
                 .putExtra(EXTRA_SOURCE_LABEL, question.getSourceLabel());
+        if (guess instanceof PointGuess) {
+            if (!submission.getScore().hasPoints()) {
+                throw new IllegalArgumentException("point feedback requires a points score");
+            }
+            return intent
+                    .putExtra(EXTRA_LEVEL, Level.POINT_ESTIMATES.name())
+                    .putExtra(EXTRA_GUESS, ((PointGuess) guess).getValue())
+                    .putExtra(EXTRA_POINTS, submission.getScore().getPoints());
+        }
+        if (guess instanceof IntervalGuess) {
+            if (submission.getScore().hasPoints()) {
+                throw new IllegalArgumentException(
+                        "confidence-interval feedback requires a raw loss"
+                );
+            }
+            IntervalGuess intervalGuess = (IntervalGuess) guess;
+            return intent
+                    .putExtra(EXTRA_LEVEL, Level.CONFIDENCE_INTERVALS.name())
+                    .putExtra(EXTRA_LOWER_BOUND, intervalGuess.getLowerBound())
+                    .putExtra(EXTRA_UPPER_BOUND, intervalGuess.getUpperBound());
+        }
+        throw new IllegalArgumentException("unsupported guess type");
     }
 
     @Override
@@ -105,11 +133,10 @@ public class FeedbackActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         int answerNumber = requirePositiveInt(intent, EXTRA_ANSWER_NUMBER);
+        Level level = requireLevel(intent);
         String question = requireNonBlankString(intent, EXTRA_QUESTION);
-        double guess = requirePositiveDouble(intent, EXTRA_GUESS);
         double trueValue = requirePositiveDouble(intent, EXTRA_TRUE_VALUE);
         String unit = requireNonBlankString(intent, EXTRA_UNIT);
-        int points = requireNonNegativeInt(intent, EXTRA_POINTS);
         Correctness correctness = requireCorrectness(intent);
         String sourceUrl = intent.getStringExtra(EXTRA_SOURCE_URL);
         String sourceLabel = intent.getStringExtra(EXTRA_SOURCE_LABEL);
@@ -118,26 +145,106 @@ public class FeedbackActivity extends AppCompatActivity {
                 getString(R.string.feedback_answer_number, answerNumber)
         );
         ((TextView) findViewById(R.id.feedback_question)).setText(question);
-        ((TextView) findViewById(R.id.feedback_guess)).setText(formatValue(guess, unit));
         ((TextView) findViewById(R.id.feedback_true_value)).setText(
                 formatValue(trueValue, unit)
         );
-        ((TextView) findViewById(R.id.feedback_score)).setText(
-                getResources().getQuantityString(R.plurals.feedback_score, points, points)
-        );
 
-        renderBand(correctness);
-        renderComparison(guess, trueValue);
+        if (level == Level.POINT_ESTIMATES) {
+            renderPointFeedback(intent, trueValue, unit, correctness);
+        } else {
+            renderIntervalFeedback(intent, trueValue, unit, correctness);
+        }
         configureSourceLink(sourceUrl, sourceLabel);
 
         findViewById(R.id.feedback_next_button).setOnClickListener(view -> finish());
     }
 
-    private void renderBand(Correctness correctness) {
+    private void renderPointFeedback(
+            Intent intent,
+            double trueValue,
+            String unit,
+            Correctness correctness
+    ) {
+        double guess = requirePositiveDouble(intent, EXTRA_GUESS);
+        int points = requireNonNegativeInt(intent, EXTRA_POINTS);
+        ((TextView) findViewById(R.id.feedback_guess)).setText(formatValue(guess, unit));
+        ((TextView) findViewById(R.id.feedback_score)).setText(
+                getResources().getQuantityString(R.plurals.feedback_score, points, points)
+        );
+        renderBand(correctness, Level.POINT_ESTIMATES);
+        renderComparison(guess, trueValue);
+    }
+
+    private void renderIntervalFeedback(
+            Intent intent,
+            double trueValue,
+            String unit,
+            Correctness correctness
+    ) {
+        double lowerBound = requirePositiveDouble(intent, EXTRA_LOWER_BOUND);
+        double upperBound = requirePositiveDouble(intent, EXTRA_UPPER_BOUND);
+        if (lowerBound > upperBound) {
+            throw new IllegalStateException("Invalid confidence-interval feedback bounds");
+        }
+        double rawScore = requireNonNegativeDouble(intent, EXTRA_RAW_SCORE);
+
+        ((TextView) findViewById(R.id.feedback_guess_label)).setText(
+                R.string.feedback_interval_label
+        );
+        ((TextView) findViewById(R.id.feedback_guess)).setText(
+                getString(
+                        R.string.feedback_interval_value,
+                        formatNumber(lowerBound),
+                        formatNumber(upperBound),
+                        unit
+                )
+        );
+        ((TextView) findViewById(R.id.feedback_score)).setText(getString(
+                R.string.feedback_interval_loss,
+                formatNumber(rawScore)
+        ));
+        renderBand(correctness, Level.CONFIDENCE_INTERVALS);
+
+        TextView comparisonView = findViewById(R.id.feedback_comparison);
+        if (correctness == Correctness.CORRECT) {
+            comparisonView.setText(R.string.feedback_interval_contained_comparison);
+        } else if (trueValue < lowerBound) {
+            comparisonView.setText(R.string.feedback_interval_above_truth_comparison);
+        } else {
+            comparisonView.setText(R.string.feedback_interval_below_truth_comparison);
+        }
+    }
+
+    private void renderBand(Correctness correctness, Level level) {
         int labelResource;
         int descriptionResource;
         int backgroundResource;
         int contentResource;
+        if (level == Level.CONFIDENCE_INTERVALS) {
+            if (correctness == Correctness.CLOSE) {
+                throw new IllegalStateException("Interval feedback cannot have a close outcome");
+            }
+            boolean contained = correctness == Correctness.CORRECT;
+            labelResource = contained
+                    ? R.string.feedback_interval_contained
+                    : R.string.feedback_interval_missed;
+            descriptionResource = contained
+                    ? R.string.feedback_interval_contained_description
+                    : R.string.feedback_interval_missed_description;
+            backgroundResource = contained
+                    ? R.color.feedback_correct_background
+                    : R.color.feedback_wrong_background;
+            contentResource = contained
+                    ? R.color.feedback_correct_content
+                    : R.color.feedback_wrong_content;
+            applyBandStyle(
+                    labelResource,
+                    descriptionResource,
+                    backgroundResource,
+                    contentResource
+            );
+            return;
+        }
         switch (correctness) {
             case CORRECT:
                 labelResource = R.string.feedback_band_correct;
@@ -161,6 +268,15 @@ public class FeedbackActivity extends AppCompatActivity {
                 throw new IllegalStateException("Unsupported correctness band: " + correctness);
         }
 
+        applyBandStyle(labelResource, descriptionResource, backgroundResource, contentResource);
+    }
+
+    private void applyBandStyle(
+            int labelResource,
+            int descriptionResource,
+            int backgroundResource,
+            int contentResource
+    ) {
         int contentColor = ContextCompat.getColor(this, contentResource);
         MaterialCardView bandCard = findViewById(R.id.feedback_band_card);
         bandCard.setCardBackgroundColor(ContextCompat.getColor(this, backgroundResource));
@@ -234,9 +350,13 @@ public class FeedbackActivity extends AppCompatActivity {
     }
 
     private String formatValue(double value, String unit) {
+        return getString(R.string.feedback_value_with_unit, formatNumber(value), unit);
+    }
+
+    private String formatNumber(double value) {
         NumberFormat numberFormat = NumberFormat.getNumberInstance();
         numberFormat.setMaximumFractionDigits(6);
-        return getString(R.string.feedback_value_with_unit, numberFormat.format(value), unit);
+        return numberFormat.format(value);
     }
 
     private String formatFactor(double factor) {
@@ -269,6 +389,14 @@ public class FeedbackActivity extends AppCompatActivity {
         return value;
     }
 
+    private static double requireNonNegativeDouble(Intent intent, String key) {
+        double value = intent.getDoubleExtra(key, Double.NaN);
+        if (!Double.isFinite(value) || value < 0.0) {
+            throw new IllegalStateException("Missing or invalid feedback extra: " + key);
+        }
+        return value;
+    }
+
     private static String requireNonBlankString(Intent intent, String key) {
         String value = intent.getStringExtra(key);
         if (isBlank(value)) {
@@ -284,6 +412,18 @@ public class FeedbackActivity extends AppCompatActivity {
         } catch (IllegalArgumentException exception) {
             throw new IllegalStateException(
                     "Missing or invalid feedback extra: " + EXTRA_CORRECTNESS,
+                    exception
+            );
+        }
+    }
+
+    private static Level requireLevel(Intent intent) {
+        String value = requireNonBlankString(intent, EXTRA_LEVEL);
+        try {
+            return Level.valueOf(value);
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalStateException(
+                    "Missing or invalid feedback extra: " + EXTRA_LEVEL,
                     exception
             );
         }
