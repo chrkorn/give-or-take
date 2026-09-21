@@ -35,6 +35,9 @@
     <dimen name="quiz_submit_button_height">56dp</dimen>
     <dimen name="quiz_counter_text_size">14sp</dimen>
     <dimen name="quiz_prompt_text_size">28sp</dimen>
+    <dimen name="range_section_spacing">24dp</dimen>
+    <dimen name="range_control_spacing">8dp</dimen>
+    <dimen name="range_readout_text_size">24sp</dimen>
 
     <dimen name="uncertainty_dial_default_width">280dp</dimen>
     <dimen name="uncertainty_dial_thumb_radius">10dp</dimen>

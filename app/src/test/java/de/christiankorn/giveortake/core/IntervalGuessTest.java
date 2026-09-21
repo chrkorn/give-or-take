@@ -12,6 +12,71 @@ import static org.junit.Assert.assertTrue;
  */
 public class IntervalGuessTest {
     @Test
+    public void fromBestGuessAndFactor_derivesLogSymmetricBounds() {
+        IntervalGuess guess = IntervalGuess.fromBestGuessAndFactor(500.0, 3.0);
+
+        assertEquals(500.0 / 3.0, guess.getLowerBound(), 0.0);
+        assertEquals(1_500.0, guess.getUpperBound(), 0.0);
+        assertEquals(
+                Math.log10(500.0) - Math.log10(guess.getLowerBound()),
+                Math.log10(guess.getUpperBound()) - Math.log10(500.0),
+                1.0e-15
+        );
+    }
+
+    @Test
+    public void fromBestGuessAndFactor_withFactorOne_derivesPointInterval() {
+        IntervalGuess guess = IntervalGuess.fromBestGuessAndFactor(500.0, 1.0);
+
+        assertEquals(500.0, guess.getLowerBound(), 0.0);
+        assertEquals(500.0, guess.getUpperBound(), 0.0);
+    }
+
+    @Test
+    public void fromBestGuessAndFactor_withInvalidArguments_throwsUsefulException() {
+        IllegalArgumentException bestGuessException = assertThrows(
+                IllegalArgumentException.class,
+                () -> IntervalGuess.fromBestGuessAndFactor(0.0, 3.0)
+        );
+        IllegalArgumentException factorException = assertThrows(
+                IllegalArgumentException.class,
+                () -> IntervalGuess.fromBestGuessAndFactor(500.0, 0.5)
+        );
+
+        assertEquals(
+                "bestGuess must be finite and greater than zero",
+                bestGuessException.getMessage()
+        );
+        assertEquals("factor must be finite and at least one", factorException.getMessage());
+    }
+
+    @Test
+    public void fromBestGuessAndFactor_whenDerivedBoundOverflows_throwsUsefulException() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> IntervalGuess.fromBestGuessAndFactor(Double.MAX_VALUE, 2.0)
+        );
+
+        assertEquals(
+                "derived bounds must be finite and greater than zero",
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    public void fromBestGuessAndFactor_whenDerivedBoundUnderflows_throwsUsefulException() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> IntervalGuess.fromBestGuessAndFactor(Double.MIN_VALUE, 2.0)
+        );
+
+        assertEquals(
+                "derived bounds must be finite and greater than zero",
+                exception.getMessage()
+        );
+    }
+
+    @Test
     public void constructor_withValidBounds_exposesBoundsThroughGuessType() {
         Guess guess = new IntervalGuess(300.0, 400.0);
 

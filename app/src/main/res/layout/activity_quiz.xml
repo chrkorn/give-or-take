@@ -5,8 +5,8 @@
     android:id="@+id/quiz_scroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
     android:background="@color/home_background"
+    android:fillViewport="true"
     tools:context=".QuizActivity">
 
     <LinearLayout
@@ -37,27 +37,189 @@
             android:textSize="@dimen/quiz_prompt_text_size"
             android:textStyle="bold" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/answer_input_layout"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        <LinearLayout
+            android:id="@+id/point_answer_group"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/quiz_input_spacing"
-            android:hint="@string/quiz_answer_hint"
-            app:errorEnabled="true"
-            app:expandedHintEnabled="false"
-            app:suffixText="@string/quiz_default_unit">
+            android:orientation="vertical">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/answer_input"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/answer_input_layout"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:imeOptions="actionDone"
-                android:inputType="numberDecimal"
-                android:maxLines="1"
-                android:selectAllOnFocus="false" />
+                android:layout_marginTop="@dimen/quiz_input_spacing"
+                android:hint="@string/quiz_answer_hint"
+                app:errorEnabled="true"
+                app:expandedHintEnabled="false"
+                app:suffixText="@string/quiz_default_unit">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/answer_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionDone"
+                    android:inputType="numberDecimal"
+                    android:maxLines="1"
+                    android:selectAllOnFocus="false" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/range_answer_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:id="@+id/dial_entry_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/best_guess_input_layout"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/quiz_input_spacing"
+                    android:hint="@string/range_best_guess_hint"
+                    app:errorEnabled="true"
+                    app:expandedHintEnabled="false"
+                    app:suffixText="@string/quiz_default_unit">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/best_guess_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionNext"
+                        android:inputType="numberDecimal"
+                        android:maxLines="1" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/range_section_spacing"
+                    android:text="@string/range_uncertainty_label"
+                    android:textColor="@color/home_secondary_text"
+                    android:textSize="@dimen/quiz_counter_text_size"
+                    android:textStyle="bold" />
+
+                <de.christiankorn.giveortake.ui.UncertaintyDial
+                    android:id="@+id/uncertainty_dial"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/range_control_spacing"
+                    app:maximumFactor="100"
+                    app:minimumFactor="1.2" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/direct_bounds_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/quiz_input_spacing"
+                    android:text="@string/range_direct_entry_label"
+                    android:textColor="@color/home_secondary_text"
+                    android:textSize="@dimen/quiz_counter_text_size"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/lower_bound_input_layout"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/range_control_spacing"
+                    android:hint="@string/range_lower_bound_hint"
+                    app:errorEnabled="true"
+                    app:expandedHintEnabled="false"
+                    app:suffixText="@string/quiz_default_unit">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/lower_bound_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionNext"
+                        android:inputType="numberDecimal"
+                        android:maxLines="1" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/upper_bound_input_layout"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/range_control_spacing"
+                    android:hint="@string/range_upper_bound_hint"
+                    app:errorEnabled="true"
+                    app:expandedHintEnabled="false"
+                    app:suffixText="@string/quiz_default_unit">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/upper_bound_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionDone"
+                        android:inputType="numberDecimal"
+                        android:maxLines="1" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/range_readout_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/range_section_spacing"
+                android:text="@string/range_readout_label"
+                android:textColor="@color/home_secondary_text"
+                android:textSize="@dimen/quiz_counter_text_size"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/range_readout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/range_control_spacing"
+                android:text="@string/range_readout_unavailable"
+                android:textColor="@color/home_on_background"
+                android:textSize="@dimen/range_readout_text_size"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/range_explanation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/home_text_spacing_small"
+                android:text="@string/range_explanation_unavailable"
+                android:textColor="@color/home_secondary_text"
+                android:textSize="@dimen/home_body_text_size" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/range_entry_mode_button"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/range_control_spacing"
+                android:minHeight="@dimen/uncertainty_dial_minimum_touch_target"
+                android:text="@string/range_enter_bounds_directly" />
+
+        </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/submit_button"

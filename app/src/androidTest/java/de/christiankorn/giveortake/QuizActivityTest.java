@@ -1,5 +1,8 @@
 package de.christiankorn.giveortake;
 
+import android.content.Context;
+import android.content.Intent;
+import android.view.View;
 import android.widget.TextView;
 
 import androidx.test.core.app.ActivityScenario;
@@ -10,10 +13,14 @@ import org.junit.runner.RunWith;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 
+import de.christiankorn.giveortake.core.IntervalGuess;
+import de.christiankorn.giveortake.core.Level;
 import de.christiankorn.giveortake.core.Question;
 import de.christiankorn.giveortake.core.QuestionBank;
 import de.christiankorn.giveortake.data.AssetQuestionBankLoader;
+import de.christiankorn.giveortake.ui.UncertaintyDial;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.Espresso.pressBack;
@@ -29,12 +36,125 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 /**
  * Verifies the quiz screen's Material validation feedback and long-prompt layout behaviour.
  */
 @RunWith(AndroidJUnit4.class)
 public class QuizActivityTest {
+
+    /** Verifies that best guess and factor changes immediately update the displayed interval. */
+    @Test
+    public void rangeMode_bestGuessAndDialChanges_updateDerivedReadout() {
+        Context context = androidx.test.core.app.ApplicationProvider.getApplicationContext();
+        Intent intent = QuizActivity.createIntent(context, Level.CONFIDENCE_INTERVALS);
+        try (ActivityScenario<QuizActivity> scenario = ActivityScenario.launch(intent)) {
+            onView(withId(R.id.best_guess_input)).perform(replaceText("500"));
+            scenario.onActivity(activity -> {
+                UncertaintyDial dial = activity.findViewById(R.id.uncertainty_dial);
+                dial.setFactor(3.0);
+
+                NumberFormat numberFormat = NumberFormat.getNumberInstance();
+                String unit = ((com.google.android.material.textfield.TextInputLayout)
+                        activity.findViewById(R.id.best_guess_input_layout))
+                        .getSuffixText()
+                        .toString();
+                String expectedRange = activity.getString(
+                        R.string.range_readout,
+                        numberFormat.format(167),
+                        numberFormat.format(1_500),
+                        unit
+                );
+                assertEquals(
+                        expectedRange,
+                        ((TextView) activity.findViewById(R.id.range_readout))
+                                .getText()
+                                .toString()
+                );
+                assertNotEquals(
+                        activity.getString(R.string.range_explanation_unavailable),
+                        ((TextView) activity.findViewById(R.id.range_explanation))
+                                .getText()
+                                .toString()
+                );
+            });
+        }
+    }
+
+    /** Verifies both range-entry representations produce the same core interval type and bounds. */
+    @Test
+    public void switchingToDirectBounds_prefillsTheSameIntervalGuess() {
+        Context context = androidx.test.core.app.ApplicationProvider.getApplicationContext();
+        Intent intent = QuizActivity.createIntent(context, Level.CONFIDENCE_INTERVALS);
+        try (ActivityScenario<QuizActivity> scenario = ActivityScenario.launch(intent)) {
+            onView(withId(R.id.best_guess_input)).perform(replaceText("500"));
+            AtomicReference<IntervalGuess> dialGuess = new AtomicReference<>();
+            scenario.onActivity(activity -> {
+                ((UncertaintyDial) activity.findViewById(R.id.uncertainty_dial)).setFactor(3.0);
+                dialGuess.set(activity.getCurrentIntervalGuess(false));
+            });
+
+            onView(withId(R.id.range_entry_mode_button)).perform(click());
+            scenario.onActivity(activity -> {
+                IntervalGuess directGuess = activity.getCurrentIntervalGuess(false);
+                assertEquals(
+                        dialGuess.get().getLowerBound(),
+                        directGuess.getLowerBound(),
+                        0.0
+                );
+                assertEquals(
+                        dialGuess.get().getUpperBound(),
+                        directGuess.getUpperBound(),
+                        0.0
+                );
+            });
+        }
+    }
+
+    /** Verifies the custom View restores its factor through Android's view-state hierarchy. */
+    @Test
+    public void recreate_rangeDial_restoresSelectedFactor() {
+        Context context = androidx.test.core.app.ApplicationProvider.getApplicationContext();
+        Intent intent = QuizActivity.createIntent(context, Level.CONFIDENCE_INTERVALS);
+        try (ActivityScenario<QuizActivity> scenario = ActivityScenario.launch(intent)) {
+            scenario.onActivity(activity ->
+                    ((UncertaintyDial) activity.findViewById(R.id.uncertainty_dial))
+                            .setFactor(4.25)
+            );
+
+            scenario.recreate();
+
+            scenario.onActivity(activity -> assertEquals(
+                    4.25,
+                    ((UncertaintyDial) activity.findViewById(R.id.uncertainty_dial)).getFactor(),
+                    0.0
+            ));
+        }
+    }
+
+    /** Verifies Activity state retains the inline direct-entry choice and its typed values. */
+    @Test
+    public void recreate_directBoundsMode_restoresModeAndValues() {
+        Context context = androidx.test.core.app.ApplicationProvider.getApplicationContext();
+        Intent intent = QuizActivity.createIntent(context, Level.CONFIDENCE_INTERVALS);
+        try (ActivityScenario<QuizActivity> scenario = ActivityScenario.launch(intent)) {
+            onView(withId(R.id.range_entry_mode_button)).perform(click());
+            onView(withId(R.id.lower_bound_input)).perform(replaceText("120"));
+            onView(withId(R.id.upper_bound_input)).perform(replaceText("2000"));
+
+            scenario.recreate();
+
+            onView(withId(R.id.direct_bounds_group)).check(matches(isDisplayed()));
+            onView(withId(R.id.dial_entry_group)).check(matches(not(isDisplayed())));
+            onView(withId(R.id.lower_bound_input)).check(matches(withText("120")));
+            onView(withId(R.id.upper_bound_input)).check(matches(withText("2000")));
+            scenario.onActivity(activity -> assertEquals(
+                    View.VISIBLE,
+                    activity.findViewById(R.id.direct_bounds_group).getVisibility()
+            ));
+        }
+    }
 
     /** Verifies that only a valid value enables submission and errors appear beside the input. */
     @Test

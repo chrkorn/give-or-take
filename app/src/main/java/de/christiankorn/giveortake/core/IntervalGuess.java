@@ -11,6 +11,38 @@ public final class IntervalGuess implements Guess {
     private final double upperBound;
 
     /**
+     * Derives a log-symmetric interval around a best guess.
+     *
+     * <p>A multiplicative factor produces {@code [bestGuess / factor,
+     * bestGuess * factor]}. Keeping this calculation beside the interval model gives every UI
+     * representation the same validation and arithmetic without introducing Android into the
+     * domain layer.</p>
+     *
+     * @param bestGuess the finite central estimate, greater than zero
+     * @param factor the finite multiplicative factor, at least one
+     * @return an interval whose bounds are equally distant from the best guess in log space
+     * @throws IllegalArgumentException if an argument is outside its domain, or either derived
+     *                                  bound cannot be represented as a finite positive double
+     */
+    public static IntervalGuess fromBestGuessAndFactor(double bestGuess, double factor) {
+        if (!Double.isFinite(bestGuess) || bestGuess <= 0.0) {
+            throw new IllegalArgumentException("bestGuess must be finite and greater than zero");
+        }
+        if (!Double.isFinite(factor) || factor < 1.0) {
+            throw new IllegalArgumentException("factor must be finite and at least one");
+        }
+
+        double lowerBound = bestGuess / factor;
+        double upperBound = bestGuess * factor;
+        if (lowerBound <= 0.0 || !Double.isFinite(upperBound)) {
+            throw new IllegalArgumentException(
+                    "derived bounds must be finite and greater than zero"
+            );
+        }
+        return new IntervalGuess(lowerBound, upperBound);
+    }
+
+    /**
      * Creates an interval with inclusive lower and upper bounds.
      *
      * @param lowerBound the finite lower bound, greater than zero

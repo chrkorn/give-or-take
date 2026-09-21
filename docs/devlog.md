@@ -352,3 +352,19 @@
 - Changed the pure-Java position-to-factor mapping to clamp positions outside the track and added
   JVM coverage for both exact endpoints and movement past each end. No dependency was added.
 - Verified all 150 JVM tests, Android lint, the debug APK build, and Android-test APK compilation.
+
+## 2026-09-21 — Confidence-range input and state restoration
+
+- Added a pure-Java `IntervalGuess` factory for deriving log-symmetric bounds from a best guess and
+  uncertainty factor, including explicit overflow and underflow rejection and matching JUnit tests.
+- Added the live range read-out and factor explanation to the confidence-interval answer mode. The
+  Activity owns locale-aware display formatting, while the core model owns interval arithmetic.
+- Implemented the asymmetric-belief escape hatch as an inline swap to two bound fields. Both paths
+  produce the same `IntervalGuess` type, and the dial path pre-fills the direct fields without
+  recursive listener updates.
+- Implemented the custom dial's `BaseSavedState` parcel for its selected factor and saved the
+  Activity's dial-versus-direct entry mode separately. Every stateful View has a stable XML ID.
+- Added Espresso coverage for live derivation, representation equivalence, dial restoration, and
+  direct-mode restoration. 
+- Verified all JVM tests, Android lint, the debug APK build, and Android-test APK compilation. No
+  dependency was added.

@@ -5,6 +5,8 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
@@ -63,6 +65,39 @@ public class UncertaintyDial extends View {
     @Nullable
     private OnFactorChangeListener onFactorChangeListener;
     private boolean dragging;
+
+    private static class SavedState extends BaseSavedState {
+        private final double factor;
+
+        SavedState(Parcelable superState, double factor) {
+            super(superState);
+            this.factor = factor;
+        }
+
+        private SavedState(Parcel source) {
+            super(source);
+            factor = source.readDouble();
+        }
+
+        @Override
+        public void writeToParcel(Parcel destination, int flags) {
+            super.writeToParcel(destination, flags);
+            destination.writeDouble(factor);
+        }
+
+        public static final Parcelable.Creator<SavedState> CREATOR =
+                new Parcelable.Creator<SavedState>() {
+                    @Override
+                    public SavedState createFromParcel(Parcel source) {
+                        return new SavedState(source);
+                    }
+
+                    @Override
+                    public SavedState[] newArray(int size) {
+                        return new SavedState[size];
+                    }
+                };
+    }
 
     /**
      * Receives factor changes so the containing screen can update its derived range immediately.
@@ -687,6 +722,35 @@ public class UncertaintyDial extends View {
             this.derivedRangeText = newText.toString();
             updateContentDescription();
         }
+    }
+
+    /**
+     * Saves the selected factor together with the framework-owned state of this View.
+     *
+     * @return a parcelable state object consumed by {@link #onRestoreInstanceState(Parcelable)}
+     */
+    @Nullable
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        Parcelable superState = super.onSaveInstanceState();
+        return new SavedState(superState, factor);
+    }
+
+    /**
+     * Restores the selected factor after Android recreates the containing view hierarchy.
+     *
+     * @param state state previously returned by {@link #onSaveInstanceState()}
+     */
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        if (!(state instanceof SavedState)) {
+            super.onRestoreInstanceState(state);
+            return;
+        }
+
+        SavedState savedState = (SavedState) state;
+        super.onRestoreInstanceState(savedState.getSuperState());
+        setFactor(savedState.factor);
     }
 
     private void updateContentDescription() {
