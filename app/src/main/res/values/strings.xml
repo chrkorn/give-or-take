@@ -53,6 +53,16 @@
     <string name="feedback_band_close_description">Between 1.5× and 3× from the true value.</string>
     <string name="feedback_band_wrong">WRONG</string>
     <string name="feedback_band_wrong_description">More than 3× from the true value. This question will return later.</string>
+    <string name="feedback_interval_label">Your 90% range</string>
+    <string name="feedback_interval_value">%1$s–%2$s %3$s</string>
+    <string name="feedback_interval_contained">CONTAINED</string>
+    <string name="feedback_interval_contained_description">The true value was inside your range.</string>
+    <string name="feedback_interval_missed">MISSED</string>
+    <string name="feedback_interval_missed_description">The true value was outside your range. This question will return later.</string>
+    <string name="feedback_interval_contained_comparison">Your range contained the true value.</string>
+    <string name="feedback_interval_above_truth_comparison">Your entire range was above the true value.</string>
+    <string name="feedback_interval_below_truth_comparison">Your entire range was below the true value.</string>
+    <string name="feedback_interval_loss">Interval loss: %1$s · lower is better</string>
     <string name="feedback_comparison_exact">Your estimate matched the true value.</string>
     <string name="feedback_comparison_high">Your estimate was about %1$s× too high.</string>
     <string name="feedback_comparison_low">Your estimate was about %1$s× too low.</string>

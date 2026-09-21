@@ -165,7 +165,7 @@ public class ResultActivity extends AppCompatActivity {
                 previousHighScorePresent
         );
         renderModeDetails(intent, level, answerCount);
-        configureNavigation();
+        configureNavigation(level);
     }
 
     private void renderScore(Intent intent, Level level, double meanRawError) {
@@ -301,9 +301,9 @@ public class ResultActivity extends AppCompatActivity {
         }
     }
 
-    private void configureNavigation() {
+    private void configureNavigation(Level level) {
         findViewById(R.id.result_play_again_button).setOnClickListener(view -> {
-            startActivity(new Intent(ResultActivity.this, QuizActivity.class));
+            startActivity(QuizActivity.createIntent(ResultActivity.this, level));
             // A fresh quiz replaces this result, so Back from it returns directly to Home.
             finish();
         });

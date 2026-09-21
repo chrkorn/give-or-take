@@ -43,6 +43,49 @@ public final class CalibrationTracker {
     }
 
     /**
+     * Restores previously aggregated interval outcomes.
+     *
+     * <p>The tracker stores an incremental mean rather than every historical interval. Restoring
+     * those same aggregate values is therefore sufficient to continue the calculation without
+     * introducing Android state types into the core package.</p>
+     *
+     * @param sampleSize number of recorded interval outcomes
+     * @param hitCount number of outcomes whose interval contained the truth
+     * @param meanLogScaleWidth arithmetic mean of the recorded logarithmic widths, or zero when
+     *                          {@code sampleSize} is zero
+     * @return a tracker containing the supplied aggregate state
+     * @throws IllegalArgumentException if the counts or mean are inconsistent
+     */
+    public static CalibrationTracker restore(
+            long sampleSize,
+            long hitCount,
+            double meanLogScaleWidth
+    ) {
+        if (sampleSize < 0L) {
+            throw new IllegalArgumentException("sampleSize must be non-negative");
+        }
+        if (hitCount < 0L || hitCount > sampleSize) {
+            throw new IllegalArgumentException("hitCount must be between zero and sampleSize");
+        }
+        if (!Double.isFinite(meanLogScaleWidth) || meanLogScaleWidth < 0.0) {
+            throw new IllegalArgumentException(
+                    "meanLogScaleWidth must be finite and non-negative"
+            );
+        }
+        if (sampleSize == 0L && meanLogScaleWidth != 0.0) {
+            throw new IllegalArgumentException(
+                    "an empty tracker must have zero meanLogScaleWidth"
+            );
+        }
+
+        CalibrationTracker tracker = new CalibrationTracker();
+        tracker.sampleSize = sampleSize;
+        tracker.hitCount = hitCount;
+        tracker.meanLogScaleWidth = meanLogScaleWidth;
+        return tracker;
+    }
+
+    /**
      * Records one confidence-interval outcome.
      *
      * @param intervalContainedTruth {@code true} when the interval included the true value,

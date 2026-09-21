@@ -128,6 +128,27 @@ public class ResultActivityTest {
         }
     }
 
+    /** Verifies Play again retains the completed session's explicitly selected level. */
+    @Test
+    public void playAgain_afterIntervalResult_startsIntervalQuiz() {
+        Context context = ApplicationProvider.getApplicationContext();
+        SessionResult result = intervalResult(1, 0);
+
+        try (ActivityScenario<ResultActivity> scenario = ActivityScenario.launch(
+                ResultActivity.createIntent(
+                        context,
+                        result,
+                        HighScore.empty(Level.CONFIDENCE_INTERVALS)
+                )
+        )) {
+            onView(withId(R.id.result_play_again_button)).perform(click());
+
+            onView(withId(R.id.range_answer_group)).check(matches(isDisplayed()));
+            onView(withId(R.id.point_answer_group)).check(matches(not(isDisplayed())));
+            assertEquals(Lifecycle.State.DESTROYED, scenario.getState());
+        }
+    }
+
     /** Verifies Home removes the result and opens the application's existing root destination. */
     @Test
     public void home_finishesResultAndDisplaysHome() {

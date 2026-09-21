@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * Coordinates scoring, correctness classification, and question scheduling for one point quiz.
+ * Coordinates scoring, outcome classification, and question scheduling for one quiz.
  *
  * <p>This class is the domain boundary used by the Android screen. Keeping the complete submission
  * sequence here prevents an Activity from duplicating arithmetic or partially updating the
@@ -15,8 +15,10 @@ import java.util.Random;
  */
 public final class QuizSession {
     private final TrainingStrategy trainingStrategy;
+    private final Level level;
     private final ScoringPolicy scoringPolicy;
     private final CorrectnessClassifier correctnessClassifier;
+    private final CalibrationTracker calibrationTracker;
     private final int initialQuestionCount;
     private final List<Score> scores;
     private Question currentQuestion;
@@ -38,6 +40,57 @@ public final class QuizSession {
             ScoringPolicy scoringPolicy,
             CorrectnessClassifier correctnessClassifier
     ) {
+        this(
+                questionPool,
+                sessionLength,
+                random,
+                Level.POINT_ESTIMATES,
+                scoringPolicy,
+                correctnessClassifier
+        );
+    }
+
+    /**
+     * Starts a session for the selected curriculum level and selects its first question.
+     *
+     * <p>The level controls only mode-specific orchestration. The supplied polymorphic policy
+     * remains solely responsible for the score arithmetic.</p>
+     *
+     * @param questionPool questions available for selection
+     * @param sessionLength maximum number of distinct initial questions
+     * @param random caller-owned source of shuffle randomness
+     * @param level selected curriculum level and answer mode
+     * @param scoringPolicy policy compatible with the selected level's guess type
+     * @throws IllegalArgumentException if an argument is invalid
+     */
+    public QuizSession(
+            List<Question> questionPool,
+            int sessionLength,
+            Random random,
+            Level level,
+            ScoringPolicy scoringPolicy
+    ) {
+        this(
+                questionPool,
+                sessionLength,
+                random,
+                level,
+                scoringPolicy,
+                new CorrectnessClassifier()
+        );
+    }
+
+    private QuizSession(
+            List<Question> questionPool,
+            int sessionLength,
+            Random random,
+            Level level,
+            ScoringPolicy scoringPolicy,
+            CorrectnessClassifier correctnessClassifier
+    ) {
+        if (level == null) {
+            throw new IllegalArgumentException("level must not be null");
+        }
         if (scoringPolicy == null) {
             throw new IllegalArgumentException("scoringPolicy must not be null");
         }
@@ -46,8 +99,12 @@ public final class QuizSession {
         }
 
         trainingStrategy = new TrainingStrategy(questionPool, sessionLength, random);
+        this.level = level;
         this.scoringPolicy = scoringPolicy;
         this.correctnessClassifier = correctnessClassifier;
+        calibrationTracker = level == Level.CONFIDENCE_INTERVALS
+                ? new CalibrationTracker()
+                : null;
         initialQuestionCount = Math.min(sessionLength, questionPool.size());
         scores = new ArrayList<>();
         currentQuestion = trainingStrategy.nextQuestion();
@@ -55,15 +112,19 @@ public final class QuizSession {
 
     private QuizSession(
             TrainingStrategy trainingStrategy,
+            Level level,
             ScoringPolicy scoringPolicy,
             CorrectnessClassifier correctnessClassifier,
+            CalibrationTracker calibrationTracker,
             int initialQuestionCount,
             List<Score> scores,
             Question currentQuestion
     ) {
         this.trainingStrategy = trainingStrategy;
+        this.level = level;
         this.scoringPolicy = scoringPolicy;
         this.correctnessClassifier = correctnessClassifier;
+        this.calibrationTracker = calibrationTracker;
         this.initialQuestionCount = initialQuestionCount;
         this.scores = new ArrayList<>(scores);
         this.currentQuestion = currentQuestion;
@@ -71,6 +132,29 @@ public final class QuizSession {
 
     /**
      * Restores a session against a freshly loaded question pool.
+     *
+     * @param questionPool current bundled questions used to resolve snapshot identifiers
+     * @param snapshot previously captured domain state
+     * @param scoringPolicy policy used for subsequent submissions
+     * @return a session at the exact captured position
+     * @throws IllegalArgumentException if an argument is null, question identifiers cannot be
+     *                                  resolved uniquely, or the snapshot is inconsistent
+     */
+    public static QuizSession restore(
+            List<Question> questionPool,
+            QuizSessionSnapshot snapshot,
+            ScoringPolicy scoringPolicy
+    ) {
+        return restore(
+                questionPool,
+                snapshot,
+                scoringPolicy,
+                new CorrectnessClassifier()
+        );
+    }
+
+    /**
+     * Restores a session with an explicitly supplied point correctness classifier.
      *
      * @param questionPool current bundled questions used to resolve snapshot identifiers
      * @param snapshot previously captured domain state
@@ -109,10 +193,20 @@ public final class QuizSession {
                 questionsById
         );
         TrainingStrategy strategy = new TrainingStrategy(pendingQuestions, currentQuestion);
+        CalibrationTracker restoredCalibrationTracker = null;
+        if (snapshot.getLevel() == Level.CONFIDENCE_INTERVALS) {
+            restoredCalibrationTracker = CalibrationTracker.restore(
+                    snapshot.getCalibrationSampleSize(),
+                    snapshot.getCalibrationHitCount(),
+                    snapshot.getMeanLogScaleWidth()
+            );
+        }
         return new QuizSession(
                 strategy,
+                snapshot.getLevel(),
                 scoringPolicy,
                 correctnessClassifier,
+                restoredCalibrationTracker,
                 snapshot.getInitialQuestionCount(),
                 snapshot.getScores(),
                 currentQuestion
@@ -189,7 +283,7 @@ public final class QuizSession {
         }
         Question answeredQuestion = getCurrentQuestion();
         Score score = scoringPolicy.score(answeredQuestion, guess);
-        Correctness correctness = correctnessClassifier.classify(score.getRawError());
+        Correctness correctness = classifyOutcome(answeredQuestion, guess, score);
 
         trainingStrategy.recordAnswer(correctness);
         scores.add(score);
@@ -217,6 +311,9 @@ public final class QuizSession {
         if (!isComplete()) {
             throw new IllegalStateException("the quiz session is not complete");
         }
+        if (level == Level.CONFIDENCE_INTERVALS) {
+            return SessionResult.forConfidenceIntervals(scores, calibrationTracker);
+        }
         return SessionResult.forPointEstimates(scores, correctnessClassifier);
     }
 
@@ -232,12 +329,38 @@ public final class QuizSession {
         }
         Question strategyQuestion = trainingStrategy.getCurrentQuestionSnapshot();
         String currentQuestionId = strategyQuestion == null ? null : strategyQuestion.getId();
+        long hitCount = calibrationTracker == null ? 0L : calibrationTracker.getHitCount();
+        long sampleSize = calibrationTracker == null ? 0L : calibrationTracker.getSampleSize();
+        double meanWidth = calibrationTracker == null
+                ? 0.0
+                : calibrationTracker.getMeanLogScaleWidth().orElse(0.0);
         return new QuizSessionSnapshot(
+                level,
                 initialQuestionCount,
                 pendingQuestionIds,
                 currentQuestionId,
-                scores
+                scores,
+                hitCount,
+                sampleSize,
+                meanWidth
         );
+    }
+
+    private Correctness classifyOutcome(Question answeredQuestion, Guess guess, Score score) {
+        if (level == Level.POINT_ESTIMATES) {
+            return correctnessClassifier.classify(score.getRawError());
+        }
+        if (!(guess instanceof IntervalGuess)) {
+            throw new IllegalArgumentException(
+                    "confidence-interval sessions require an IntervalGuess"
+            );
+        }
+
+        IntervalGuess intervalGuess = (IntervalGuess) guess;
+        boolean containedTruth = intervalGuess.containsTruth(answeredQuestion.getTrueValue());
+        calibrationTracker.recordOutcome(containedTruth, intervalGuess.width());
+        // Containment is the discrete practice signal; IntervalScore separately penalises width.
+        return containedTruth ? Correctness.CORRECT : Correctness.WRONG;
     }
 
     private static Map<String, Question> indexQuestions(List<Question> questionPool) {

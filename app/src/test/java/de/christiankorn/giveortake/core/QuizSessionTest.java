@@ -54,6 +54,41 @@ public class QuizSessionTest {
         assertEquals(wrongQuestion, session.getCurrentQuestion());
     }
 
+    /** Verifies interval containment drives calibration and the discrete training outcome. */
+    @Test
+    public void submit_intervalContainingTruth_recordsHitAndRawLoss() {
+        QuizSession session = newIntervalSession(questions(1), 1);
+        Question question = session.getCurrentQuestion();
+
+        QuizSubmission submission = session.submit(new IntervalGuess(
+                question.getTrueValue() / 2.0,
+                question.getTrueValue() * 2.0
+        ));
+
+        assertEquals(Correctness.CORRECT, submission.getCorrectness());
+        assertFalse(submission.getScore().hasPoints());
+        SessionResult result = session.getResult();
+        assertEquals(Level.CONFIDENCE_INTERVALS, result.getLevel());
+        assertEquals(1L, result.getCalibrationHitCount());
+        assertEquals(1L, result.getCalibrationSampleSize());
+    }
+
+    /** Verifies a missed interval returns after two intervening questions. */
+    @Test
+    public void submit_intervalMissingTruth_appliesTrainingStrategyRepeat() {
+        QuizSession session = newIntervalSession(questions(3), 3);
+        Question missedQuestion = session.getCurrentQuestion();
+
+        session.submit(new IntervalGuess(
+                missedQuestion.getTrueValue() * 2.0,
+                missedQuestion.getTrueValue() * 3.0
+        ));
+        answerCurrentWithContainingInterval(session);
+        answerCurrentWithContainingInterval(session);
+
+        assertEquals(missedQuestion, session.getCurrentQuestion());
+    }
+
     /** Verifies that snapshot restoration preserves the exact future schedule and score history. */
     @Test
     public void restore_afterWrongAnswer_preservesScheduleAndResult() {
@@ -98,6 +133,31 @@ public class QuizSessionTest {
 
         assertTrue(restored.isComplete());
         assertEquals(100.0, restored.getResult().getMeanPoints().getAsDouble(), 0.0);
+    }
+
+    /** Verifies interval score and calibration aggregates survive framework-free restoration. */
+    @Test
+    public void restore_completedIntervalSession_preservesResult() {
+        List<Question> pool = questions(1);
+        QuizSession original = newIntervalSession(pool, 1);
+        answerCurrentWithContainingInterval(original);
+
+        QuizSession restored = QuizSession.restore(
+                pool,
+                original.snapshot(),
+                new IntervalScore(),
+                new CorrectnessClassifier()
+        );
+
+        SessionResult result = restored.getResult();
+        assertEquals(Level.CONFIDENCE_INTERVALS, result.getLevel());
+        assertEquals(1L, result.getCalibrationHitCount());
+        assertEquals(1L, result.getCalibrationSampleSize());
+        assertEquals(
+                original.getResult().getMeanRawError().getAsDouble(),
+                result.getMeanRawError().getAsDouble(),
+                0.0
+        );
     }
 
     /** Verifies that an app update cannot silently restore a snapshot against different content. */
@@ -149,9 +209,27 @@ public class QuizSessionTest {
         );
     }
 
+    private static QuizSession newIntervalSession(List<Question> pool, int sessionLength) {
+        return new QuizSession(
+                pool,
+                sessionLength,
+                new Random(RANDOM_SEED),
+                Level.CONFIDENCE_INTERVALS,
+                new IntervalScore()
+        );
+    }
+
     private static void answerCurrentCorrectly(QuizSession session) {
         Question question = session.getCurrentQuestion();
         session.submit(new PointGuess(question.getTrueValue()));
+    }
+
+    private static void answerCurrentWithContainingInterval(QuizSession session) {
+        Question question = session.getCurrentQuestion();
+        session.submit(new IntervalGuess(
+                question.getTrueValue() / 2.0,
+                question.getTrueValue() * 2.0
+        ));
     }
 
     private static List<String> answerRemainderAndCollectIds(QuizSession session) {
@@ -175,7 +253,10 @@ public class QuizSessionTest {
             Score expectedScore = expected.getScores().get(index);
             Score actualScore = actual.getScores().get(index);
             assertEquals(expectedScore.getRawError(), actualScore.getRawError(), 0.0);
-            assertEquals(expectedScore.getPoints(), actualScore.getPoints());
+            assertEquals(expectedScore.hasPoints(), actualScore.hasPoints());
+            if (expectedScore.hasPoints()) {
+                assertEquals(expectedScore.getPoints(), actualScore.getPoints());
+            }
         }
     }
 

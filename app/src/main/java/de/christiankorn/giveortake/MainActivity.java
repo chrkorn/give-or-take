@@ -36,7 +36,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.start_session_button).setOnClickListener(view -> {
-            Intent quizIntent = new Intent(MainActivity.this, QuizActivity.class);
+            Intent quizIntent = QuizActivity.createIntent(
+                    MainActivity.this,
+                    Level.POINT_ESTIMATES
+            );
             startActivity(quizIntent);
         });
 
