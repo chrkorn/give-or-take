@@ -54,6 +54,13 @@ genuinely asymmetric beliefs, including beliefs constrained by a natural boundar
 same interval-answer representation and stored bounds as the primary path; scoring and analytics
 will not distinguish how the answer was entered.
 
+The secondary action swaps the controls inline within the same quiz Activity. Direct-bound entry is
+an alternative representation of the current answer, not a separate navigation destination. An
+inline swap therefore keeps the question and live range summary in place, avoids a second Activity
+result contract or dialog lifecycle, and makes the relationship between both representations easy
+to follow in the implementation and project report. The Activity saves the selected entry mode as
+instance state, while each input View retains its own value through the normal view-state hierarchy.
+
 ## Consequences
 
 The step from point mode to interval mode adds one control while retaining the familiar best-guess

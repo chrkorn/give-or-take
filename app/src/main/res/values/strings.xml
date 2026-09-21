@@ -27,6 +27,21 @@
     <string name="quiz_error_too_large">Enter a value no greater than 1,000,000,000,000,000.</string>
     <string name="uncertainty_dial_content_description">Uncertainty factor ×%1$s. 90%% range: %2$s.</string>
     <string name="uncertainty_dial_range_unavailable">not available until a best guess is entered</string>
+    <string name="range_best_guess_hint">Best guess</string>
+    <string name="range_uncertainty_label">HOW SURE ARE YOU?</string>
+    <string name="range_direct_entry_label">90% RANGE — ENTER BOTH BOUNDS</string>
+    <string name="range_lower_bound_hint">At least</string>
+    <string name="range_upper_bound_hint">At most</string>
+    <string name="range_readout_label">SO YOUR 90% RANGE IS</string>
+    <string name="range_readout">%1$s %3$s – %2$s %3$s</string>
+    <string name="range_readout_unavailable">—</string>
+    <string name="range_factor_explanation">Within a factor of %1$s of %2$s %3$s.</string>
+    <string name="range_direct_explanation">Bounds entered directly.</string>
+    <string name="range_explanation_unavailable">Enter a valid value to see the range.</string>
+    <string name="range_enter_bounds_directly">Set the two bounds myself</string>
+    <string name="range_use_factor_dial">Use best guess and factor</string>
+    <string name="range_submit">Submit range</string>
+    <string name="range_error_inverted">The lower bound cannot exceed the upper bound.</string>
 
     <string name="feedback_answer_number">Answer %1$d</string>
     <string name="feedback_guess_label">Your estimate</string>
