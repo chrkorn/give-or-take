@@ -405,3 +405,21 @@
   trips, mode validation, foreign keys, completed-session queries, and transaction rollback. Added
   a small instrumented Android SQLite smoke test without requiring it in emulator-free CI.
 - Verified all 166 JVM tests, Android lint, the debug APK build, and Android-test APK compilation.
+
+## 2026-09-22 — Move quiz-history I/O off the main thread
+
+- Recorded ADR 0020 after comparing deprecated `AsyncTask`, `HandlerThread`, raw threads,
+  `ExecutorService`, WorkManager, and services. Chose one application-scoped single-thread executor
+  because it gives Java-native FIFO ordering without another dependency.
+- Added lifecycle-independent session handles that queue creation, answers, atomic final completion,
+  and abandonment without retaining an Activity or View. Activity recreation reattaches by a saved
+  process token, and process-style restoration can recover the row when state was saved before the
+  asynchronous insert returned its ID.
+- Moved DAO ownership from `QuizActivity` to the application process, so `onDestroy()` cannot close
+  the database beneath an in-flight write. Kept ADR 0019's raw-input schema and final-answer
+  transaction unchanged.
+- Enabled debug-only `StrictMode` detection for main-thread disk reads and writes with logged
+  violations; release builds do not install the policy.
+- Added Robolectric coverage for serial write order, final session state, in-process reattachment,
+  and restoration without a previously saved database ID. No dependency was added.
+- Verified all 169 JVM tests, Android lint, the debug APK build, and Android-test APK compilation.

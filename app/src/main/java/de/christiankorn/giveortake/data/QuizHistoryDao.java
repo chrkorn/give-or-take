@@ -85,6 +85,81 @@ public final class QuizHistoryDao implements AutoCloseable {
         }
         requireNonNegativeTimestamp(startedAtEpochMillis, "startedAtEpochMillis");
 
+        return insertSession(
+                databaseHelper.getWritableDatabase(),
+                level,
+                initialQuestionCount,
+                startedAtEpochMillis
+        );
+    }
+
+    /**
+     * Finds a session by its stable creation inputs, or starts it when it does not yet exist.
+     *
+     * <p>This operation supports recovery from the narrow interval in which Android saved an
+     * Activity's state before an asynchronous session insert returned its generated identifier.
+     * The lookup and possible insert share one transaction so two recovery requests cannot create
+     * duplicate rows inside this process.</p>
+     *
+     * @param level curriculum level and answer mode
+     * @param initialQuestionCount planned distinct-question count before repeats
+     * @param startedAtEpochMillis non-negative UTC Unix epoch millisecond captured when play began
+     * @return the matching stored session, newly created in progress when none existed
+     * @throws IllegalArgumentException if an argument is invalid
+     */
+    public StoredSession findOrStartSession(
+            Level level,
+            int initialQuestionCount,
+            long startedAtEpochMillis
+    ) {
+        if (level == null) {
+            throw new IllegalArgumentException("level must not be null");
+        }
+        if (initialQuestionCount <= 0) {
+            throw new IllegalArgumentException("initialQuestionCount must be greater than zero");
+        }
+        requireNonNegativeTimestamp(startedAtEpochMillis, "startedAtEpochMillis");
+
+        SQLiteDatabase database = databaseHelper.getWritableDatabase();
+        database.beginTransaction();
+        try {
+            StoredSession existing = findSessionByIdentity(
+                    database,
+                    level,
+                    initialQuestionCount,
+                    startedAtEpochMillis
+            );
+            if (existing != null) {
+                database.setTransactionSuccessful();
+                return existing;
+            }
+            long sessionId = insertSession(
+                    database,
+                    level,
+                    initialQuestionCount,
+                    startedAtEpochMillis
+            );
+            StoredSession created = new StoredSession(
+                    sessionId,
+                    level,
+                    StoredSession.State.IN_PROGRESS,
+                    initialQuestionCount,
+                    startedAtEpochMillis,
+                    null
+            );
+            database.setTransactionSuccessful();
+            return created;
+        } finally {
+            database.endTransaction();
+        }
+    }
+
+    private static long insertSession(
+            SQLiteDatabase database,
+            Level level,
+            int initialQuestionCount,
+            long startedAtEpochMillis
+    ) {
         ContentValues values = new ContentValues();
         values.put(QuizHistoryContract.Sessions.COLUMN_LEVEL, levelValue(level));
         values.put(
@@ -99,7 +174,7 @@ public final class QuizHistoryDao implements AutoCloseable {
                 QuizHistoryContract.Sessions.COLUMN_STARTED_AT_EPOCH_MS,
                 startedAtEpochMillis
         );
-        long id = databaseHelper.getWritableDatabase().insertOrThrow(
+        long id = database.insertOrThrow(
                 QuizHistoryContract.Sessions.TABLE_NAME,
                 null,
                 values
@@ -409,6 +484,32 @@ public final class QuizHistoryDao implements AutoCloseable {
             return readLevel(cursor.getString(cursor.getColumnIndexOrThrow(
                     QuizHistoryContract.Sessions.COLUMN_LEVEL
             )));
+        }
+    }
+
+    private static StoredSession findSessionByIdentity(
+            SQLiteDatabase database,
+            Level level,
+            int initialQuestionCount,
+            long startedAtEpochMillis
+    ) {
+        try (Cursor cursor = database.query(
+                QuizHistoryContract.Sessions.TABLE_NAME,
+                SESSION_PROJECTION,
+                QuizHistoryContract.Sessions.COLUMN_LEVEL + " = ? AND "
+                        + QuizHistoryContract.Sessions.COLUMN_INITIAL_QUESTION_COUNT + " = ? AND "
+                        + QuizHistoryContract.Sessions.COLUMN_STARTED_AT_EPOCH_MS + " = ?",
+                new String[]{
+                        levelValue(level),
+                        Integer.toString(initialQuestionCount),
+                        Long.toString(startedAtEpochMillis)
+                },
+                null,
+                null,
+                QuizHistoryContract.Sessions._ID + " DESC",
+                "1"
+        )) {
+            return cursor.moveToFirst() ? readSession(cursor) : null;
         }
     }
 
