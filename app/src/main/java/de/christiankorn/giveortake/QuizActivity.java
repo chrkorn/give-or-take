@@ -38,14 +38,15 @@ import de.christiankorn.giveortake.core.SessionResult;
 import de.christiankorn.giveortake.data.AssetQuestionBankLoader;
 import de.christiankorn.giveortake.data.AnswerDraft;
 import de.christiankorn.giveortake.data.HighScorePreferences;
-import de.christiankorn.giveortake.data.QuizHistoryDao;
-import de.christiankorn.giveortake.data.StoredSession;
+import de.christiankorn.giveortake.data.QuizHistorySession;
+import de.christiankorn.giveortake.data.QuizHistoryStore;
 import de.christiankorn.giveortake.ui.UncertaintyDial;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.Random;
+import java.util.UUID;
 
 /**
  * Runs a numerical-estimation quiz and owns its point or interval answer controls.
@@ -61,6 +62,8 @@ public class QuizActivity extends AppCompatActivity {
     private static final String STATE_DIRECT_BOUNDS_INITIALISED =
             "quiz.directBoundsInitialised";
     private static final String STATE_HISTORY_SESSION_ID = "quiz.historySessionId";
+    private static final String STATE_HISTORY_SESSION_TOKEN = "quiz.historySessionToken";
+    private static final String STATE_HISTORY_STARTED_AT = "quiz.historyStartedAt";
 
     private enum RangeEntryMode {
         FACTOR_DIAL,
@@ -94,8 +97,9 @@ public class QuizActivity extends AppCompatActivity {
     private MaterialButton rangeEntryModeButton;
     private char decimalSeparator;
     private QuizSession quizSession;
-    private QuizHistoryDao quizHistoryDao;
-    private long historySessionId;
+    private QuizHistorySession historySession;
+    private String historySessionToken;
+    private long historyStartedAtEpochMillis;
     private boolean historySessionEnded;
     private Level level;
     private RangeEntryMode rangeEntryMode = RangeEntryMode.FACTOR_DIAL;
@@ -160,7 +164,6 @@ public class QuizActivity extends AppCompatActivity {
 
         QuestionBank questionBank = new AssetQuestionBankLoader(getAssets()).load();
         quizSession = createOrRestoreSession(questionBank, savedInstanceState);
-        quizHistoryDao = new QuizHistoryDao(this);
         restoreOrStartHistorySession(savedInstanceState);
         if (quizSession.isComplete()) {
             showCompletedResult();
@@ -488,7 +491,9 @@ public class QuizActivity extends AppCompatActivity {
         QuizSessionState.write(outState, quizSession.snapshot());
         outState.putString(STATE_RANGE_ENTRY_MODE, rangeEntryMode.name());
         outState.putBoolean(STATE_DIRECT_BOUNDS_INITIALISED, directBoundsInitialised);
-        outState.putLong(STATE_HISTORY_SESSION_ID, historySessionId);
+        outState.putString(STATE_HISTORY_SESSION_TOKEN, historySessionToken);
+        outState.putLong(STATE_HISTORY_STARTED_AT, historyStartedAtEpochMillis);
+        outState.putLong(STATE_HISTORY_SESSION_ID, historySession.getSessionId());
     }
 
     private QuizSession createOrRestoreSession(
@@ -621,36 +626,39 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private void restoreOrStartHistorySession(Bundle savedInstanceState) {
+        QuizHistoryStore historyStore = ((GiveOrTakeApplication) getApplication())
+                .getQuizHistoryStore();
         if (savedInstanceState == null) {
-            historySessionId = quizHistoryDao.startSession(
+            historySessionToken = UUID.randomUUID().toString();
+            historyStartedAtEpochMillis = System.currentTimeMillis();
+            historySession = historyStore.startSession(
+                    historySessionToken,
                     level,
                     quizSession.getInitialQuestionCount(),
-                    System.currentTimeMillis()
+                    historyStartedAtEpochMillis
             );
             historySessionEnded = false;
             return;
         }
 
-        historySessionId = savedInstanceState.getLong(STATE_HISTORY_SESSION_ID, 0L);
-        if (historySessionId <= 0L) {
-            throw new IllegalStateException("Saved quiz is missing its history session identifier");
+        historySessionToken = savedInstanceState.getString(STATE_HISTORY_SESSION_TOKEN);
+        if (historySessionToken == null || historySessionToken.trim().isEmpty()) {
+            throw new IllegalStateException("Saved quiz is missing its history session token");
         }
-        StoredSession storedSession = quizHistoryDao.findSession(historySessionId)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Saved quiz history session no longer exists"
-                ));
-        if (storedSession.getLevel() != level) {
-            throw new IllegalStateException(
-                    "Saved quiz history level does not match the Intent level"
-            );
+        if (!savedInstanceState.containsKey(STATE_HISTORY_STARTED_AT)) {
+            throw new IllegalStateException("Saved quiz is missing its history start time");
         }
-        historySessionEnded = storedSession.getState() != StoredSession.State.IN_PROGRESS;
-        if (quizSession.isComplete()
-                != (storedSession.getState() == StoredSession.State.COMPLETED)) {
-            throw new IllegalStateException(
-                    "Saved quiz and persisted history completion states disagree"
-            );
-        }
+        historyStartedAtEpochMillis = savedInstanceState.getLong(STATE_HISTORY_STARTED_AT);
+        long savedSessionId = savedInstanceState.getLong(STATE_HISTORY_SESSION_ID, 0L);
+        historySessionEnded = quizSession.isComplete();
+        historySession = historyStore.restoreSession(
+                historySessionToken,
+                level,
+                quizSession.getInitialQuestionCount(),
+                historyStartedAtEpochMillis,
+                savedSessionId,
+                historySessionEnded
+        );
     }
 
     private void persistAcceptedAnswer(QuizSubmission submission, Guess guess) {
@@ -662,32 +670,23 @@ public class QuizActivity extends AppCompatActivity {
                 answeredAtEpochMillis
         );
         if (submission.isSessionComplete()) {
-            quizHistoryDao.recordFinalAnswerAndCompleteSession(
-                    historySessionId,
+            historySession.recordFinalAnswerAndCompleteSession(
                     answer,
                     answeredAtEpochMillis
             );
             historySessionEnded = true;
             return;
         }
-        quizHistoryDao.recordAnswer(historySessionId, answer);
+        historySession.recordAnswer(answer);
     }
 
     /** {@inheritDoc} */
     @Override
     public void finish() {
-        if (quizHistoryDao != null && historySessionId > 0L && !historySessionEnded) {
-            quizHistoryDao.abandonSession(historySessionId, System.currentTimeMillis());
+        if (historySession != null && !historySessionEnded) {
+            historySession.abandon(System.currentTimeMillis());
             historySessionEnded = true;
         }
         super.finish();
-    }
-
-    @Override
-    protected void onDestroy() {
-        if (quizHistoryDao != null) {
-            quizHistoryDao.close();
-        }
-        super.onDestroy();
     }
 }
