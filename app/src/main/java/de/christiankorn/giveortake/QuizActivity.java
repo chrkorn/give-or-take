@@ -21,6 +21,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import de.christiankorn.giveortake.core.Guess;
 import de.christiankorn.giveortake.core.HighScore;
 import de.christiankorn.giveortake.core.IntervalGuess;
 import de.christiankorn.giveortake.core.IntervalScore;
@@ -35,7 +36,10 @@ import de.christiankorn.giveortake.core.QuizSubmission;
 import de.christiankorn.giveortake.core.ScoringPolicy;
 import de.christiankorn.giveortake.core.SessionResult;
 import de.christiankorn.giveortake.data.AssetQuestionBankLoader;
+import de.christiankorn.giveortake.data.AnswerDraft;
 import de.christiankorn.giveortake.data.HighScorePreferences;
+import de.christiankorn.giveortake.data.QuizHistoryDao;
+import de.christiankorn.giveortake.data.StoredSession;
 import de.christiankorn.giveortake.ui.UncertaintyDial;
 
 import java.math.BigDecimal;
@@ -56,6 +60,7 @@ public class QuizActivity extends AppCompatActivity {
     private static final String STATE_RANGE_ENTRY_MODE = "quiz.rangeEntryMode";
     private static final String STATE_DIRECT_BOUNDS_INITIALISED =
             "quiz.directBoundsInitialised";
+    private static final String STATE_HISTORY_SESSION_ID = "quiz.historySessionId";
 
     private enum RangeEntryMode {
         FACTOR_DIAL,
@@ -89,6 +94,9 @@ public class QuizActivity extends AppCompatActivity {
     private MaterialButton rangeEntryModeButton;
     private char decimalSeparator;
     private QuizSession quizSession;
+    private QuizHistoryDao quizHistoryDao;
+    private long historySessionId;
+    private boolean historySessionEnded;
     private Level level;
     private RangeEntryMode rangeEntryMode = RangeEntryMode.FACTOR_DIAL;
     private boolean directBoundsInitialised;
@@ -152,6 +160,8 @@ public class QuizActivity extends AppCompatActivity {
 
         QuestionBank questionBank = new AssetQuestionBankLoader(getAssets()).load();
         quizSession = createOrRestoreSession(questionBank, savedInstanceState);
+        quizHistoryDao = new QuizHistoryDao(this);
+        restoreOrStartHistorySession(savedInstanceState);
         if (quizSession.isComplete()) {
             showCompletedResult();
             return;
@@ -446,6 +456,7 @@ public class QuizActivity extends AppCompatActivity {
             return;
         }
         QuizSubmission submission = quizSession.submit(interval);
+        persistAcceptedAnswer(submission, interval);
 
         runWithoutRangeCallbacks(() -> {
             bestGuessInput.setText("");
@@ -477,6 +488,7 @@ public class QuizActivity extends AppCompatActivity {
         QuizSessionState.write(outState, quizSession.snapshot());
         outState.putString(STATE_RANGE_ENTRY_MODE, rangeEntryMode.name());
         outState.putBoolean(STATE_DIRECT_BOUNDS_INITIALISED, directBoundsInitialised);
+        outState.putLong(STATE_HISTORY_SESSION_ID, historySessionId);
     }
 
     private QuizSession createOrRestoreSession(
@@ -569,6 +581,7 @@ public class QuizActivity extends AppCompatActivity {
         BigDecimal estimate = new BigDecimal(normalisedInput);
         PointGuess guess = new PointGuess(estimate.doubleValue());
         QuizSubmission submission = quizSession.submit(guess);
+        persistAcceptedAnswer(submission, guess);
 
         answerInput.setText("");
         answerInputLayout.setError(null);
@@ -605,5 +618,76 @@ public class QuizActivity extends AppCompatActivity {
         ));
         // Removing the completed quiz means Back from Result returns to Home, never stale input.
         finish();
+    }
+
+    private void restoreOrStartHistorySession(Bundle savedInstanceState) {
+        if (savedInstanceState == null) {
+            historySessionId = quizHistoryDao.startSession(
+                    level,
+                    quizSession.getInitialQuestionCount(),
+                    System.currentTimeMillis()
+            );
+            historySessionEnded = false;
+            return;
+        }
+
+        historySessionId = savedInstanceState.getLong(STATE_HISTORY_SESSION_ID, 0L);
+        if (historySessionId <= 0L) {
+            throw new IllegalStateException("Saved quiz is missing its history session identifier");
+        }
+        StoredSession storedSession = quizHistoryDao.findSession(historySessionId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Saved quiz history session no longer exists"
+                ));
+        if (storedSession.getLevel() != level) {
+            throw new IllegalStateException(
+                    "Saved quiz history level does not match the Intent level"
+            );
+        }
+        historySessionEnded = storedSession.getState() != StoredSession.State.IN_PROGRESS;
+        if (quizSession.isComplete()
+                != (storedSession.getState() == StoredSession.State.COMPLETED)) {
+            throw new IllegalStateException(
+                    "Saved quiz and persisted history completion states disagree"
+            );
+        }
+    }
+
+    private void persistAcceptedAnswer(QuizSubmission submission, Guess guess) {
+        long answeredAtEpochMillis = System.currentTimeMillis();
+        AnswerDraft answer = new AnswerDraft(
+                quizSession.getAnsweredQuestionCount(),
+                submission.getAnsweredQuestion(),
+                guess,
+                answeredAtEpochMillis
+        );
+        if (submission.isSessionComplete()) {
+            quizHistoryDao.recordFinalAnswerAndCompleteSession(
+                    historySessionId,
+                    answer,
+                    answeredAtEpochMillis
+            );
+            historySessionEnded = true;
+            return;
+        }
+        quizHistoryDao.recordAnswer(historySessionId, answer);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void finish() {
+        if (quizHistoryDao != null && historySessionId > 0L && !historySessionEnded) {
+            quizHistoryDao.abandonSession(historySessionId, System.currentTimeMillis());
+            historySessionEnded = true;
+        }
+        super.finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (quizHistoryDao != null) {
+            quizHistoryDao.close();
+        }
+        super.onDestroy();
     }
 }

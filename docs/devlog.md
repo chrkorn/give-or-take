@@ -386,3 +386,22 @@
   coverage for interval scheduling, restoration, feedback, navigation, and mode retention.
 - Verified the JVM suite, debug APK, Android-test APK compilation, and Android lint. No dependency
   was added.
+
+## 2026-09-22 — Persist raw quiz history with SQLiteOpenHelper
+
+- Recorded ADR 0019: explicit session rows own level and lifecycle state, while answer rows retain
+  raw point or interval inputs plus the scoring-time truth value so future policies can rescore
+  history without stale derived columns.
+- Added an Android-style schema contract and version-1 `SQLiteOpenHelper` with enabled foreign
+  keys, shape and lifecycle constraints, focused indices, and a sequential fail-fast migration
+  pattern that never drops user history.
+- Added a typed DAO that keeps SQL and cursor ownership out of Activities, returns immutable stored
+  records, closes every cursor with try-with-resources, and uses transactions for batches and the
+  final-answer-plus-completion boundary.
+- Kept the existing `SharedPreferences` high score as a derived cache and wired `QuizActivity` to
+  start or restore a history session, persist each accepted answer, complete the final answer
+  atomically, and mark an explicitly finished incomplete quiz as abandoned.
+- Added the approved Robolectric test-only dependency and JVM coverage for point and interval round
+  trips, mode validation, foreign keys, completed-session queries, and transaction rollback. Added
+  a small instrumented Android SQLite smoke test without requiring it in emulator-free CI.
+- Verified all 166 JVM tests, Android lint, the debug APK build, and Android-test APK compilation.
