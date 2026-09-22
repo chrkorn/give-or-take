@@ -38,6 +38,7 @@ dependencies {
     implementation libs.material
     implementation libs.gson
     testImplementation libs.junit
+    testImplementation libs.robolectric
     androidTestImplementation libs.espresso.core
     androidTestImplementation libs.ext.junit
 }
