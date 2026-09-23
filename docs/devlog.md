@@ -423,3 +423,21 @@
 - Added Robolectric coverage for serial write order, final session state, in-process reattachment,
   and restoration without a previously saved database ID. No dependency was added.
 - Verified all 169 JVM tests, Android lint, the debug APK build, and Android-test APK compilation.
+
+## 2026-09-23 — Query and derive history statistics
+
+- Recorded ADR 0021 after comparing SQLite aggregation with reuse of the pure-Java policies.
+  SQLite now owns filtering, stable ordering, and bound-parameter paging, while the data layer
+  applies the already-tested scoring, calibration, session-result, and personal-best logic.
+- Added immutable result types for recent session pages, overall calibration, rolling ten-answer
+  coverage, per-session mean log-relative error, category performance, and mode-specific records.
+  Empty samples use optional values and no cursor leaves the data layer.
+- Migrated history to schema version 2 with a nullable answer-time category snapshot. New answers
+  preserve their category; unrecoverable version-1 rows are reported under `Uncategorised` instead
+  of being silently reclassified through the current question bank.
+- Included completed and explicitly abandoned answers in learning statistics, excluded in-progress
+  sessions, and limited record-setting to completed non-empty sessions.
+- Added Robolectric coverage for empty results, newest-first paging and tie-breaking, in-progress
+  exclusion, mixed-mode aggregates, category separation, personal bests, and overlapping rolling
+  windows. No dependency was added.
+- Verified all 176 JVM tests, Android lint, the debug APK build, and Android-test APK compilation.

@@ -2,7 +2,9 @@ package de.christiankorn.giveortake.data;
 
 import android.content.Context;
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
+import android.database.sqlite.SQLiteDatabase;
 
 import org.junit.After;
 import org.junit.Before;
@@ -70,6 +72,7 @@ public class QuizHistoryDaoTest {
         assertEquals(sessionId, answer.getSessionId());
         assertEquals(1, answer.getSequenceNumber());
         assertEquals("river", answer.getQuestionId());
+        assertEquals("Test category", answer.getCategoryAtAnswer());
         assertEquals(346.0, answer.getTrueValueAtAnswer(), 0.0);
         assertEquals(300.0, ((PointGuess) answer.getGuess()).getValue(), 0.0);
         assertEquals(1_100L, answer.getAnsweredAtEpochMillis());
@@ -192,6 +195,30 @@ public class QuizHistoryDaoTest {
         assertTrue(dao.getAnswersForSession(sessionId).isEmpty());
     }
 
+    @Test
+    public void migrationFromVersionOne_addsNullableAnswerCategoryWithoutDroppingRows() {
+        SQLiteDatabase database = SQLiteDatabase.create(null);
+        QuizDatabaseHelper helper = new QuizDatabaseHelper(context);
+        database.execSQL("CREATE TABLE answers (_id INTEGER PRIMARY KEY, question_id TEXT)");
+        database.execSQL("INSERT INTO answers (_id, question_id) VALUES (1, 'legacy')");
+
+        try {
+            helper.onUpgrade(database, 1, 2);
+
+            try (Cursor cursor = database.rawQuery(
+                    "SELECT question_id, category_at_answer FROM answers WHERE _id = ?",
+                    new String[]{"1"}
+            )) {
+                assertTrue(cursor.moveToFirst());
+                assertEquals("legacy", cursor.getString(0));
+                assertTrue(cursor.isNull(1));
+            }
+        } finally {
+            helper.close();
+            database.close();
+        }
+    }
+
     private static Question question(String id, double trueValue) {
         return Question.builder()
                 .id(id)
@@ -200,6 +227,7 @@ public class QuizHistoryDaoTest {
                 .unit("units")
                 .measurementBasis("test measurement")
                 .timeVarying(false)
+                .category("Test category")
                 .build();
     }
 }

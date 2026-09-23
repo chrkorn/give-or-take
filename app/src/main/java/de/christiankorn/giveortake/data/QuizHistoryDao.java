@@ -36,6 +36,7 @@ public final class QuizHistoryDao implements AutoCloseable {
             QuizHistoryContract.Answers.COLUMN_SESSION_ID,
             QuizHistoryContract.Answers.COLUMN_SEQUENCE_NUMBER,
             QuizHistoryContract.Answers.COLUMN_QUESTION_ID,
+            QuizHistoryContract.Answers.COLUMN_CATEGORY_AT_ANSWER,
             QuizHistoryContract.Answers.COLUMN_TRUE_VALUE_AT_ANSWER,
             QuizHistoryContract.Answers.COLUMN_POINT_GUESS,
             QuizHistoryContract.Answers.COLUMN_LOWER_BOUND,
@@ -406,6 +407,10 @@ public final class QuizHistoryDao implements AutoCloseable {
                 QuizHistoryContract.Answers.COLUMN_QUESTION_ID,
                 answer.getQuestion().getId()
         );
+        String category = answer.getQuestion().getCategory();
+        if (category != null) {
+            values.put(QuizHistoryContract.Answers.COLUMN_CATEGORY_AT_ANSWER, category);
+        }
         values.put(
                 QuizHistoryContract.Answers.COLUMN_TRUE_VALUE_AT_ANSWER,
                 answer.getQuestion().getTrueValue()
@@ -572,6 +577,10 @@ public final class QuizHistoryDao implements AutoCloseable {
                 cursor.getString(cursor.getColumnIndexOrThrow(
                         QuizHistoryContract.Answers.COLUMN_QUESTION_ID
                 )),
+                readNullableString(
+                        cursor,
+                        QuizHistoryContract.Answers.COLUMN_CATEGORY_AT_ANSWER
+                ),
                 cursor.getDouble(cursor.getColumnIndexOrThrow(
                         QuizHistoryContract.Answers.COLUMN_TRUE_VALUE_AT_ANSWER
                 )),
@@ -580,6 +589,11 @@ public final class QuizHistoryDao implements AutoCloseable {
                         QuizHistoryContract.Answers.COLUMN_ANSWERED_AT_EPOCH_MS
                 ))
         );
+    }
+
+    private static String readNullableString(Cursor cursor, String columnName) {
+        int index = cursor.getColumnIndexOrThrow(columnName);
+        return cursor.isNull(index) ? null : cursor.getString(index);
     }
 
     private static String levelValue(Level level) {
