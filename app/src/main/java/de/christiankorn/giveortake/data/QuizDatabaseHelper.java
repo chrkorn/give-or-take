@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 /** Creates, configures, and incrementally upgrades the private quiz-history database. */
 public final class QuizDatabaseHelper extends SQLiteOpenHelper {
     /** Current on-device schema version. */
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2;
     /** Name of the application-private database file. */
     public static final String DATABASE_NAME = "quiz_history.db";
 
@@ -52,6 +52,10 @@ public final class QuizDatabaseHelper extends SQLiteOpenHelper {
                     + QuizHistoryContract.Answers.COLUMN_QUESTION_ID
                     + " TEXT NOT NULL CHECK (length(trim("
                     + QuizHistoryContract.Answers.COLUMN_QUESTION_ID + ")) > 0), "
+                    + QuizHistoryContract.Answers.COLUMN_CATEGORY_AT_ANSWER
+                    + " TEXT CHECK (" + QuizHistoryContract.Answers.COLUMN_CATEGORY_AT_ANSWER
+                    + " IS NULL OR length(trim("
+                    + QuizHistoryContract.Answers.COLUMN_CATEGORY_AT_ANSWER + ")) > 0), "
                     + QuizHistoryContract.Answers.COLUMN_TRUE_VALUE_AT_ANSWER
                     + " REAL NOT NULL CHECK ("
                     + QuizHistoryContract.Answers.COLUMN_TRUE_VALUE_AT_ANSWER + " > 0), "
@@ -89,6 +93,13 @@ public final class QuizDatabaseHelper extends SQLiteOpenHelper {
                     + QuizHistoryContract.Answers.COLUMN_QUESTION_ID + ", "
                     + QuizHistoryContract.Answers.COLUMN_ANSWERED_AT_EPOCH_MS + ")";
 
+    private static final String ADD_ANSWER_CATEGORY =
+            "ALTER TABLE " + QuizHistoryContract.Answers.TABLE_NAME + " ADD COLUMN "
+                    + QuizHistoryContract.Answers.COLUMN_CATEGORY_AT_ANSWER + " TEXT CHECK ("
+                    + QuizHistoryContract.Answers.COLUMN_CATEGORY_AT_ANSWER
+                    + " IS NULL OR length(trim("
+                    + QuizHistoryContract.Answers.COLUMN_CATEGORY_AT_ANSWER + ")) > 0)";
+
     /**
      * Creates a helper for the application-private history database.
      *
@@ -123,10 +134,14 @@ public final class QuizDatabaseHelper extends SQLiteOpenHelper {
             /*
              * Each future case performs exactly one immutable migration, such as ALTER TABLE or
              * create-copy-rename, and then advances currentVersion. Chaining fixed steps upgrades
-             * every installed version without discarding user history. Version 1 has no earlier
-             * schema to migrate, so no case exists yet; a missing future step fails visibly.
+             * every installed version without discarding user history. A missing future step
+             * fails visibly instead of silently recreating or partially upgrading the database.
              */
             switch (currentVersion) {
+                case 1:
+                    database.execSQL(ADD_ANSWER_CATEGORY);
+                    currentVersion = 2;
+                    break;
                 default:
                     throw new IllegalStateException(
                             "Missing database migration from version " + currentVersion

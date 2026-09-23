@@ -31,7 +31,28 @@ public final class LogRelativeScore implements ScoringPolicy {
             throw new IllegalArgumentException("LogRelativeScore requires a PointGuess");
         }
 
-        PointGuess pointGuess = (PointGuess) guess;
+        return score(question.getTrueValue(), (PointGuess) guess);
+    }
+
+    /**
+     * Scores a stored point estimate against its scoring-time truth value.
+     *
+     * <p>This overload lets history be rescored without reconstructing question content that was
+     * never part of the numerical policy. It applies exactly the same arithmetic as
+     * {@link #score(Question, Guess)}.</p>
+     *
+     * @param trueValue finite scoring-time truth value greater than zero
+     * @param guess stored point estimate
+     * @return the log-relative raw error and a points value from 0 through 100
+     * @throws IllegalArgumentException if an argument is invalid
+     */
+    public Score score(double trueValue, PointGuess guess) {
+        if (!Double.isFinite(trueValue) || trueValue <= 0.0) {
+            throw new IllegalArgumentException("trueValue must be finite and greater than zero");
+        }
+        if (guess == null) {
+            throw new IllegalArgumentException("guess must not be null");
+        }
 
         // Subtracting logarithms is algebraically identical to log10(guess / trueValue) but is
         // numerically robust. Forming the ratio first overflows to infinity, or underflows to
@@ -40,7 +61,7 @@ public final class LogRelativeScore implements ScoringPolicy {
         // such a ratio is infinite, which the Score constructor then rejects with a message that
         // says nothing about the real cause. Working in the exponent domain cannot overflow for
         // any finite positive inputs, which the domain invariants already guarantee.
-        double rawError = Math.abs(Math.log10(pointGuess.getValue()) - Math.log10(question.getTrueValue()));
+        double rawError = Math.abs(Math.log10(guess.getValue()) - Math.log10(trueValue));
         double unroundedPoints = 100.0 * Math.exp(-POINT_DECAY_RATE * rawError);
 
         // Whole points keep the displayed result and accumulated session total easy to explain.

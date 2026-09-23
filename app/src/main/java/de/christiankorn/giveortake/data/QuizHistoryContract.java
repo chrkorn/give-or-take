@@ -52,6 +52,11 @@ public final class QuizHistoryContract {
         public static final String COLUMN_SEQUENCE_NUMBER = "sequence_number";
         /** Stable identifier of the question that was answered. */
         public static final String COLUMN_QUESTION_ID = "question_id";
+        /**
+         * Subject grouping captured when the answer was submitted, or {@code NULL} for legacy
+         * data.
+         */
+        public static final String COLUMN_CATEGORY_AT_ANSWER = "category_at_answer";
         /** Authoritative value used when the answer was originally scored. */
         public static final String COLUMN_TRUE_VALUE_AT_ANSWER = "true_value_at_answer";
         /** Raw point estimate, or {@code NULL} for an interval answer. */

@@ -85,20 +85,41 @@ public final class IntervalScore implements ScoringPolicy {
             throw new IllegalArgumentException("IntervalScore requires an IntervalGuess");
         }
 
-        IntervalGuess intervalGuess = (IntervalGuess) guess;
-        double logarithmicLowerBound = Math.log10(intervalGuess.getLowerBound());
-        double logarithmicUpperBound = Math.log10(intervalGuess.getUpperBound());
-        double logarithmicTruth = Math.log10(question.getTrueValue());
+        return score(question.getTrueValue(), (IntervalGuess) guess);
+    }
+
+    /**
+     * Scores a stored confidence interval against its scoring-time truth value.
+     *
+     * <p>This overload keeps historical rescoring on the same proper scoring-rule implementation
+     * as live quiz play without manufacturing question text in the data layer.</p>
+     *
+     * @param trueValue finite scoring-time truth value greater than zero
+     * @param guess stored confidence interval
+     * @return the negatively oriented log interval loss
+     * @throws IllegalArgumentException if an argument is invalid
+     */
+    public Score score(double trueValue, IntervalGuess guess) {
+        if (!Double.isFinite(trueValue) || trueValue <= 0.0) {
+            throw new IllegalArgumentException("trueValue must be finite and greater than zero");
+        }
+        if (guess == null) {
+            throw new IllegalArgumentException("guess must not be null");
+        }
+
+        double logarithmicLowerBound = Math.log10(guess.getLowerBound());
+        double logarithmicUpperBound = Math.log10(guess.getUpperBound());
+        double logarithmicTruth = Math.log10(trueValue);
 
         double logarithmicWidth = logarithmicUpperBound - logarithmicLowerBound;
         double missPenaltyMultiplier = TWO_SIDED_MISS_WEIGHT / alpha;
         double missBelowPenalty = 0.0;
         double missAbovePenalty = 0.0;
 
-        if (question.getTrueValue() < intervalGuess.getLowerBound()) {
+        if (trueValue < guess.getLowerBound()) {
             missBelowPenalty = missPenaltyMultiplier
                     * (logarithmicLowerBound - logarithmicTruth);
-        } else if (question.getTrueValue() > intervalGuess.getUpperBound()) {
+        } else if (trueValue > guess.getUpperBound()) {
             missAbovePenalty = missPenaltyMultiplier
                     * (logarithmicTruth - logarithmicUpperBound);
         }

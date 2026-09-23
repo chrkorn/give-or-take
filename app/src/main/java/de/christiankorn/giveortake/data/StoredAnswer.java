@@ -8,6 +8,7 @@ public final class StoredAnswer {
     private final long sessionId;
     private final int sequenceNumber;
     private final String questionId;
+    private final String categoryAtAnswer;
     private final double trueValueAtAnswer;
     private final Guess guess;
     private final long answeredAtEpochMillis;
@@ -17,6 +18,7 @@ public final class StoredAnswer {
             long sessionId,
             int sequenceNumber,
             String questionId,
+            String categoryAtAnswer,
             double trueValueAtAnswer,
             Guess guess,
             long answeredAtEpochMillis
@@ -25,6 +27,7 @@ public final class StoredAnswer {
         this.sessionId = sessionId;
         this.sequenceNumber = sequenceNumber;
         this.questionId = questionId;
+        this.categoryAtAnswer = categoryAtAnswer;
         this.trueValueAtAnswer = trueValueAtAnswer;
         this.guess = guess;
         this.answeredAtEpochMillis = answeredAtEpochMillis;
@@ -48,6 +51,15 @@ public final class StoredAnswer {
     /** Returns the stable identifier of the answered question. */
     public String getQuestionId() {
         return questionId;
+    }
+
+    /**
+     * Returns the subject grouping captured when the answer was submitted.
+     *
+     * @return the category, or {@code null} for history written before schema version 2
+     */
+    public String getCategoryAtAnswer() {
+        return categoryAtAnswer;
     }
 
     /** Returns the authoritative value used when the answer was scored. */
