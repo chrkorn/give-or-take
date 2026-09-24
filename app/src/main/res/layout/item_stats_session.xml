@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/stats_horizontal_margin"
+    android:layout_marginEnd="@dimen/stats_horizontal_margin"
+    android:layout_marginBottom="@dimen/stats_session_list_spacing"
+    android:minHeight="@dimen/stats_session_row_min_height"
+    app:cardBackgroundColor="@color/home_card_background"
+    app:cardCornerRadius="@dimen/stats_card_corner_radius"
+    app:cardElevation="@dimen/elevation_none"
+    app:strokeColor="@color/home_card_outline"
+    app:strokeWidth="@dimen/home_card_stroke_width">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="@dimen/stats_session_row_padding">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/stats_session_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/home_card_content"
+                android:textSize="@dimen/stats_body_text_size"
+                android:textStyle="bold"
+                tools:text="9 Sep 2026" />
+
+            <TextView
+                android:id="@+id/stats_session_bands"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/home_text_spacing_small"
+                android:textColor="@color/home_secondary_text"
+                android:textSize="@dimen/stats_secondary_text_size"
+                tools:text="4 correct · 3 close · 3 wrong" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/stats_session_score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/stats_card_spacing"
+            android:textColor="@color/home_card_content"
+            android:textSize="@dimen/stats_session_score_text_size"
+            android:textStyle="bold"
+            tools:text="74 / 100" />
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

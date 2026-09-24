@@ -123,4 +123,59 @@
     <string name="result_home">Home</string>
     <string name="result_share">Share</string>
     <string name="result_share_placeholder_description">Share results, coming in a later version</string>
+
+    <string name="stats_title">Statistics</string>
+    <string name="stats_back">Back</string>
+    <string name="stats_loading">Loading your history…</string>
+    <string name="stats_load_error_title">Statistics could not be loaded</string>
+    <string name="stats_load_error_message">Your quiz history is still safe. Try loading it again.</string>
+    <string name="stats_retry">Try again</string>
+    <string name="stats_empty_title">Nothing to measure yet</string>
+    <string name="stats_empty_message">Play one session and this screen will fill in. Calibration checks whether the ranges you call “90%% sure” really do contain the answer nine times in ten; it needs about %1$s range answers before the percentage is useful.</string>
+    <string name="stats_empty_preview_title">What will appear here</string>
+    <string name="stats_empty_preview_coverage" formatted="false">How often your 90% ranges actually contain the answer</string>
+    <string name="stats_empty_preview_closeness">How close your point estimates are on average</string>
+    <string name="stats_empty_preview_sessions">Every session you have played, scored and dated</string>
+    <string name="stats_start_session">Start a session</string>
+    <string name="stats_sessions_label">Sessions</string>
+    <string name="stats_questions_label">Questions</string>
+    <string name="stats_high_score_label">High score</string>
+    <string name="stats_mean_closeness_label">Mean closeness</string>
+    <string name="stats_unavailable">—</string>
+    <string name="stats_point_score">%1$s / 100</string>
+    <string name="stats_factor">×%1$s</string>
+    <string name="stats_confidently_wrong_title">Confidently Wrong</string>
+    <string name="stats_no_ranges_title">No range data yet</string>
+    <string name="stats_no_ranges_message" formatted="false">Play interval mode to see how your 90% ranges behave over time.</string>
+    <string name="stats_coverage_summary">Your 90%% ranges contained the true value %1$s of the time.</string>
+    <string name="stats_verdict_overconfident" formatted="false">That is below the 90% aim: the answers justify less confidence than the ranges claimed.</string>
+    <string name="stats_verdict_well_calibrated" formatted="false">That is close to the 90% aim: your stated confidence matches the results well.</string>
+    <string name="stats_verdict_underconfident" formatted="false">That is above the 90% aim. Your ranges may be more cautious than they need to be.</string>
+    <string name="stats_coverage_target" formatted="false">Nominal target: 90%</string>
+    <plurals name="stats_coverage_insufficient">
+        <item quantity="one">You have given %1$d range. Coverage stays hidden until there are at least %2$d. With fewer, a small run of hits or misses says too much about luck and too little about your calibration.</item>
+        <item quantity="other">You have given %1$d ranges. Coverage stays hidden until there are at least %2$d. With fewer, a small run of hits or misses says too much about luck and too little about your calibration.</item>
+    </plurals>
+    <plurals name="stats_ranges_remaining">
+        <item quantity="one">%1$d more range answer until coverage is shown.</item>
+        <item quantity="other">%1$d more range answers until coverage is shown.</item>
+    </plurals>
+    <string name="stats_mean_interval_width">Mean interval width</string>
+    <string name="stats_mean_interval_width_explanation">Average upper-to-lower factor</string>
+    <string name="stats_chart_title">Calibration over time</string>
+    <string name="stats_chart_placeholder" formatted="false">Chart coming next. It will show rolling groups of range answers against the 90% target.</string>
+    <string name="stats_past_sessions">Past sessions</string>
+    <string name="stats_band_counts">%1$s · %2$s · %3$s</string>
+    <string name="stats_interval_counts">%1$s · %2$s</string>
+    <plurals name="stats_contained_count">
+        <item quantity="one">%1$d contained</item>
+        <item quantity="other">%1$d contained</item>
+    </plurals>
+    <plurals name="stats_missed_count">
+        <item quantity="one">%1$d missed</item>
+        <item quantity="other">%1$d missed</item>
+    </plurals>
+    <string name="stats_interval_loss">%1$s avg loss</string>
+    <string name="stats_empty_session_score">No score</string>
+    <string name="stats_abandoned_suffix"> · ended early</string>
 </resources>

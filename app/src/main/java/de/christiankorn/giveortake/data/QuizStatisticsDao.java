@@ -198,12 +198,30 @@ public final class QuizStatisticsDao implements AutoCloseable {
         return new StatisticsOverview(
                 sessions.size(),
                 answers.size(),
+                meanPointLogRelativeError(answers),
                 new CalibrationStatistics(overallCalibration),
                 immutable(coverageTrend(answers)),
                 immutable(meanErrorTrend(sessions)),
                 immutable(categoryPerformance(answers)),
                 immutable(personalBests(sessions))
         );
+    }
+
+    private OptionalDouble meanPointLogRelativeError(List<HistoricalAnswer> answers) {
+        int pointCount = 0;
+        double mean = 0.0;
+        for (HistoricalAnswer answer : answers) {
+            if (!(answer.guess instanceof PointGuess)) {
+                continue;
+            }
+            pointCount++;
+            double error = pointPolicy.score(
+                    answer.trueValue,
+                    requirePointGuess(answer.guess)
+            ).getRawError();
+            mean += (error - mean) / pointCount;
+        }
+        return pointCount == 0 ? OptionalDouble.empty() : OptionalDouble.of(mean);
     }
 
     /** Closes the cached database connection held by the helper. */

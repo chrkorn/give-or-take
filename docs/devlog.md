@@ -441,3 +441,24 @@
   exclusion, mixed-mode aggregates, category separation, personal bests, and overlapping rolling
   windows. No dependency was added.
 - Verified all 176 JVM tests, Android lint, the debug APK build, and Android-test APK compilation.
+
+## 2026-09-24 — Statistics screen
+
+- Implemented the XML-and-Java `StatsActivity` with explicit loading, useful empty, error, and
+  populated states. A single `RecyclerView` holds a summary header and reusable newest-first
+  session rows so headline figures, calibration, the chart placeholder, and history scroll
+  together.
+- Kept SQLite reads on a named background executor and converted the stored mean logarithmic
+  values into locale-formatted multiplicative factors only at the presentation boundary. Added
+  the answer-weighted point-estimate mean needed by the headline without moving scoring policy
+  into the Activity.
+- Added the fixed “Confidently Wrong” panel with neutral wording for under-, well-, and
+  overconfidence. Empirical coverage is completely withheld below the core tracker’s 50-answer
+  threshold; the UI explains the sampling reason and shows finite progress, while mean interval
+  width remains available.
+- Added locale-aware dates, scores, factors, percentages, pluralised counts, interval contained
+  and missed counts, an actionable first-use explanation, and the calibration-chart placeholder.
+- Added JUnit coverage for factor conversion and verdict boundaries, extended DAO coverage for the
+  headline aggregate, and added Espresso cases for empty, insufficient, and 55 percent coverage
+  states. No dependency was added.
+- Verified all 179 JVM tests, Android lint, and Android-test APK compilation.
