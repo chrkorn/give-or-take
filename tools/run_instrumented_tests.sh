@@ -16,6 +16,9 @@
 #
 set -euo pipefail
 
+# Without this, `set -e` aborts with no output at all and the caller is left guessing.
+trap 'status=$?; [ $status -ne 0 ] && echo "aborted at line $LINENO (exit $status): $BASH_COMMAND" >&2' ERR
+
 # Espresso 3.5.1 with androidx.test.ext:junit 1.1.5 -- the Android Studio template
 # defaults pinned in gradle/libs.versions.toml -- fail during framework initialisation
 # on newer platform images. minSdk is 26, so running the suite below targetSdk is
@@ -68,9 +71,17 @@ need adb
 need emulator
 
 avd_api() {   # echo the API level of an AVD, or nothing
+  # Handles dotted levels such as android-37.1 by taking the major number only.
+  # Every branch is guarded: a bare `[ -f x ] && ...` that finds nothing returns 1, and
+  # a command substitution returning non-zero under `set -e` aborts the whole script.
   local ini="$HOME/.android/avd/$1.ini" cfg="$HOME/.android/avd/$1.avd/config.ini"
-  [ -f "$cfg" ] && sed -n 's/^image\.sysdir\.1=.*android-\([0-9][0-9]*\).*/\1/p' "$cfg" | head -1
-  [ -f "$ini" ] && sed -n 's/^target=android-\([0-9][0-9]*\)/\1/p' "$ini" | head -1
+  if [ -f "$cfg" ]; then
+    sed -n 's/^image\.sysdir\.1=.*android-\([0-9][0-9]*\).*/\1/p' "$cfg" || true
+  fi
+  if [ -f "$ini" ]; then
+    sed -n 's/^target=android-\([0-9][0-9]*\).*/\1/p' "$ini" || true
+  fi
+  return 0
 }
 
 choose_avd() {
@@ -107,6 +118,9 @@ HINT
   avd="${picked%%|*}"; api="${picked##*|}"
 else
   api="$(avd_api "$avd" | head -1)"
+fi
+if [ -z "${api:-}" ]; then
+  echo "Could not read an API level for AVD '$avd'. Continuing anyway." >&2
 fi
 echo "AVD: $avd (API ${api:-unknown})"
 
