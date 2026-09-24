@@ -210,3 +210,21 @@ Two sets are written:
 
 Playwright is not a dependency of the app and is not referenced by the Gradle build. It is
 required only to regenerate these images.
+
+## Running the instrumented tests
+
+```bash
+tools/run_instrumented_tests.sh                 # picks a suitable AVD
+tools/run_instrumented_tests.sh Pixel_6_API_34  # or name one
+```
+
+The script boots an emulator at API 35 or below, disables animations, runs
+`ExampleInstrumentedTest` alone as a canary, and only then runs the full suite. The canary
+matters: Espresso 3.5.1 cannot initialise on an API 37 image, and when the harness itself
+is broken every test "fails" for a reason that has nothing to do with the test. Separating
+the two makes that unmistakable.
+
+Instrumented tests stay out of CI — an emulator there is slow and flaky. The cost of that
+exclusion is real: nothing notices when the harness breaks, and five test classes
+accumulated here without ever executing. Making the local run one command is the
+mitigation. **Run it before every tag**, and record the API level it passed on.
