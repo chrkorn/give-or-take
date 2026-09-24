@@ -4,8 +4,9 @@
 #
 # Instrumented tests are deliberately excluded from CI: an emulator there is slow and
 # flaky. The cost of that exclusion is that nothing notices when the harness itself
-# breaks -- which is exactly what happened. Espresso 3.5.1 cannot initialise on an
-# API 37 image, so five test classes accumulated without ever executing.
+# breaks -- which is exactly what happened: five test classes accumulated without ever
+# executing, first because ./gradlew could not find a JDK outside Android Studio, then
+# because Espresso 3.5.1 does not work on an API 37 image.
 #
 # This script makes the local run a single command, so it is cheap enough to do before
 # every tag rather than "when I get round to it".
@@ -19,10 +20,12 @@ set -euo pipefail
 # Without this, `set -e` aborts with no output at all and the caller is left guessing.
 trap 'status=$?; [ $status -ne 0 ] && echo "aborted at line $LINENO (exit $status): $BASH_COMMAND" >&2' ERR
 
-# Espresso 3.5.1 with androidx.test.ext:junit 1.1.5 -- the Android Studio template
-# defaults pinned in gradle/libs.versions.toml -- fail during framework initialisation
-# on newer platform images. minSdk is 26, so running the suite below targetSdk is
-# ordinary practice rather than a compromise. Raise this only if the versions change.
+# Espresso 3.5.1 -- the Android Studio template default pinned in
+# gradle/libs.versions.toml -- reflects on the hidden InputManager.getInstance() to
+# inject events. API 37 no longer has it, so every onView(...).perform/check fails with
+# NoSuchMethodException while tests that never touch Espresso still pass. Verified
+# working on API 35. minSdk is 26, so running the suite below targetSdk is ordinary
+# practice rather than a compromise. Raise this only if the versions change.
 MAX_SUPPORTED_API=35
 CANARY='de.christiankorn.giveortake.ExampleInstrumentedTest'
 
@@ -183,7 +186,9 @@ adb shell input keyevent 82 >/dev/null 2>&1 || true
 echo
 echo "== canary: $CANARY =="
 # Prove the harness initialises before trusting any real assertion. If this fails, the
-# problem is the environment, not the tests.
+# problem is the environment, not the tests. The canary does not touch Espresso, so a
+# pass proves the runner, not Espresso: if every Espresso test then fails with the same
+# framework exception, that is still the environment.
 if ! ./gradlew connectedDebugAndroidTest \
       -Pandroid.testInstrumentationRunnerArguments.class="$CANARY" --console=plain; then
   echo >&2
