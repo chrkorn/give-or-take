@@ -11,6 +11,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.math.BigDecimal;
 import java.util.concurrent.atomic.AtomicReference;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
@@ -291,7 +292,11 @@ public class QuizActivityTest {
                     prompt.set(((TextView) view).getText().toString());
                 });
                 Question question = findByPrompt(questionBank, prompt.get());
-                String answer = Double.toString(question.getTrueValue());
+                // Double.toString switches to scientific notation at 1e7 ("1.46119928E8"),
+                // which the answer field rightly rejects. Type what a player would type.
+                String answer = BigDecimal.valueOf(question.getTrueValue())
+                        .stripTrailingZeros()
+                        .toPlainString();
                 if (decimalSeparator != '.') {
                     answer = answer.replace('.', decimalSeparator);
                 }
