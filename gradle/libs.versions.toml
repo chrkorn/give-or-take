@@ -3,9 +3,12 @@ agp = "9.4.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 # Espresso 3.5.1 and androidx.test.ext:junit 1.1.5 are the Android Studio template
-# defaults. They cannot initialise on an API 37 system image, so the instrumented suite
-# runs against API 35 or below -- see tools/run_instrumented_tests.sh, which enforces
-# that. minSdk is 26, so this is ordinary practice rather than a compromise.
+# defaults. On an API 37 image the runner starts, but every Espresso interaction fails:
+# 3.5.1 reflects on the hidden InputManager.getInstance(), which that platform no longer
+# has (NoSuchMethodException). Espresso 3.7.0 replaced the reflection with
+# getSystemService. The suite therefore runs against API 35 or below -- see
+# tools/run_instrumented_tests.sh, which enforces that. minSdk is 26, so this is
+# ordinary practice rather than a compromise.
 #
 # Before raising either version, read the current numbers from
 # https://developer.android.com/jetpack/androidx/releases/test and note that

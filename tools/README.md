@@ -222,9 +222,15 @@ The script locates the Android SDK itself — from `$ANDROID_HOME`, then `sdk.di
 `local.properties`, then the default install location — so there is nothing to add to your
 shell profile first. It then boots an emulator at API 35 or below, disables animations, runs
 `ExampleInstrumentedTest` alone as a canary, and only then runs the full suite. The canary
-matters: Espresso 3.5.1 cannot initialise on an API 37 image, and when the harness itself
-is broken every test "fails" for a reason that has nothing to do with the test. Separating
-the two makes that unmistakable.
+matters: when the harness itself is broken every test "fails" for a reason that has nothing
+to do with the test, and separating the two makes that unmistakable.
+
+The canary proves the runner, not Espresso: it never calls `onView`. On an API 37 image it
+passes, yet every Espresso test fails with `NoSuchMethodException:
+InputManager.getInstance` -- Espresso 3.5.1 reflects on a hidden platform method that API 37
+no longer has (fixed upstream in Espresso 3.7.0). A full suite failing with one identical
+framework exception is still an environment problem, not a test problem. The suite was
+first verified on API 35 (Google APIs, arm64).
 
 Instrumented tests stay out of CI — an emulator there is slow and flaky. The cost of that
 exclusion is real: nothing notices when the harness breaks, and five test classes
