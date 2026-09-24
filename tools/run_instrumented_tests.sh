@@ -26,7 +26,44 @@ CANARY='de.christiankorn.giveortake.ExampleInstrumentedTest'
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$here"
 
-need() { command -v "$1" >/dev/null 2>&1 || { echo "not on PATH: $1" >&2; exit 1; }; }
+# Android Studio installs the SDK but does not put it on PATH, so locate it rather than
+# making the caller configure a shell. local.properties already records it for Gradle.
+find_sdk() {
+  local candidate
+  for candidate in "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}"; do
+    [ -n "$candidate" ] && [ -d "$candidate/platform-tools" ] && { echo "$candidate"; return; }
+  done
+  if [ -f local.properties ]; then
+    candidate="$(sed -n 's/^sdk\.dir=//p' local.properties | head -1 | sed 's/\\\\/\//g')"
+    [ -n "$candidate" ] && [ -d "$candidate/platform-tools" ] && { echo "$candidate"; return; }
+  fi
+  for candidate in "$HOME/Library/Android/sdk" "$HOME/Android/Sdk"; do
+    [ -d "$candidate/platform-tools" ] && { echo "$candidate"; return; }
+  done
+}
+
+SDK="$(find_sdk || true)"
+if [ -z "$SDK" ]; then
+  cat >&2 <<'HINT'
+Could not find the Android SDK.
+
+Looked at $ANDROID_HOME, $ANDROID_SDK_ROOT, sdk.dir in local.properties, and the
+default install locations. Set ANDROID_HOME to your SDK directory and try again --
+in Android Studio it is shown under Settings > Languages & Frameworks > Android SDK.
+HINT
+  exit 1
+fi
+echo "SDK: $SDK"
+export ANDROID_HOME="$SDK" ANDROID_SDK_ROOT="$SDK"
+export PATH="$SDK/platform-tools:$SDK/emulator:$SDK/cmdline-tools/latest/bin:$SDK/tools/bin:$PATH"
+
+need() {
+  command -v "$1" >/dev/null 2>&1 || {
+    echo "not found in the SDK at $SDK: $1" >&2
+    echo "install it from Android Studio's SDK Manager, or with sdkmanager" >&2
+    exit 1
+  }
+}
 need adb
 need emulator
 
