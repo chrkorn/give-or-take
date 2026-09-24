@@ -55,6 +55,7 @@ public class QuizStatisticsDaoTest {
 
         assertEquals(0, overview.getEndedSessionCount());
         assertEquals(0, overview.getAnswerCount());
+        assertFalse(overview.getMeanPointLogRelativeError().isPresent());
         assertFalse(overview.getCalibration().getEmpiricalCoverage().isPresent());
         assertFalse(overview.getCalibration().getNominalCoverageGap().isPresent());
         assertFalse(overview.getCalibration().getMeanLogScaleWidth().isPresent());
@@ -150,6 +151,11 @@ public class QuizStatisticsDaoTest {
 
         assertEquals(4, overview.getEndedSessionCount());
         assertEquals(14, overview.getAnswerCount());
+        assertEquals(
+                (1.0 + Math.log10(2.0)) / 4.0,
+                overview.getMeanPointLogRelativeError().getAsDouble(),
+                PRECISE
+        );
         assertEquals(10L, overview.getCalibration().getSampleSize());
         assertEquals(9L, overview.getCalibration().getHitCount());
         assertEquals(

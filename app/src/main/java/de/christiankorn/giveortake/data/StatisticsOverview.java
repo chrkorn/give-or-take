@@ -1,11 +1,13 @@
 package de.christiankorn.giveortake.data;
 
 import java.util.List;
+import java.util.OptionalDouble;
 
 /** Collects the statistics-screen aggregates calculated from one consistent history snapshot. */
 public final class StatisticsOverview {
     private final int endedSessionCount;
     private final int answerCount;
+    private final OptionalDouble meanPointLogRelativeError;
     private final CalibrationStatistics calibration;
     private final List<CoverageTrendPoint> coverageTrend;
     private final List<MeanErrorTrendPoint> meanErrorTrend;
@@ -15,6 +17,7 @@ public final class StatisticsOverview {
     StatisticsOverview(
             int endedSessionCount,
             int answerCount,
+            OptionalDouble meanPointLogRelativeError,
             CalibrationStatistics calibration,
             List<CoverageTrendPoint> coverageTrend,
             List<MeanErrorTrendPoint> meanErrorTrend,
@@ -23,6 +26,7 @@ public final class StatisticsOverview {
     ) {
         this.endedSessionCount = endedSessionCount;
         this.answerCount = answerCount;
+        this.meanPointLogRelativeError = meanPointLogRelativeError;
         this.calibration = calibration;
         this.coverageTrend = coverageTrend;
         this.meanErrorTrend = meanErrorTrend;
@@ -38,6 +42,18 @@ public final class StatisticsOverview {
     /** Returns the number of accepted answers represented. */
     public int getAnswerCount() {
         return answerCount;
+    }
+
+    /**
+     * Returns the mean log-relative error across every stored point estimate.
+     *
+     * <p>The aggregate is weighted per answer rather than per session, so a short abandoned
+     * session does not count as much as a longer session merely because both have one mean.</p>
+     *
+     * @return mean point-estimate error, or an empty value when no point answer exists
+     */
+    public OptionalDouble getMeanPointLogRelativeError() {
+        return meanPointLogRelativeError;
     }
 
     /** Returns overall confidence-interval calibration. */
