@@ -218,7 +218,9 @@ tools/run_instrumented_tests.sh                 # picks a suitable AVD
 tools/run_instrumented_tests.sh Pixel_6_API_34  # or name one
 ```
 
-The script boots an emulator at API 35 or below, disables animations, runs
+The script locates the Android SDK itself — from `$ANDROID_HOME`, then `sdk.dir` in
+`local.properties`, then the default install location — so there is nothing to add to your
+shell profile first. It then boots an emulator at API 35 or below, disables animations, runs
 `ExampleInstrumentedTest` alone as a canary, and only then runs the full suite. The canary
 matters: Espresso 3.5.1 cannot initialise on an API 37 image, and when the harness itself
 is broken every test "fails" for a reason that has nothing to do with the test. Separating
