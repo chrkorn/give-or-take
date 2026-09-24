@@ -56,6 +56,43 @@ in Android Studio it is shown under Settings > Languages & Frameworks > Android 
 HINT
   exit 1
 fi
+# Gradle needs a JDK. Android Studio bundles one and uses it internally, so the build
+# works in the IDE while ./gradlew from a plain shell reports "Unable to locate a Java
+# Runtime" -- which is how the instrumented tests came to have never run. Prefer the
+# bundled runtime: it is the one the IDE builds with, so the versions cannot disagree.
+find_jdk() {
+  local candidate
+  if [ -n "${JAVA_HOME:-}" ] && [ -x "${JAVA_HOME}/bin/java" ]; then
+    echo "$JAVA_HOME"; return
+  fi
+  for candidate in \
+      "/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
+      "$HOME/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
+      "/Applications/Android Studio Preview.app/Contents/jbr/Contents/Home"; do
+    [ -x "$candidate/bin/java" ] && { echo "$candidate"; return; }
+  done
+  if [ -x /usr/libexec/java_home ]; then
+    candidate="$(/usr/libexec/java_home 2>/dev/null || true)"
+    [ -n "$candidate" ] && [ -x "$candidate/bin/java" ] && { echo "$candidate"; return; }
+  fi
+  return 0
+}
+
+JDK="$(find_jdk)"
+if [ -z "$JDK" ]; then
+  cat >&2 <<'HINT'
+No Java runtime found.
+
+Gradle needs a JDK. Android Studio ships one, normally at
+  /Applications/Android Studio.app/Contents/jbr/Contents/Home
+Set JAVA_HOME to it, or install a JDK 17 or newer, then try again.
+HINT
+  exit 1
+fi
+export JAVA_HOME="$JDK"
+export PATH="$JAVA_HOME/bin:$PATH"
+echo "JDK: $JAVA_HOME ($("$JAVA_HOME/bin/java" -version 2>&1 | head -1))"
+
 echo "SDK: $SDK"
 export ANDROID_HOME="$SDK" ANDROID_SDK_ROOT="$SDK"
 export PATH="$SDK/platform-tools:$SDK/emulator:$SDK/cmdline-tools/latest/bin:$SDK/tools/bin:$PATH"
