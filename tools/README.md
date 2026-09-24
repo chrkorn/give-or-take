@@ -218,6 +218,10 @@ tools/run_instrumented_tests.sh                 # picks a suitable AVD
 tools/run_instrumented_tests.sh Pixel_6_API_34  # or name one
 ```
 
+The API cap is checked against the device the tests actually run on, including an emulator
+that was already running. `ALLOW_UNSUPPORTED_API=1` overrides it, e.g. to re-check API 37
+after raising the test library versions.
+
 The script locates the Android SDK itself — from `$ANDROID_HOME`, then `sdk.dir` in
 `local.properties`, then the default install location — so there is nothing to add to your
 shell profile first. It then boots an emulator at API 35 or below, disables animations, runs

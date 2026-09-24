@@ -176,6 +176,26 @@ if [ -z "$(adb devices | sed -n '2p' | cut -f1)" ]; then
   echo "Booted."
 fi
 
+# Check the API level of the device the tests will actually run on. Neither a named AVD
+# nor an emulator that was already running goes through choose_avd, so without this the
+# cap is silently skipped -- which is how the suite first ran on API 37.
+device_api="$(adb shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r' || true)"
+if [ -n "$device_api" ] && [ "$device_api" -gt "$MAX_SUPPORTED_API" ]; then
+  if [ "${ALLOW_UNSUPPORTED_API:-0}" = "1" ]; then
+    echo "warning: device is API $device_api, above the supported $MAX_SUPPORTED_API;" \
+         "Espresso tests are expected to fail." >&2
+  else
+    cat >&2 <<HINT
+The connected device runs API $device_api; the pinned Espresso works only up to API
+$MAX_SUPPORTED_API (see the comment on MAX_SUPPORTED_API). Shut that emulator down and run
+again, naming an AVD at API $MAX_SUPPORTED_API or below -- or set ALLOW_UNSUPPORTED_API=1 to
+run anyway.
+HINT
+    exit 1
+  fi
+fi
+[ -n "$device_api" ] && api="$device_api"
+
 # Keep the device from interfering with Espresso: animations must be off, and the
 # screen must be on and unlocked or taps land nowhere.
 for s in window_animation_scale transition_animation_scale animator_duration_scale; do
