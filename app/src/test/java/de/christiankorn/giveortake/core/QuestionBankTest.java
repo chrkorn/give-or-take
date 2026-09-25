@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import java.io.StringReader;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -38,6 +39,22 @@ public class QuestionBankTest {
         assertEquals("https://example.org/river-thames", loaded.get(0).getSourceUrl());
         assertEquals("Example source", loaded.get(0).getSourceLabel());
         assertEquals("mount-everest", loaded.get(1).getId());
+    }
+
+    @Test
+    public void getCategories_removesDuplicatesAndSortsNames() throws Exception {
+        String questions = validQuestion("river-thames", 346.0)
+                .replace("Example category", "Rivers")
+                + ","
+                + validQuestion("mount-everest", 8848.86)
+                .replace("Example category", "Mountains")
+                + ","
+                + validQuestion("river-nile", 6650.0)
+                .replace("Example category", "Rivers");
+
+        QuestionBank bank = QuestionBank.fromJson(validBank(questions));
+
+        assertEquals(Arrays.asList("Mountains", "Rivers"), bank.getCategories());
     }
 
     @Test

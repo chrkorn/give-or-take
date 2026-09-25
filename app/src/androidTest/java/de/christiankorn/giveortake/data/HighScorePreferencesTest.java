@@ -77,4 +77,17 @@ public class HighScorePreferencesTest {
 
         assertEquals("highScore must contain a recorded value", exception.getMessage());
     }
+
+    /** Verifies a statistics reset removes records for every answer mode. */
+    @Test
+    public void clear_afterSeveralSaves_removesEveryHighScore() {
+        highScorePreferences.save(HighScore.recorded(Level.POINT_ESTIMATES, 80.0, 10));
+        highScorePreferences.save(HighScore.recorded(Level.CONFIDENCE_INTERVALS, 0.4, 10));
+
+        highScorePreferences.clear();
+
+        assertFalse(highScorePreferences.load(Level.POINT_ESTIMATES).getBestValue().isPresent());
+        assertFalse(highScorePreferences.load(Level.CONFIDENCE_INTERVALS)
+                .getBestValue().isPresent());
+    }
 }

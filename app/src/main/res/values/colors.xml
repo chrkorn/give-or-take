@@ -28,4 +28,5 @@
     <color name="feedback_close_content">#584000</color>
     <color name="feedback_wrong_background">#F9DEDC</color>
     <color name="feedback_wrong_content">#6D1B1B</color>
+    <color name="settings_destructive">#8C1D18</color>
 </resources>

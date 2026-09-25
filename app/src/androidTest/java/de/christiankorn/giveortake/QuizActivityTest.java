@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicReference;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
@@ -44,6 +45,31 @@ import static org.junit.Assert.assertNotEquals;
  */
 @RunWith(AndroidJUnit4.class)
 public class QuizActivityTest {
+
+    /** Verifies the launch snapshot controls both length and the eligible question pool. */
+    @Test
+    public void configuredSession_usesRequestedLengthAndCategory() {
+        Context context = androidx.test.core.app.ApplicationProvider.getApplicationContext();
+        Intent intent = QuizActivity.createIntent(
+                context,
+                Level.POINT_ESTIMATES,
+                5,
+                Collections.singleton("Mountain elevations")
+        );
+        QuestionBank bank = new AssetQuestionBankLoader(context.getAssets()).load();
+
+        try (ActivityScenario<QuizActivity> scenario = ActivityScenario.launch(intent)) {
+            onView(withId(R.id.question_counter)).check(matches(withText(
+                    "0 answered · 5 remaining"
+            )));
+            scenario.onActivity(activity -> {
+                String prompt = ((TextView) activity.findViewById(R.id.question_prompt))
+                        .getText()
+                        .toString();
+                assertEquals("Mountain elevations", findByPrompt(bank, prompt).getCategory());
+            });
+        }
+    }
 
     /** Verifies that best guess and factor changes immediately update the displayed interval. */
     @Test

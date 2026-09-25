@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 /**
@@ -131,6 +132,22 @@ public final class QuestionBank {
      */
     public List<Question> getQuestions() {
         return questions;
+    }
+
+    /**
+     * Returns the question categories in stable alphabetical order.
+     *
+     * <p>Categories are derived from the validated bank rather than duplicated in Android
+     * resources, so the settings filter automatically follows question-data updates.</p>
+     *
+     * @return an unmodifiable, duplicate-free list of category names
+     */
+    public List<String> getCategories() {
+        Set<String> categories = new TreeSet<>();
+        for (Question question : questions) {
+            categories.add(question.getCategory());
+        }
+        return Collections.unmodifiableList(new ArrayList<>(categories));
     }
 
     private static QuestionBank parse(String json) throws QuestionBankFormatException {

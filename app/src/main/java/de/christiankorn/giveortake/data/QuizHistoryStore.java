@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 import de.christiankorn.giveortake.core.Level;
 
@@ -137,6 +138,53 @@ public final class QuizHistoryStore {
         return session;
     }
 
+    /**
+     * Loads exact history counts after all earlier queued writes have finished.
+     *
+     * <p>Callbacks run on the history worker. An Activity must post UI work to the main thread.</p>
+     *
+     * @param onSuccess receives immutable counts when the query succeeds
+     * @param onFailure receives the database failure
+     * @throws IllegalArgumentException if either callback is {@code null}
+     */
+    public void loadHistoryCounts(
+            Consumer<HistoryCounts> onSuccess,
+            Consumer<RuntimeException> onFailure
+    ) {
+        requireCallbacks(onSuccess, onFailure);
+        execute(() -> {
+            try {
+                onSuccess.accept(dao.getHistoryCounts());
+            } catch (RuntimeException exception) {
+                onFailure.accept(exception);
+            }
+        });
+    }
+
+    /**
+     * Deletes all history after earlier writes and before later writes on the serial queue.
+     *
+     * <p>Callbacks run on the history worker. Personal-best preferences are deliberately cleared
+     * by the caller only after this database operation succeeds.</p>
+     *
+     * @param onSuccess invoked after the transaction commits
+     * @param onFailure receives the database failure
+     * @throws IllegalArgumentException if either callback is {@code null}
+     */
+    public void clearHistory(Runnable onSuccess, Consumer<RuntimeException> onFailure) {
+        if (onSuccess == null || onFailure == null) {
+            throw new IllegalArgumentException("callbacks must not be null");
+        }
+        execute(() -> {
+            try {
+                dao.clearHistory();
+                onSuccess.run();
+            } catch (RuntimeException exception) {
+                onFailure.accept(exception);
+            }
+        });
+    }
+
     void execute(Runnable operation) {
         executor.execute(operation);
     }
@@ -180,6 +228,15 @@ public final class QuizHistoryStore {
         return context.getApplicationContext();
     }
 
+    private static <T> void requireCallbacks(
+            Consumer<T> onSuccess,
+            Consumer<RuntimeException> onFailure
+    ) {
+        if (onSuccess == null || onFailure == null) {
+            throw new IllegalArgumentException("callbacks must not be null");
+        }
+    }
+
     private static void requireDescriptor(
             String token,
             Level level,
@@ -197,6 +254,27 @@ public final class QuizHistoryStore {
         }
         if (startedAtEpochMillis < 0L) {
             throw new IllegalArgumentException("startedAtEpochMillis must not be negative");
+        }
+    }
+
+    /** Exact row counts shown before the player confirms a statistics reset. */
+    public static final class HistoryCounts {
+        private final int sessionCount;
+        private final int answerCount;
+
+        HistoryCounts(int sessionCount, int answerCount) {
+            this.sessionCount = sessionCount;
+            this.answerCount = answerCount;
+        }
+
+        /** Returns the number of session rows that will be deleted. */
+        public int getSessionCount() {
+            return sessionCount;
+        }
+
+        /** Returns the number of answer rows that will be deleted. */
+        public int getAnswerCount() {
+            return answerCount;
         }
     }
 }

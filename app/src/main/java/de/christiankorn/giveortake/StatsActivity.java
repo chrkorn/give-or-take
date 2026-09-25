@@ -72,7 +72,7 @@ public final class StatsActivity extends AppCompatActivity {
         MaterialToolbar toolbar = findViewById(R.id.stats_toolbar);
         toolbar.setNavigationOnClickListener(view -> finish());
         findViewById(R.id.stats_start_session_button).setOnClickListener(view -> startActivity(
-                QuizActivity.createIntent(StatsActivity.this, Level.POINT_ESTIMATES)
+                QuizActivity.createConfiguredIntent(StatsActivity.this, Level.POINT_ESTIMATES)
         ));
         findViewById(R.id.stats_retry_button).setOnClickListener(view -> loadStatistics());
 

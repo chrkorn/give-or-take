@@ -386,6 +386,36 @@ public final class QuizHistoryDao implements AutoCloseable {
         return Collections.unmodifiableList(answers);
     }
 
+    /**
+     * Counts all persisted sessions and answers, including unfinished sessions.
+     *
+     * @return immutable counts suitable for a destructive-action confirmation
+     */
+    public QuizHistoryStore.HistoryCounts getHistoryCounts() {
+        SQLiteDatabase database = databaseHelper.getReadableDatabase();
+        return new QuizHistoryStore.HistoryCounts(
+                countRows(database, QuizHistoryContract.Sessions.TABLE_NAME),
+                countRows(database, QuizHistoryContract.Answers.TABLE_NAME)
+        );
+    }
+
+    /**
+     * Deletes every persisted answer and session in one transaction.
+     *
+     * <p>Deleting parent sessions is sufficient because foreign-key cascades own their answers.
+     * The transaction keeps a reset all-or-nothing if SQLite reports a failure.</p>
+     */
+    public void clearHistory() {
+        SQLiteDatabase database = databaseHelper.getWritableDatabase();
+        database.beginTransaction();
+        try {
+            database.delete(QuizHistoryContract.Sessions.TABLE_NAME, null, null);
+            database.setTransactionSuccessful();
+        } finally {
+            database.endTransaction();
+        }
+    }
+
     /** Closes the cached database connection held by the helper. */
     @Override
     public void close() {
@@ -421,6 +451,18 @@ public final class QuizHistoryDao implements AutoCloseable {
                 answer.getAnsweredAtEpochMillis()
         );
         database.insertOrThrow(QuizHistoryContract.Answers.TABLE_NAME, null, values);
+    }
+
+    private static int countRows(SQLiteDatabase database, String tableName) {
+        try (Cursor cursor = database.rawQuery(
+                "SELECT COUNT(*) FROM " + tableName,
+                null
+        )) {
+            if (!cursor.moveToFirst()) {
+                throw new IllegalStateException("SQLite did not return a row count");
+            }
+            return cursor.getInt(0);
+        }
     }
 
     private static void putGuess(ContentValues values, Guess guess) {

@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/settings_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/theme_background"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/settings_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/settings_toolbar_height"
+        android:background="@color/theme_background"
+        android:navigationContentDescription="@string/settings_back"
+        android:title="@string/settings_title"
+        app:navigationIcon="?attr/homeAsUpIndicator"
+        app:titleTextColor="@color/theme_on_background" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/settings_horizontal_margin"
+            android:paddingTop="@dimen/settings_content_padding"
+            android:paddingEnd="@dimen/settings_horizontal_margin"
+            android:paddingBottom="@dimen/settings_bottom_margin">
+
+            <TextView
+                style="@style/TextAppearance.Material3.LabelLarge"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_session_length_label"
+                android:textAllCaps="true"
+                android:textColor="@color/home_secondary_text"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/settings_session_length_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/settings_control_spacing"
+                app:checkedButton="@id/settings_length_10"
+                app:selectionRequired="true"
+                app:singleSelection="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/settings_length_5"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/settings_segment_height"
+                    android:layout_weight="1"
+                    android:checkable="true"
+                    android:text="@string/settings_length_5" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/settings_length_10"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/settings_segment_height"
+                    android:layout_weight="1"
+                    android:checkable="true"
+                    android:text="@string/settings_length_10" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/settings_length_20"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/settings_segment_height"
+                    android:layout_weight="1"
+                    android:checkable="true"
+                    android:text="@string/settings_length_20" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/settings_explanation_spacing"
+                android:text="@string/settings_session_length_explanation"
+                android:textColor="@color/home_secondary_text"
+                android:textSize="@dimen/settings_body_text_size" />
+
+            <TextView
+                style="@style/TextAppearance.Material3.LabelLarge"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/settings_section_spacing"
+                android:text="@string/settings_answer_mode_label"
+                android:textAllCaps="true"
+                android:textColor="@color/home_secondary_text"
+                android:textStyle="bold" />
+
+            <RadioGroup
+                android:id="@+id/settings_answer_mode_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/settings_control_spacing"
+                android:background="@drawable/settings_group_background"
+                android:orientation="vertical">
+
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/settings_mode_point"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/settings_row_height"
+                    android:paddingStart="@dimen/settings_row_padding"
+                    android:paddingEnd="@dimen/settings_row_padding"
+                    android:text="@string/settings_mode_point"
+                    android:textSize="@dimen/settings_body_text_size" />
+
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/settings_mode_interval"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/settings_row_height"
+                    android:paddingStart="@dimen/settings_row_padding"
+                    android:paddingEnd="@dimen/settings_row_padding"
+                    android:text="@string/settings_mode_interval"
+                    android:textSize="@dimen/settings_body_text_size" />
+
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/settings_mode_follow_level"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/settings_row_height"
+                    android:paddingStart="@dimen/settings_row_padding"
+                    android:paddingEnd="@dimen/settings_row_padding"
+                    android:text="@string/settings_mode_follow_level"
+                    android:textSize="@dimen/settings_body_text_size" />
+            </RadioGroup>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/settings_explanation_spacing"
+                android:text="@string/settings_next_session_explanation"
+                android:textColor="@color/home_secondary_text"
+                android:textSize="@dimen/settings_body_text_size" />
+
+            <TextView
+                style="@style/TextAppearance.Material3.LabelLarge"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/settings_section_spacing"
+                android:text="@string/settings_categories_label"
+                android:textAllCaps="true"
+                android:textColor="@color/home_secondary_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/settings_categories_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/settings_control_spacing"
+                android:background="@drawable/settings_group_background"
+                android:orientation="vertical"
+                android:paddingTop="@dimen/settings_group_vertical_padding"
+                android:paddingBottom="@dimen/settings_group_vertical_padding" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/settings_explanation_spacing"
+                android:text="@string/settings_categories_explanation"
+                android:textColor="@color/home_secondary_text"
+                android:textSize="@dimen/settings_secondary_text_size" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="@dimen/settings_reset_spacing"
+                android:background="@color/home_card_outline" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/settings_reset_button"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/settings_reset_height"
+                android:layout_marginTop="@dimen/settings_control_spacing"
+                android:text="@string/settings_reset_action"
+                android:textColor="@color/settings_destructive"
+                app:strokeColor="@color/settings_destructive" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

@@ -473,3 +473,21 @@
   state, and a TalkBack description that states the direction and latest relationship to target.
 - Connected the view to the existing immutable coverage trend without adding a chart dependency.
 - Verified all 185 JVM tests, Android lint, the debug APK build, and Android-test APK compilation.
+
+## 2026-09-25 — Session settings and statistics reset
+
+- Recorded ADR 0022 and implemented the settings screen as a real XML-and-Java Activity with the
+  already-present Material controls rather than adding AndroidX Preference.
+- Added one `SharedPreferences` wrapper that owns keys, validation, and first-run defaults: ten
+  questions, follow the current level, and every dynamically loaded question-bank category.
+- Populated category checkboxes from the validated bank, persisted multi-select changes, and
+  refused deselection of the final category so a quiz always has an eligible question pool.
+- Copied a complete settings snapshot into each new quiz Intent. Session length, resolved answer
+  mode, and category filter therefore stay fixed through later edits and Activity recreation.
+- Added a two-step statistics reset that reports exact session and answer counts, serializes the
+  SQLite deletion behind pending history writes, and clears personal-best preferences only after
+  the database transaction succeeds.
+- Added JUnit/Robolectric coverage for defaults, round-trips, stale-category recovery, and ordered
+  reset, plus Espresso coverage for dynamic defaults, persistence, last-category protection,
+  confirmation, and configured quiz filtering. No dependency was added.
+- Verified all 190 JVM tests, Android lint, the debug APK build, and Android-test APK compilation.
