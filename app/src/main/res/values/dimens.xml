@@ -111,7 +111,7 @@
     <dimen name="stats_empty_row_spacing">14dp</dimen>
     <dimen name="stats_state_padding">28dp</dimen>
     <dimen name="stats_progress_size">40dp</dimen>
-    <dimen name="stats_chart_height">128dp</dimen>
+    <dimen name="stats_chart_height">280dp</dimen>
     <dimen name="stats_session_row_padding">16dp</dimen>
     <dimen name="stats_session_row_min_height">88dp</dimen>
     <dimen name="stats_session_list_spacing">8dp</dimen>
@@ -122,4 +122,15 @@
     <dimen name="stats_body_text_size">16sp</dimen>
     <dimen name="stats_secondary_text_size">14sp</dimen>
     <dimen name="stats_session_score_text_size">20sp</dimen>
+
+    <dimen name="calibration_chart_default_width">320dp</dimen>
+    <dimen name="calibration_chart_default_height">232dp</dimen>
+    <dimen name="calibration_chart_marker_radius">3dp</dimen>
+    <dimen name="calibration_chart_line_width">2dp</dimen>
+    <dimen name="calibration_chart_reference_width">3dp</dimen>
+    <dimen name="calibration_chart_small_gap">4dp</dimen>
+    <dimen name="calibration_chart_medium_gap">10dp</dimen>
+    <dimen name="calibration_chart_legend_swatch_width">22dp</dimen>
+    <dimen name="calibration_chart_label_text_size">11sp</dimen>
+    <dimen name="calibration_chart_legend_text_size">12sp</dimen>
 </resources>

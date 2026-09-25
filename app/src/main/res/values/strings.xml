@@ -163,7 +163,21 @@
     <string name="stats_mean_interval_width">Mean interval width</string>
     <string name="stats_mean_interval_width_explanation">Average upper-to-lower factor</string>
     <string name="stats_chart_title">Calibration over time</string>
-    <string name="stats_chart_placeholder" formatted="false">Chart coming next. It will show rolling groups of range answers against the 90% target.</string>
+    <string name="calibration_chart_empty">Not enough data yet</string>
+    <string name="calibration_chart_observed_legend">Observed coverage</string>
+    <string name="calibration_chart_target_legend" formatted="false">90% target</string>
+    <string name="calibration_chart_target_label" formatted="false">90% target</string>
+    <string name="calibration_chart_y_axis">Coverage</string>
+    <string name="calibration_chart_x_axis">Session</string>
+    <string name="calibration_chart_accessibility_empty">Calibration chart. Not enough data yet.</string>
+    <string name="calibration_chart_accessibility_summary">Calibration chart with %1$d observations. From %2$s at %3$s to %4$s at %5$s. The overall trend is %6$s. The latest coverage is %7$s the nominal 90%% target.</string>
+    <string name="calibration_chart_trend_rising">rising</string>
+    <string name="calibration_chart_trend_falling">falling</string>
+    <string name="calibration_chart_trend_stable">roughly stable</string>
+    <string name="calibration_chart_above_target">above</string>
+    <string name="calibration_chart_below_target">below</string>
+    <string name="calibration_chart_at_target">at</string>
+    <string name="calibration_chart_session_label">Session %1$s</string>
     <string name="stats_past_sessions">Past sessions</string>
     <string name="stats_band_counts">%1$s · %2$s · %3$s</string>
     <string name="stats_interval_counts">%1$s · %2$s</string>
