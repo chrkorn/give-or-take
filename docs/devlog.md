@@ -462,3 +462,14 @@
   headline aggregate, and added Espresso cases for empty, insufficient, and 55 percent coverage
   states. No dependency was added.
 - Verified all 179 JVM tests, Android lint, and Android-test APK compilation.
+
+## 2026-09-25 — Calibration chart
+
+- Replaced the statistics placeholder with a hand-drawn Java `View` that plots rolling interval
+  coverage on a fixed zero-to-one scale against a visually prominent dashed 90 percent target.
+- Kept `Paint` and `Path` allocation out of drawing, respected view padding and measure contracts,
+  and resolved line, text, and grid colours from the active Material theme for dark-mode support.
+- Added session labels, grid and axis labels, a legend, point markers, a useful insufficient-data
+  state, and a TalkBack description that states the direction and latest relationship to target.
+- Connected the view to the existing immutable coverage trend without adding a chart dependency.
+- Verified all 185 JVM tests, Android lint, the debug APK build, and Android-test APK compilation.

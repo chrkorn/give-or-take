@@ -33,11 +33,13 @@ import java.util.concurrent.TimeoutException;
 import de.christiankorn.giveortake.core.CalibrationTracker;
 import de.christiankorn.giveortake.core.Level;
 import de.christiankorn.giveortake.data.CalibrationStatistics;
+import de.christiankorn.giveortake.data.CoverageTrendPoint;
 import de.christiankorn.giveortake.data.PersonalBestStatistics;
 import de.christiankorn.giveortake.data.QuizStatisticsDao;
 import de.christiankorn.giveortake.data.RecentSessionStatistics;
 import de.christiankorn.giveortake.data.StatisticsOverview;
 import de.christiankorn.giveortake.data.StoredSession;
+import de.christiankorn.giveortake.ui.CalibrationChartView;
 
 /**
  * Displays aggregate performance, confidence calibration, and past quiz sessions.
@@ -273,6 +275,7 @@ public final class StatsActivity extends AppCompatActivity {
             private final TextView insufficientMessage;
             private final TextView rangesRemaining;
             private final TextView meanWidthValue;
+            private final CalibrationChartView calibrationChart;
 
             private HeaderViewHolder(View itemView) {
                 super(itemView);
@@ -292,6 +295,7 @@ public final class StatsActivity extends AppCompatActivity {
                 insufficientMessage = itemView.findViewById(R.id.stats_insufficient_message);
                 rangesRemaining = itemView.findViewById(R.id.stats_ranges_remaining);
                 meanWidthValue = itemView.findViewById(R.id.stats_mean_width_value);
+                calibrationChart = itemView.findViewById(R.id.stats_calibration_chart);
             }
 
             private void bind(StatisticsOverview value) {
@@ -299,6 +303,34 @@ public final class StatsActivity extends AppCompatActivity {
                 questionsValue.setText(integerFormat.format(value.getAnswerCount()));
                 bindPointHeadlines(value);
                 bindCalibration(value.getCalibration());
+                bindCalibrationChart(value.getCoverageTrend());
+            }
+
+            private void bindCalibrationChart(List<CoverageTrendPoint> trend) {
+                List<CalibrationChartView.DataPoint> points = new ArrayList<>(trend.size());
+                long previousSessionId = Long.MIN_VALUE;
+                for (CoverageTrendPoint point : trend) {
+                    String sessionNumber = integerFormat.format(point.getEndingSessionId());
+                    CalibrationChartView.DataPoint chartPoint =
+                            new CalibrationChartView.DataPoint(
+                                    getString(
+                                            R.string.calibration_chart_session_label,
+                                            sessionNumber
+                                    ),
+                                    point.getCoverage()
+                            );
+                    int lastIndex = points.size() - 1;
+                    if (lastIndex >= 0 && previousSessionId == point.getEndingSessionId()) {
+                        // Coverage uses overlapping ten-answer windows. Keeping the last window in
+                        // each session makes the horizontal axis genuinely session-based rather
+                        // than drawing many identically labelled points for a long quiz.
+                        points.set(lastIndex, chartPoint);
+                    } else {
+                        points.add(chartPoint);
+                    }
+                    previousSessionId = point.getEndingSessionId();
+                }
+                calibrationChart.setDataPoints(points);
             }
 
             private void bindPointHeadlines(StatisticsOverview value) {
