@@ -123,6 +123,23 @@
     <dimen name="stats_secondary_text_size">14sp</dimen>
     <dimen name="stats_session_score_text_size">20sp</dimen>
 
+    <dimen name="settings_horizontal_margin">24dp</dimen>
+    <dimen name="settings_toolbar_height">64dp</dimen>
+    <dimen name="settings_content_padding">20dp</dimen>
+    <dimen name="settings_bottom_margin">24dp</dimen>
+    <dimen name="settings_section_spacing">28dp</dimen>
+    <dimen name="settings_control_spacing">10dp</dimen>
+    <dimen name="settings_explanation_spacing">8dp</dimen>
+    <dimen name="settings_reset_spacing">40dp</dimen>
+    <dimen name="settings_segment_height">56dp</dimen>
+    <dimen name="settings_row_height">64dp</dimen>
+    <dimen name="settings_reset_height">56dp</dimen>
+    <dimen name="settings_row_padding">12dp</dimen>
+    <dimen name="settings_group_vertical_padding">4dp</dimen>
+    <dimen name="settings_group_corner_radius">4dp</dimen>
+    <dimen name="settings_body_text_size">18sp</dimen>
+    <dimen name="settings_secondary_text_size">14sp</dimen>
+
     <dimen name="calibration_chart_default_width">320dp</dimen>
     <dimen name="calibration_chart_default_height">232dp</dimen>
     <dimen name="calibration_chart_marker_radius">3dp</dimen>

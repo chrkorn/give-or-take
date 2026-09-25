@@ -102,6 +102,11 @@ public final class HighScorePreferences {
                 .apply();
     }
 
+    /** Removes every level-specific personal best as part of a statistics reset. */
+    public void clear() {
+        preferences.edit().clear().apply();
+    }
+
     private static String key(Level level, String suffix) {
         return KEY_PREFIX + level.name() + suffix;
     }

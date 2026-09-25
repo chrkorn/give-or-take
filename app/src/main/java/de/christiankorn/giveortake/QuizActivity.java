@@ -40,12 +40,17 @@ import de.christiankorn.giveortake.data.AnswerDraft;
 import de.christiankorn.giveortake.data.HighScorePreferences;
 import de.christiankorn.giveortake.data.QuizHistorySession;
 import de.christiankorn.giveortake.data.QuizHistoryStore;
+import de.christiankorn.giveortake.data.QuizSettings;
 import de.christiankorn.giveortake.ui.UncertaintyDial;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -56,8 +61,9 @@ import java.util.UUID;
  * while sharing the question, progress, and submission controls.</p>
  */
 public class QuizActivity extends AppCompatActivity {
-    private static final int SESSION_LENGTH = 10;
     private static final String EXTRA_LEVEL = "quiz.level";
+    private static final String EXTRA_SESSION_LENGTH = "quiz.sessionLength";
+    private static final String EXTRA_CATEGORIES = "quiz.categories";
     private static final String STATE_RANGE_ENTRY_MODE = "quiz.rangeEntryMode";
     private static final String STATE_DIRECT_BOUNDS_INITIALISED =
             "quiz.directBoundsInitialised";
@@ -102,6 +108,8 @@ public class QuizActivity extends AppCompatActivity {
     private long historyStartedAtEpochMillis;
     private boolean historySessionEnded;
     private Level level;
+    private int sessionLength;
+    private Set<String> selectedCategories;
     private RangeEntryMode rangeEntryMode = RangeEntryMode.FACTOR_DIAL;
     private boolean directBoundsInitialised;
     private boolean updatingRangeInputs;
@@ -124,7 +132,79 @@ public class QuizActivity extends AppCompatActivity {
         if (level == null) {
             throw new IllegalArgumentException("level must not be null");
         }
-        return new Intent(context, QuizActivity.class).putExtra(EXTRA_LEVEL, level.name());
+        return new Intent(context, QuizActivity.class)
+                .putExtra(EXTRA_LEVEL, level.name())
+                .putExtra(EXTRA_SESSION_LENGTH, QuizSettings.DEFAULT_SESSION_LENGTH);
+    }
+
+    /**
+     * Creates an explicit quiz Intent containing a complete immutable settings snapshot.
+     *
+     * <p>Because these values live in the Intent, Activity recreation and later preference edits
+     * cannot change the length, answer mode, or question pool of an active session.</p>
+     *
+     * @param context context used to identify this Activity
+     * @param level resolved answer-mode level
+     * @param sessionLength 5, 10, or 20 requested questions
+     * @param selectedCategories non-empty question-bank category filter
+     * @return explicit Intent carrying the complete session configuration
+     * @throws IllegalArgumentException if an argument is invalid
+     */
+    public static Intent createIntent(
+            Context context,
+            Level level,
+            int sessionLength,
+            Set<String> selectedCategories
+    ) {
+        if (context == null) {
+            throw new IllegalArgumentException("context must not be null");
+        }
+        if (level == null) {
+            throw new IllegalArgumentException("level must not be null");
+        }
+        if (!QuizSettings.isSupportedSessionLength(sessionLength)) {
+            throw new IllegalArgumentException("sessionLength must be 5, 10, or 20");
+        }
+        if (selectedCategories == null || selectedCategories.isEmpty()) {
+            throw new IllegalArgumentException("selectedCategories must not be null or empty");
+        }
+        ArrayList<String> categories = new ArrayList<>();
+        for (String category : selectedCategories) {
+            if (category == null || category.trim().isEmpty()) {
+                throw new IllegalArgumentException("selectedCategories must not contain blanks");
+            }
+            categories.add(category);
+        }
+        return new Intent(context, QuizActivity.class)
+                .putExtra(EXTRA_LEVEL, level.name())
+                .putExtra(EXTRA_SESSION_LENGTH, sessionLength)
+                .putStringArrayListExtra(EXTRA_CATEGORIES, categories);
+    }
+
+    /**
+     * Reads preferences once and creates the configured Intent for a new session.
+     *
+     * @param context context used to load settings and the bundled question bank
+     * @param currentLevel player's current curriculum level for "follow level" mode
+     * @return explicit Intent carrying a stable session snapshot
+     * @throws IllegalArgumentException if an argument is {@code null}
+     */
+    public static Intent createConfiguredIntent(Context context, Level currentLevel) {
+        if (context == null) {
+            throw new IllegalArgumentException("context must not be null");
+        }
+        if (currentLevel == null) {
+            throw new IllegalArgumentException("currentLevel must not be null");
+        }
+        QuestionBank questionBank = new AssetQuestionBankLoader(context.getAssets()).load();
+        Set<String> categories = new LinkedHashSet<>(questionBank.getCategories());
+        QuizSettings.Snapshot settings = new QuizSettings(context).load(categories);
+        return createIntent(
+                context,
+                settings.resolveLevel(currentLevel),
+                settings.getSessionLength(),
+                settings.getSelectedCategories()
+        );
     }
 
     @Override
@@ -160,10 +240,15 @@ public class QuizActivity extends AppCompatActivity {
         rangeEntryModeButton = findViewById(R.id.range_entry_mode_button);
         decimalSeparator = DecimalFormatSymbols.getInstance().getDecimalSeparator();
         level = readLevel();
+        sessionLength = readSessionLength();
+        selectedCategories = readSelectedCategories();
         restoreRangeEntryState(savedInstanceState);
 
         QuestionBank questionBank = new AssetQuestionBankLoader(getAssets()).load();
-        quizSession = createOrRestoreSession(questionBank, savedInstanceState);
+        quizSession = createOrRestoreSession(
+                filterQuestions(questionBank.getQuestions()),
+                savedInstanceState
+        );
         restoreOrStartHistorySession(savedInstanceState);
         if (quizSession.isComplete()) {
             showCompletedResult();
@@ -184,6 +269,51 @@ public class QuizActivity extends AppCompatActivity {
         } catch (IllegalArgumentException exception) {
             throw new IllegalStateException("Unsupported quiz level: " + levelName, exception);
         }
+    }
+
+    private int readSessionLength() {
+        int value = getIntent().getIntExtra(
+                EXTRA_SESSION_LENGTH,
+                QuizSettings.DEFAULT_SESSION_LENGTH
+        );
+        if (!QuizSettings.isSupportedSessionLength(value)) {
+            throw new IllegalStateException("Unsupported quiz session length: " + value);
+        }
+        return value;
+    }
+
+    private Set<String> readSelectedCategories() {
+        ArrayList<String> values = getIntent().getStringArrayListExtra(EXTRA_CATEGORIES);
+        Set<String> categories = new LinkedHashSet<>();
+        if (values == null) {
+            return categories;
+        }
+        for (String value : values) {
+            if (value == null || value.trim().isEmpty()) {
+                throw new IllegalStateException("Quiz category filter contains a blank value");
+            }
+            categories.add(value);
+        }
+        if (categories.isEmpty()) {
+            throw new IllegalStateException("Quiz category filter must not be empty");
+        }
+        return categories;
+    }
+
+    private List<Question> filterQuestions(List<Question> allQuestions) {
+        if (selectedCategories.isEmpty()) {
+            return allQuestions;
+        }
+        List<Question> filtered = new ArrayList<>();
+        for (Question question : allQuestions) {
+            if (selectedCategories.contains(question.getCategory())) {
+                filtered.add(question);
+            }
+        }
+        if (filtered.isEmpty()) {
+            throw new IllegalStateException("Selected categories match no bundled questions");
+        }
+        return filtered;
     }
 
     private void restoreRangeEntryState(Bundle savedInstanceState) {
@@ -497,7 +627,7 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private QuizSession createOrRestoreSession(
-            QuestionBank questionBank,
+            List<Question> questionPool,
             Bundle savedInstanceState
     ) {
         ScoringPolicy scoringPolicy = level == Level.POINT_ESTIMATES
@@ -506,8 +636,8 @@ public class QuizActivity extends AppCompatActivity {
         QuizSessionSnapshot snapshot = QuizSessionState.read(savedInstanceState);
         if (snapshot == null) {
             return new QuizSession(
-                    questionBank.getQuestions(),
-                    SESSION_LENGTH,
+                    questionPool,
+                    sessionLength,
                     new Random(),
                     level,
                     scoringPolicy
@@ -520,7 +650,7 @@ public class QuizActivity extends AppCompatActivity {
 
         try {
             return QuizSession.restore(
-                    questionBank.getQuestions(),
+                    questionPool,
                     snapshot,
                     scoringPolicy
             );

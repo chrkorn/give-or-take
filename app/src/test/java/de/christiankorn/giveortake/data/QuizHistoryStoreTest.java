@@ -12,6 +12,7 @@ import org.robolectric.annotation.Config;
 
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.christiankorn.giveortake.core.Level;
 import de.christiankorn.giveortake.core.PointGuess;
@@ -136,6 +137,40 @@ public class QuizHistoryStoreTest {
 
         assertNull(restored.getFailure());
         assertEquals(originalId, restored.getSessionId());
+    }
+
+    /** Verifies reset is serialised after pending writes and removes sessions with their answers. */
+    @Test
+    public void clearHistory_afterQueuedWrites_deletesCompleteHistory() {
+        QuizHistorySession session = store.startSession(
+                "reset-session",
+                Level.POINT_ESTIMATES,
+                1,
+                4_000L
+        );
+        session.recordFinalAnswerAndCompleteSession(
+                new AnswerDraft(
+                        1,
+                        question("reset-answer", 25.0),
+                        new PointGuess(24.0),
+                        4_100L
+                ),
+                4_100L
+        );
+        AtomicBoolean resetCompleted = new AtomicBoolean();
+
+        store.clearHistory(
+                () -> resetCompleted.set(true),
+                exception -> {
+                    throw exception;
+                }
+        );
+        store.awaitIdle();
+
+        assertTrue(resetCompleted.get());
+        QuizHistoryStore.HistoryCounts counts = dao.getHistoryCounts();
+        assertEquals(0, counts.getSessionCount());
+        assertEquals(0, counts.getAnswerCount());
     }
 
     private static Question question(String id, double trueValue) {
