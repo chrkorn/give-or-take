@@ -636,3 +636,14 @@
   executed yet** — it needs the emulator, and the instrumented suite runs by hand. Recording that
   here because a test written today and run tomorrow is not evidence today, and this project has
   already been caught once believing otherwise.
+
+## 2026-09-27 — Both suites green after the reset fix
+
+- 195 JVM tests and 35 instrumented tests, no failures, no errors, no skips. Instrumented run on
+  the Pixel_9 AVD at API 35.
+- `SettingsActivityTest.resetConfirmation_survivesRecreation` passed on its first execution, in
+  1.03 s. The entry above said the test had been written but not run; it has now run, and the
+  claim that the confirmation survives rotation is evidence rather than an intention.
+- The instrumented count went from 34 to 35 — the whole of the increase is that one test. Worth
+  noting that the suite took two runs of this project to become useful: the first, three days
+  ago, existed only to discover that it could not start.
