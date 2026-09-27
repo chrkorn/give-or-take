@@ -40,9 +40,17 @@ import de.christiankorn.giveortake.data.QuizSettings;
  * into its launch Intent instead of reading these preferences while the session is active.</p>
  */
 public class SettingsActivity extends AppCompatActivity {
+    private static final String STATE_RESET_PHASE = "reset_phase";
+    private static final String STATE_RESET_SESSION_COUNT = "reset_session_count";
+    private static final String STATE_RESET_ANSWER_COUNT = "reset_answer_count";
+
     private final Map<String, MaterialCheckBox> categoryBoxes = new LinkedHashMap<>();
     private QuizSettings quizSettings;
     private MaterialButton resetButton;
+    private ResetPhase resetPhase = ResetPhase.IDLE;
+    private int pendingSessionCount;
+    private int pendingAnswerCount;
+    private AlertDialog resetDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +75,61 @@ public class SettingsActivity extends AppCompatActivity {
         configureAnswerMode(snapshot);
         configureCategories(questionBank.getCategories(), snapshot.getSelectedCategories());
         resetButton = findViewById(R.id.settings_reset_button);
-        resetButton.setOnClickListener(view -> loadResetCounts());
+        resetButton.setOnClickListener(view -> beginReset());
+        restoreResetPhase(savedInstanceState);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(STATE_RESET_PHASE, resetPhase.name());
+        outState.putInt(STATE_RESET_SESSION_COUNT, pendingSessionCount);
+        outState.putInt(STATE_RESET_ANSWER_COUNT, pendingAnswerCount);
+    }
+
+    @Override
+    protected void onDestroy() {
+        // Detach the listener before dismissing: this dismissal is the Activity going away, not
+        // the user answering the dialog, and it must not be recorded as the reset having ended.
+        // Dismissing at all is what stops the window leaking when rotation destroys the host.
+        if (resetDialog != null) {
+            resetDialog.setOnDismissListener(null);
+            resetDialog.dismiss();
+            resetDialog = null;
+        }
+        super.onDestroy();
+    }
+
+    private void restoreResetPhase(Bundle savedInstanceState) {
+        if (savedInstanceState == null) {
+            return;
+        }
+        pendingSessionCount = savedInstanceState.getInt(STATE_RESET_SESSION_COUNT);
+        pendingAnswerCount = savedInstanceState.getInt(STATE_RESET_ANSWER_COUNT);
+        String savedPhase = savedInstanceState.getString(STATE_RESET_PHASE);
+        ResetPhase phase = savedPhase == null ? ResetPhase.IDLE : ResetPhase.valueOf(savedPhase);
+        switch (phase) {
+            case LOADING_COUNTS:
+                // The count query belonged to the destroyed Activity and its callback was
+                // dropped. Counting rows reads two tables and changes nothing, so the cheapest
+                // correct recovery is to ask again.
+                beginReset();
+                break;
+            case CONFIRMING:
+                showResetConfirmation(pendingSessionCount, pendingAnswerCount);
+                break;
+            case CLEARING:
+                // The delete that was running will finish on its own, because the store holds
+                // only the application context, but its completion callback cannot reach this
+                // new Activity. Re-issuing it is what restores the feedback, and it is safe:
+                // clearHistory deletes unconditionally inside one transaction, so a second pass
+                // over an already empty table is a no-op.
+                showResetConfirmation(pendingSessionCount, pendingAnswerCount);
+                confirmClear();
+                break;
+            default:
+                break;
+        }
     }
 
     private void configureSessionLength(QuizSettings.Snapshot snapshot) {
@@ -140,17 +202,19 @@ public class SettingsActivity extends AppCompatActivity {
         return selected;
     }
 
-    private void loadResetCounts() {
+    private void beginReset() {
+        resetPhase = ResetPhase.LOADING_COUNTS;
         setResetLoading(true);
         historyStore().loadHistoryCounts(
                 counts -> runOnUiThread(() -> {
                     if (!isDestroyed()) {
                         setResetLoading(false);
-                        showResetConfirmation(counts);
+                        showResetConfirmation(counts.getSessionCount(), counts.getAnswerCount());
                     }
                 }),
                 exception -> runOnUiThread(() -> {
                     if (!isDestroyed()) {
+                        resetPhase = ResetPhase.IDLE;
                         setResetLoading(false);
                         showResetFailure();
                     }
@@ -158,42 +222,66 @@ public class SettingsActivity extends AppCompatActivity {
         );
     }
 
-    private void showResetConfirmation(QuizHistoryStore.HistoryCounts counts) {
+    /**
+     * Shows the confirmation dialog for a reset that would delete the given row counts.
+     *
+     * <p>Takes the two counts rather than a {@link QuizHistoryStore.HistoryCounts} so that the
+     * dialog can be rebuilt after a configuration change from the two integers in the saved
+     * instance state, without querying the database a second time.</p>
+     */
+    private void showResetConfirmation(int sessionCount, int answerCount) {
+        resetPhase = ResetPhase.CONFIRMING;
+        pendingSessionCount = sessionCount;
+        pendingAnswerCount = answerCount;
         String sessions = getResources().getQuantityString(
                 R.plurals.settings_reset_sessions,
-                counts.getSessionCount(),
-                counts.getSessionCount()
+                sessionCount,
+                sessionCount
         );
         String answers = getResources().getQuantityString(
                 R.plurals.settings_reset_answers,
-                counts.getAnswerCount(),
-                counts.getAnswerCount()
+                answerCount,
+                answerCount
         );
-        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+        resetDialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.settings_reset_title)
                 .setMessage(getString(R.string.settings_reset_message, sessions, answers))
                 .setNegativeButton(R.string.settings_reset_cancel, null)
                 .setPositiveButton(R.string.settings_reset_confirm, null)
                 .create();
-        dialog.setOnShowListener(unused -> {
-            dialog.getButton(DialogInterface.BUTTON_NEGATIVE).requestFocus();
-            dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(view -> {
-                dialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
-                dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setEnabled(false);
-                clearStatistics(dialog);
-            });
+        resetDialog.setOnShowListener(unused -> {
+            resetDialog.getButton(DialogInterface.BUTTON_NEGATIVE).requestFocus();
+            resetDialog.getButton(DialogInterface.BUTTON_POSITIVE)
+                    .setOnClickListener(view -> confirmClear());
         });
-        dialog.show();
+        // Reached by cancelling, by the delete succeeding and by the delete failing. All three
+        // end the reset. The Activity being destroyed detaches this listener first, so a
+        // rotation mid-dialog is not mistaken for the user having answered.
+        resetDialog.setOnDismissListener(unused -> {
+            resetPhase = ResetPhase.IDLE;
+            resetDialog = null;
+        });
+        resetDialog.show();
     }
 
-    private void clearStatistics(AlertDialog dialog) {
+    private void confirmClear() {
+        resetPhase = ResetPhase.CLEARING;
+        // Once queued the delete cannot be called back, so the dialog stops offering a choice
+        // rather than pretending the user still has one.
+        resetDialog.setCancelable(false);
+        resetDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
+        resetDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setEnabled(false);
+        clearStatistics();
+    }
+
+    private void clearStatistics() {
         historyStore().clearHistory(
                 () -> {
                     // Persistence must finish even if rotation destroys this Activity mid-reset.
                     new HighScorePreferences(getApplicationContext()).clear();
                     runOnUiThread(() -> {
                         if (!isDestroyed()) {
-                            dialog.dismiss();
+                            dismissResetDialog();
                             Toast.makeText(
                                     this,
                                     R.string.settings_reset_complete,
@@ -204,11 +292,20 @@ public class SettingsActivity extends AppCompatActivity {
                 },
                 exception -> runOnUiThread(() -> {
                     if (!isDestroyed()) {
-                        dialog.dismiss();
+                        dismissResetDialog();
                         showResetFailure();
                     }
                 })
         );
+    }
+
+    private void dismissResetDialog() {
+        // Read the field instead of capturing the dialog in the database callback. A captured
+        // dialog holds the destroyed Activity's window alive until the worker thread gets round
+        // to the callback, and after a configuration change it is the wrong dialog in any case.
+        if (resetDialog != null) {
+            resetDialog.dismiss();
+        }
     }
 
     private void showResetFailure() {
@@ -264,5 +361,24 @@ public class SettingsActivity extends AppCompatActivity {
             return QuizSettings.AnswerMode.CONFIDENCE_INTERVAL;
         }
         return QuizSettings.AnswerMode.FOLLOW_LEVEL;
+    }
+
+    /**
+     * How far the multi-step statistics reset has got.
+     *
+     * <p>A reset spans two asynchronous database calls with a dialog between them, so it
+     * regularly outlives the Activity that started it. This project deliberately carries no
+     * retained scope — no {@code ViewModel} — which leaves the saved instance state as the only
+     * place the progress of the flow can be kept.</p>
+     */
+    private enum ResetPhase {
+        /** No reset in progress. */
+        IDLE,
+        /** Counting the rows a reset would delete, before anything is shown or deleted. */
+        LOADING_COUNTS,
+        /** The confirmation dialog is on screen; nothing has been deleted. */
+        CONFIRMING,
+        /** The user confirmed and the delete is running. */
+        CLEARING
     }
 }

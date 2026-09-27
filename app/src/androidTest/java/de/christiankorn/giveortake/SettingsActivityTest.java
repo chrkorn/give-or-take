@@ -106,6 +106,25 @@ public class SettingsActivityTest {
         }
     }
 
+    /** Verifies the confirmation survives the Activity destruction a rotation causes. */
+    @Test
+    public void resetConfirmation_survivesRecreation() {
+        try (ActivityScenario<SettingsActivity> scenario = ActivityScenario.launch(
+                SettingsActivity.class
+        )) {
+            onView(withId(R.id.settings_reset_button)).perform(scrollTo(), click());
+            waitForDialog();
+
+            scenario.recreate();
+            waitForDialog();
+
+            onView(withText(R.string.settings_reset_title)).check(matches(
+                    androidx.test.espresso.matcher.ViewMatchers.isDisplayed()
+            ));
+            onView(withText(R.string.settings_reset_cancel)).perform(click());
+        }
+    }
+
     private static void waitForDialog() {
         long deadline = android.os.SystemClock.uptimeMillis() + 2_000L;
         while (android.os.SystemClock.uptimeMillis() < deadline) {
