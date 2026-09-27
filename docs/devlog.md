@@ -539,3 +539,21 @@
   which has never run is not evidence, and that this one earned its place the first time it did.
 - The 2026-09-21 entry claimed the level was preserved when replaying. It was not. Corrected here
   rather than by editing that entry, so the sequence stays visible.
+
+## 2026-09-27 — Stop the statistics test racing its own list
+
+- `StatsActivityTest.smallIntervalSample_suppressesCoverageAndExplainsThreshold` asserted on
+  `stats_session_date`, a view inside a `RecyclerView` row, and failed with
+  `NoMatchingViewException`. The three assertions before it passed, so the screen had loaded; the
+  list simply had not bound a row yet.
+- `awaitLoadForTest()` returns when the query finishes, but the adapter is attached on the main
+  thread and children are bound on a later layout pass. `waitForIdleSync()` does not reliably
+  span that gap. The lifecycle review had already flagged that the adapter attaches
+  asynchronously and that a test would need to account for it.
+- `awaitStatistics` now waits for the list to bind at least one child, polling a real condition
+  against a five-second deadline rather than sleeping for a guessed interval. Every future
+  assertion on a row inherits the wait.
+- Considered an `IdlingResource` and rejected it: it reports work the application knows it is
+  doing, and the application does not know it is waiting for a layout pass. There would be
+  nothing for it to mark busy. Polling the condition that actually matters is the more honest
+  instrument here, even though it is the less idiomatic one.

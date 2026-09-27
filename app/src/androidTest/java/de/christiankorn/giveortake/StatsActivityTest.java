@@ -1,6 +1,9 @@
 package de.christiankorn.giveortake;
 
 import android.content.Context;
+import android.os.SystemClock;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
@@ -14,6 +17,7 @@ import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.christiankorn.giveortake.core.IntervalGuess;
@@ -33,6 +37,8 @@ import static org.hamcrest.Matchers.not;
 /** Verifies the statistics screen's asynchronous states and calibration disclosure rules. */
 @RunWith(AndroidJUnit4.class)
 public class StatsActivityTest {
+    private static final long ADAPTER_BIND_TIMEOUT_MILLIS = 5_000L;
+
     private Context context;
 
     /** Starts each test with no persisted quiz history. */
@@ -103,6 +109,42 @@ public class StatsActivityTest {
         scenario.onActivity(activityReference::set);
         activityReference.get().awaitLoadForTest();
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        awaitBoundRows(scenario);
+    }
+
+    /**
+     * Waits until the list has bound at least one row.
+     *
+     * <p>{@code awaitLoadForTest()} returns when the database query completes, but the adapter is
+     * attached on the main thread and the {@link RecyclerView} binds its children on a later
+     * layout pass. {@code waitForIdleSync()} does not reliably span that gap, so an assertion on a
+     * view inside a row could run against a list that was still empty — which is exactly how
+     * {@code smallIntervalSample_suppressesCoverageAndExplainsThreshold} failed.</p>
+     *
+     * <p>Polls the laid-out child count rather than sleeping for a fixed period. An
+     * {@code IdlingResource} would be the more idiomatic instrument, but it tracks work the
+     * application knows it is performing; the application does not know it is waiting for a
+     * layout pass, so there is nothing for it to report as busy. Polling a real condition against
+     * a deadline is honest about what is being waited for.</p>
+     */
+    private static void awaitBoundRows(ActivityScenario<StatsActivity> scenario) {
+        long deadline = SystemClock.uptimeMillis() + ADAPTER_BIND_TIMEOUT_MILLIS;
+        AtomicInteger boundChildren = new AtomicInteger();
+        while (SystemClock.uptimeMillis() < deadline) {
+            scenario.onActivity(activity -> {
+                RecyclerView list = activity.findViewById(R.id.stats_recycler);
+                boundChildren.set(list == null ? 0 : list.getChildCount());
+            });
+            if (boundChildren.get() > 0) {
+                return;
+            }
+            // One frame, so the loop neither spins nor hides a genuine failure behind a long wait.
+            SystemClock.sleep(16L);
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        }
+        throw new AssertionError(
+                "the statistics list bound no rows within " + ADAPTER_BIND_TIMEOUT_MILLIS + " ms"
+        );
     }
 
     private void storeIntervalSession(int sampleSize, int hitCount) {
