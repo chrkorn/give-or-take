@@ -60,7 +60,7 @@ public class ResultActivityTest {
             assertPointResultIsVisible();
             scenario.recreate();
             assertPointResultIsVisible();
-            onView(withId(R.id.result_share_button)).check(matches(not(isEnabled())));
+            onView(withId(R.id.result_share_button)).check(matches(isEnabled()));
         }
     }
 

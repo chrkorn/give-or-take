@@ -153,7 +153,21 @@
     <string name="result_play_again">Play again</string>
     <string name="result_home">Home</string>
     <string name="result_share">Share</string>
-    <string name="result_share_placeholder_description">Share results, coming in a later version</string>
+    <string name="result_share_content_description">Share session result</string>
+    <string name="result_share_chooser_title">Share session result</string>
+    <string name="result_share_unavailable">No app is available to share this result.</string>
+    <plurals name="result_share_point_text">
+        <item quantity="one">Give or Take — score %1$s across %2$d question.</item>
+        <item quantity="other">Give or Take — score %1$s across %2$d questions.</item>
+    </plurals>
+    <plurals name="result_share_interval_text">
+        <item quantity="one">Give or Take — interval score %1$s across %2$d question. Calibration: %3$d/%4$d range contained the truth (%5$s).</item>
+        <item quantity="other">Give or Take — interval score %1$s across %2$d questions. Calibration: %3$d/%4$d ranges contained the truth (%5$s).</item>
+    </plurals>
+    <plurals name="result_share_interval_text_insufficient">
+        <item quantity="one">Give or Take — interval score %1$s across %2$d question. Calibration: %3$d/%4$d range contained the truth.</item>
+        <item quantity="other">Give or Take — interval score %1$s across %2$d questions. Calibration: %3$d/%4$d ranges contained the truth.</item>
+    </plurals>
 
     <string name="stats_title">Statistics</string>
     <string name="stats_back">Back</string>

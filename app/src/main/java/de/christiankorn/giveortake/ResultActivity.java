@@ -1,5 +1,6 @@
 package de.christiankorn.giveortake;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.text.NumberFormat;
 import java.util.OptionalDouble;
@@ -166,6 +168,7 @@ public class ResultActivity extends AppCompatActivity {
         );
         renderModeDetails(intent, level, answerCount);
         configureNavigation();
+        configureSharing(intent, level, answerCount, meanRawError);
     }
 
     private void renderScore(Intent intent, Level level, double meanRawError) {
@@ -316,8 +319,94 @@ public class ResultActivity extends AppCompatActivity {
             startActivity(homeIntent);
             finish();
         });
-        // Share remains visibly disabled until the later system-share implementation step.
-        findViewById(R.id.result_share_button).setEnabled(false);
+    }
+
+    private void configureSharing(
+            Intent resultIntent,
+            Level level,
+            int answerCount,
+            double meanRawError
+    ) {
+        String shareText = buildShareText(resultIntent, level, answerCount, meanRawError);
+        findViewById(R.id.result_share_button).setOnClickListener(
+                view -> shareResult(shareText)
+        );
+    }
+
+    private String buildShareText(
+            Intent resultIntent,
+            Level level,
+            int answerCount,
+            double meanRawError
+    ) {
+        if (level == Level.POINT_ESTIMATES) {
+            double meanPoints = requireScoreValue(resultIntent, EXTRA_MEAN_POINTS, level);
+            String score = getString(
+                    R.string.result_point_score,
+                    formatDecimal(meanPoints, 1)
+            );
+            return getResources().getQuantityString(
+                    R.plurals.result_share_point_text,
+                    answerCount,
+                    score,
+                    answerCount
+            );
+        }
+
+        long hitCount = requireNonNegativeLong(resultIntent, EXTRA_CALIBRATION_HIT_COUNT);
+        long sampleSize = requireNonNegativeLong(
+                resultIntent,
+                EXTRA_CALIBRATION_SAMPLE_SIZE
+        );
+        boolean meaningful = requireBoolean(resultIntent, EXTRA_CALIBRATION_MEANINGFUL);
+        String score = getString(
+                R.string.result_interval_score,
+                formatDecimal(meanRawError, 2)
+        );
+        if (!meaningful) {
+            return getResources().getQuantityString(
+                    R.plurals.result_share_interval_text_insufficient,
+                    answerCount,
+                    score,
+                    answerCount,
+                    hitCount,
+                    sampleSize
+            );
+        }
+
+        NumberFormat percentFormat = NumberFormat.getPercentInstance();
+        percentFormat.setMaximumFractionDigits(0);
+        return getResources().getQuantityString(
+                R.plurals.result_share_interval_text,
+                answerCount,
+                score,
+                answerCount,
+                hitCount,
+                sampleSize,
+                percentFormat.format((double) hitCount / sampleSize)
+        );
+    }
+
+    private void shareResult(String shareText) {
+        Intent sendIntent = new Intent(Intent.ACTION_SEND)
+                .setType("text/plain")
+                .putExtra(Intent.EXTRA_TEXT, shareText);
+        Intent chooserIntent = Intent.createChooser(
+                sendIntent,
+                getString(R.string.result_share_chooser_title)
+        );
+        try {
+            // Since Android 11, package visibility can make resolveActivity() return null even
+            // when the system can resolve this Intent. Launching and handling failure works on
+            // every supported API level without broad package-visibility declarations.
+            startActivity(chooserIntent);
+        } catch (ActivityNotFoundException exception) {
+            Snackbar.make(
+                    findViewById(R.id.result_root),
+                    R.string.result_share_unavailable,
+                    Snackbar.LENGTH_LONG
+            ).show();
+        }
     }
 
     private String formatHighScore(double value, Level level) {

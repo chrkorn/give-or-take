@@ -491,3 +491,20 @@
   reset, plus Espresso coverage for dynamic defaults, persistence, last-category protection,
   confirmation, and configured quiz filtering. No dependency was added.
 - Verified all 190 JVM tests, Android lint, the debug APK build, and Android-test APK compilation.
+
+## 2026-09-27 — Share results and open question sources
+
+- Enabled the result screen's system share action with an `ACTION_SEND` `text/plain` Intent wrapped
+  in `Intent.createChooser`. The concise text contains the session score and answer count; interval
+  sessions also include containment counts and, once statistically meaningful, observed coverage.
+- Kept the feedback screen's source URL as an `ACTION_VIEW` Intent and verified that the exact
+  authored URL is delegated to Android rather than tied to a particular browser.
+- Both implicit launches now use direct launch plus `ActivityNotFoundException` handling. This
+  remains reliable from minSdk 26 onward without broad `<queries>` declarations, unlike treating
+  `resolveActivity()` as an authoritative availability check on Android 11 and later.
+- Added Robolectric coverage for both Intent contracts, chooser wrapping, share copy, honest small-
+  sample calibration, and the no-handler share path. The existing Espresso no-browser test covers
+  the corresponding feedback fallback.
+- Verified all 195 JVM tests, Android lint, the debug APK build, and Android-test APK compilation.
+  On an API 35 emulator, all feedback tests and the changed share-button assertion passed. 
+  

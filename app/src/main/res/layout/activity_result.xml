@@ -354,8 +354,7 @@
                 android:layout_height="@dimen/result_button_height"
                 android:layout_marginStart="@dimen/result_button_gap_half"
                 android:layout_weight="1"
-                android:contentDescription="@string/result_share_placeholder_description"
-                android:enabled="false"
+                android:contentDescription="@string/result_share_content_description"
                 android:text="@string/result_share"
                 android:textSize="@dimen/home_button_text_size"
                 app:cornerRadius="@dimen/home_button_corner_radius" />

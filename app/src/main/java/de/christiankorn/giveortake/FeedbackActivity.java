@@ -339,6 +339,9 @@ public class FeedbackActivity extends AppCompatActivity {
     private void openSource(String sourceUrl) {
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(sourceUrl));
         try {
+            // Since Android 11, package visibility can make resolveActivity() return null even
+            // when the system can resolve this Intent. Launching and handling failure works on
+            // every supported API level without broad package-visibility declarations.
             startActivity(browserIntent);
         } catch (ActivityNotFoundException exception) {
             Snackbar.make(
