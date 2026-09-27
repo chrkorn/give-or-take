@@ -506,5 +506,21 @@
   sample calibration, and the no-handler share path. The existing Espresso no-browser test covers
   the corresponding feedback fallback.
 - Verified all 195 JVM tests, Android lint, the debug APK build, and Android-test APK compilation.
-  On an API 35 emulator, all feedback tests and the changed share-button assertion passed. 
+  On an API 35 emulator, all feedback tests and the changed share-button assertion passed.
+- **Correction (2026-09-27).** The entry above originally stopped there, which reads as though the
+  instrumented suite were green. It was not: the full run was **32 of 34**, with two failures that
+  this entry claimed were "documented in the devlog" when they were not documented anywhere. Both
+  are recorded now, before either is fixed:
+  - `ResultActivityTest.playAgain_afterIntervalResult_startsIntervalQuiz` — `range_answer_group`
+    was `GONE`. A product defect: `ResultActivity.configureNavigation()` passed a hard-coded
+    `Level.POINT_ESTIMATES` to `createConfiguredIntent`, so replaying after an interval session
+    dropped back to point estimates whenever the answer mode is "follow my level". This directly
+    contradicts the 2026-09-21 claim that the level is preserved when replaying.
+  - `StatsActivityTest.smallIntervalSample_suppressesCoverageAndExplainsThreshold` —
+    `NoMatchingViewException` on `stats_session_date`. A test defect: the assertion reaches into a
+    `RecyclerView` row while `awaitStatistics` waits only for the aggregates, not for the adapter
+    to bind. The same asynchronous attachment was flagged during the lifecycle review.
+- Recording this before fixing it, because a green-looking entry that was never green is worse than
+  a red one. Instrumented tests are excluded from CI by choice; the cost of that choice is that the
+  written record is the only place a failure is visible, so the written record has to be accurate.
   
