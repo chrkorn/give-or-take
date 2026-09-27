@@ -588,3 +588,27 @@
   run there is a standing temptation to migrate assertions there to keep CI green. The division is
   drawn by what is being claimed — anything asserting what a user can see or touch stays on a
   device — not by which is more convenient.
+
+## 2026-09-27 — The instrumented suite runs, and passes
+
+- 34 of 34 instrumented tests green on a Pixel_9 AVD at API 35. This is the first complete run of
+  the instrumented suite in the project's history; before today the harness had never started.
+- What it took, in the order the failures surfaced: `adb` was not on `PATH`, so the runner learned
+  to locate the SDK from `ANDROID_HOME`, then `sdk.dir` in `local.properties`, then the default
+  install location. The Gradle invocation then failed with `Unable to locate a Java Runtime`,
+  because no JDK is on the shell `PATH` on this machine — the runner now prefers Android Studio's
+  bundled JBR and falls back to `JAVA_HOME` and `/usr/libexec/java_home`. Finally the only
+  emulator image installed was API 37, on which the Espresso version in the version catalogue
+  does not initialise; creating a Pixel_9 AVD at API 35 was the fix, and the runner now refuses to
+  proceed above API 35 unless `ALLOW_UNSUPPORTED_API=1` is set, checking the *connected* device's
+  API level rather than trusting the AVD name.
+- The three failures the suite then reported were all real: the replay level bug, and the two
+  statistics assertions racing the `RecyclerView`. Both are written up above. It is worth stating
+  plainly that a harness which cannot start hides defects rather than preventing them — these
+  tests had been in the repository for weeks, were correct, and found genuine bugs the first
+  minute they were allowed to execute.
+- The instrumented suite stays out of CI, as decided earlier: there is no emulator on the runner
+  and the tests are slow enough to discourage the small commits this project is trying to
+  demonstrate. The cost is that it runs when someone runs it, and the devlog is the only record
+  that it did. `tools/run_instrumented_tests.sh` exists so that "someone runs it" is one command
+  rather than an afternoon.
