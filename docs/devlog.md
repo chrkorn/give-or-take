@@ -550,9 +550,16 @@
   thread and children are bound on a later layout pass. `waitForIdleSync()` does not reliably
   span that gap. The lifecycle review had already flagged that the adapter attaches
   asynchronously and that a test would need to account for it.
-- `awaitStatistics` now waits for the list to bind at least one child, polling a real condition
-  against a five-second deadline rather than sleeping for a guessed interval. Every future
-  assertion on a row inherits the wait.
+- **First attempt was wrong twice over, and instructively so.** Waiting for a non-zero child count
+  inside `awaitStatistics` broke `noHistory_displaysHelpfulEmptyState`, because the empty-state
+  screen hides the list entirely — `showOnly(R.id.stats_empty_state)` leaves the `RecyclerView`
+  `GONE` with no children, so the wait could never be satisfied. It also failed to fix the
+  original test, because the overview header is adapter item 0 and satisfies "at least one child"
+  before any session row has been bound.
+- The working version waits for the view the assertion actually needs —
+  `findViewById(R.id.stats_session_date) != null` — and is called only from the one test that
+  asserts on a row, rather than from every test. A proxy condition was the mistake in both
+  earlier attempts: child count is not the same claim as "the row exists".
 - Considered an `IdlingResource` and rejected it: it reports work the application knows it is
   doing, and the application does not know it is waiting for a layout pass. There would be
   nothing for it to mark busy. Polling the condition that actually matters is the more honest

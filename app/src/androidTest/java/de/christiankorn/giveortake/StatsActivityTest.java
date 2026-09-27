@@ -17,7 +17,7 @@ import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.christiankorn.giveortake.core.IntervalGuess;
@@ -37,7 +37,7 @@ import static org.hamcrest.Matchers.not;
 /** Verifies the statistics screen's asynchronous states and calibration disclosure rules. */
 @RunWith(AndroidJUnit4.class)
 public class StatsActivityTest {
-    private static final long ADAPTER_BIND_TIMEOUT_MILLIS = 5_000L;
+    private static final long ROW_BIND_TIMEOUT_MILLIS = 5_000L;
 
     private Context context;
 
@@ -82,6 +82,8 @@ public class StatsActivityTest {
             onView(withId(R.id.stats_coverage_group)).check(matches(not(isDisplayed())));
             onView(withText("49 more range answers until coverage is shown."))
                     .check(matches(isDisplayed()));
+
+            awaitSessionRow(scenario);
             onView(withId(R.id.stats_session_date)).check(matches(isDisplayed()));
         }
     }
@@ -109,41 +111,42 @@ public class StatsActivityTest {
         scenario.onActivity(activityReference::set);
         activityReference.get().awaitLoadForTest();
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
-        awaitBoundRows(scenario);
     }
 
     /**
-     * Waits until the list has bound at least one row.
+     * Waits until a session row has been bound into the history list.
      *
      * <p>{@code awaitLoadForTest()} returns when the database query completes, but the adapter is
      * attached on the main thread and the {@link RecyclerView} binds its children on a later
      * layout pass. {@code waitForIdleSync()} does not reliably span that gap, so an assertion on a
-     * view inside a row could run against a list that was still empty — which is exactly how
-     * {@code smallIntervalSample_suppressesCoverageAndExplainsThreshold} failed.</p>
+     * view inside a row could run against a list that had not yet bound one.</p>
      *
-     * <p>Polls the laid-out child count rather than sleeping for a fixed period. An
-     * {@code IdlingResource} would be the more idiomatic instrument, but it tracks work the
-     * application knows it is performing; the application does not know it is waiting for a
-     * layout pass, so there is nothing for it to report as busy. Polling a real condition against
-     * a deadline is honest about what is being waited for.</p>
+     * <p>Polls for the view the assertion actually needs rather than a proxy. Two earlier attempts
+     * were wrong in instructive ways: waiting for a non-zero child count never returns on the
+     * empty-state screen, where the list is {@code GONE} and has no children at all; and it
+     * returns too early on a populated screen, where the overview header is item 0 and satisfies
+     * the condition before any session row exists.</p>
+     *
+     * <p>Call it only from tests that assert on a row. An {@code IdlingResource} would be more
+     * idiomatic but reports work the application knows it is performing, and the application does
+     * not know it is waiting for a layout pass.</p>
      */
-    private static void awaitBoundRows(ActivityScenario<StatsActivity> scenario) {
-        long deadline = SystemClock.uptimeMillis() + ADAPTER_BIND_TIMEOUT_MILLIS;
-        AtomicInteger boundChildren = new AtomicInteger();
+    private static void awaitSessionRow(ActivityScenario<StatsActivity> scenario) {
+        long deadline = SystemClock.uptimeMillis() + ROW_BIND_TIMEOUT_MILLIS;
+        AtomicBoolean bound = new AtomicBoolean();
         while (SystemClock.uptimeMillis() < deadline) {
-            scenario.onActivity(activity -> {
-                RecyclerView list = activity.findViewById(R.id.stats_recycler);
-                boundChildren.set(list == null ? 0 : list.getChildCount());
-            });
-            if (boundChildren.get() > 0) {
+            scenario.onActivity(activity ->
+                    bound.set(activity.findViewById(R.id.stats_session_date) != null)
+            );
+            if (bound.get()) {
                 return;
             }
-            // One frame, so the loop neither spins nor hides a genuine failure behind a long wait.
+            // One frame, so the loop neither spins nor hides a real failure behind a long wait.
             SystemClock.sleep(16L);
             InstrumentationRegistry.getInstrumentation().waitForIdleSync();
         }
         throw new AssertionError(
-                "the statistics list bound no rows within " + ADAPTER_BIND_TIMEOUT_MILLIS + " ms"
+                "no session row was bound within " + ROW_BIND_TIMEOUT_MILLIS + " ms"
         );
     }
 
