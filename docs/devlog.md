@@ -524,3 +524,18 @@
   a red one. Instrumented tests are excluded from CI by choice; the cost of that choice is that the
   written record is the only place a failure is visible, so the written record has to be accurate.
   
+
+## 2026-09-27 — Replay keeps the answer mode
+
+- `ResultActivity` passed a hard-coded `Level.POINT_ESTIMATES` into
+  `QuizActivity.createConfiguredIntent()`. That argument is the level `QuizSettings.resolveLevel()`
+  resolves against, so with the answer mode set to "follow my level" — the default — replaying
+  after a confidence-interval session silently started a point-estimate session.
+- It now passes the level of the session just completed, which `onCreate` already reads from the
+  result Intent for the score, high-score and share rendering.
+- Caught by `ResultActivityTest.playAgain_afterIntervalResult_startsIntervalQuiz`, one of the two
+  failures in the 32-of-34 run. The test was written weeks ago and had never executed, because the
+  instrumented harness could not start; it was correct all along. Worth remembering that a test
+  which has never run is not evidence, and that this one earned its place the first time it did.
+- The 2026-09-21 entry claimed the level was preserved when replaying. It was not. Corrected here
+  rather than by editing that entry, so the sequence stays visible.

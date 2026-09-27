@@ -167,7 +167,7 @@ public class ResultActivity extends AppCompatActivity {
                 previousHighScorePresent
         );
         renderModeDetails(intent, level, answerCount);
-        configureNavigation();
+        configureNavigation(level);
         configureSharing(intent, level, answerCount, meanRawError);
     }
 
@@ -304,11 +304,14 @@ public class ResultActivity extends AppCompatActivity {
         }
     }
 
-    private void configureNavigation() {
+    private void configureNavigation(Level completedLevel) {
         findViewById(R.id.result_play_again_button).setOnClickListener(view -> {
+            // The level of the session just finished, not a fixed default: it is what
+            // "follow my level" resolves against, so hard-coding point estimates here
+            // silently demoted every replay after an interval session.
             startActivity(QuizActivity.createConfiguredIntent(
                     ResultActivity.this,
-                    Level.POINT_ESTIMATES
+                    completedLevel
             ));
             // A fresh quiz replaces this result, so Back from it returns directly to Home.
             finish();
