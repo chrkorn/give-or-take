@@ -612,3 +612,27 @@
   demonstrate. The cost is that it runs when someone runs it, and the devlog is the only record
   that it did. `tools/run_instrumented_tests.sh` exists so that "someone runs it" is one command
   rather than an afternoon.
+
+## 2026-09-27 — Closing out the lifecycle review
+
+- The lifecycle review left five findings. Three are fixed and two are accepted; the accepted
+  pair is written up as ADR 0024 rather than left in a review note nobody reads again.
+- The visible defect was the statistics reset. The confirmation dialog was a local variable, so
+  rotation lost it and leaked its window, and a count query in flight had its callback dropped on
+  the destroyed Activity — tap Reset, rotate, and the screen sat there with nothing ever
+  happening. A `ResetPhase` enum and the two row counts now go into the saved instance state and
+  the flow is rebuilt from them.
+- The re-issue strategy is worth stating because it is not obviously safe. A dropped count query
+  is re-issued because counting rows changes nothing. A delete that was running is also
+  re-issued, because `clearHistory` deletes unconditionally inside one transaction and a second
+  pass over an empty table is a no-op — re-issuing it is the only way the rebuilt dialog gets a
+  completion callback, the original having gone to an Activity that no longer exists. If the
+  delete had been conditional or incremental this would have been the wrong move.
+- The database callbacks now read the dialog from a field instead of capturing it. A captured
+  dialog keeps the destroyed Activity's window alive until the worker thread gets round to the
+  callback, and after a configuration change it is the wrong dialog anyway. The `NestedScrollView`
+  also finally has an id, without which the framework cannot save its scroll position.
+- `SettingsActivityTest.resetConfirmation_survivesRecreation` covers it. **This test has not been
+  executed yet** — it needs the emulator, and the instrumented suite runs by hand. Recording that
+  here because a test written today and run tomorrow is not evidence today, and this project has
+  already been caught once believing otherwise.
