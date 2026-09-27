@@ -557,3 +557,17 @@
   doing, and the application does not know it is waiting for a layout pass. There would be
   nothing for it to mark busy. Polling the condition that actually matters is the more honest
   instrument here, even though it is the less idiomatic one.
+
+## 2026-09-27 — Record the Robolectric decision
+
+- Robolectric was approved and added on 2026-09-22 with the SQLite history work, and is now used
+  in seven test classes. It had no ADR, while smaller dependency decisions did — ADR 0022 records
+  *rejecting* AndroidX Preference, yet the library that carries most of the Android-dependent
+  coverage was undocumented.
+- Written up as ADR 0023, including the part that matters for the report: Robolectric runs inside
+  the existing CI job, so it is the only reason six weeks of a broken instrumented harness did not
+  leave every Android-dependent class unverified.
+- Also recorded the hazard. Robolectric is a simulation, and because its tests are fast and always
+  run there is a standing temptation to migrate assertions there to keep CI green. The division is
+  drawn by what is being claimed — anything asserting what a user can see or touch stays on a
+  device — not by which is more convenient.
