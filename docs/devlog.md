@@ -556,10 +556,20 @@
   `GONE` with no children, so the wait could never be satisfied. It also failed to fix the
   original test, because the overview header is adapter item 0 and satisfies "at least one child"
   before any session row has been bound.
-- The working version waits for the view the assertion actually needs —
-  `findViewById(R.id.stats_session_date) != null` — and is called only from the one test that
-  asserts on a row, rather than from every test. A proxy condition was the mistake in both
-  earlier attempts: child count is not the same claim as "the row exists".
+- Waiting for the view itself rather than a proxy fixed the empty-state regression but not the
+  original failure, which then failed as an explicit timeout instead of `NoMatchingViewException`
+  — the same fact, better reported.
+- **It was never a timing problem.** A `RecyclerView` only lays out the children needed to fill the
+  viewport. The overview header is item 0 and is taller than the screen, so the first session row
+  is never created at all until the list is scrolled to it. No amount of waiting produces a view
+  that the layout has decided not to build.
+- The helper now scrolls to position 1 and then waits. It scrolls through the Activity rather than
+  `RecyclerViewActions`, which lives in espresso-contrib and would mean a new dependency for one
+  assertion. Its failure message now reports the adapter item count and the laid-out child count,
+  so the next failure of this kind arrives with evidence instead of requiring another hypothesis.
+- Three wrong attempts, each wrong in the same way: asserting on a stand-in for the condition
+  rather than the condition. Child count is not "the row exists"; "the row exists" is not "the row
+  has been laid out".
 - Considered an `IdlingResource` and rejected it: it reports work the application knows it is
   doing, and the application does not know it is waiting for a layout pass. There would be
   nothing for it to mark busy. Polling the condition that actually matters is the more honest

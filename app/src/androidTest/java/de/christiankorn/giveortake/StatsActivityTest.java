@@ -18,6 +18,7 @@ import org.junit.runner.RunWith;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.christiankorn.giveortake.core.IntervalGuess;
@@ -114,30 +115,39 @@ public class StatsActivityTest {
     }
 
     /**
-     * Waits until a session row has been bound into the history list.
+     * Scrolls to the first session row and waits until it is bound.
      *
-     * <p>{@code awaitLoadForTest()} returns when the database query completes, but the adapter is
-     * attached on the main thread and the {@link RecyclerView} binds its children on a later
-     * layout pass. {@code waitForIdleSync()} does not reliably span that gap, so an assertion on a
-     * view inside a row could run against a list that had not yet bound one.</p>
+     * <p>A {@link RecyclerView} only lays out the children it needs to fill the viewport. The
+     * overview header is item 0 and is taller than the screen, so the first session row is never
+     * created until the list is scrolled to it — it is absent from the view hierarchy rather than
+     * merely late, which is why Espresso reported {@code NoMatchingViewException} and why waiting
+     * alone never helped.</p>
      *
-     * <p>Polls for the view the assertion actually needs rather than a proxy. Two earlier attempts
-     * were wrong in instructive ways: waiting for a non-zero child count never returns on the
-     * empty-state screen, where the list is {@code GONE} and has no children at all; and it
-     * returns too early on a populated screen, where the overview header is item 0 and satisfies
-     * the condition before any session row exists.</p>
+     * <p>Two earlier attempts waited on a proxy instead. A non-zero child count never becomes true
+     * on the empty-state screen, where the list is {@code GONE}; and on a populated screen it is
+     * already true because of the header, long before any session row exists.</p>
      *
-     * <p>Call it only from tests that assert on a row. An {@code IdlingResource} would be more
-     * idiomatic but reports work the application knows it is performing, and the application does
-     * not know it is waiting for a layout pass.</p>
+     * <p>Scrolls through the Activity rather than {@code RecyclerViewActions}, which lives in
+     * espresso-contrib and would be a new dependency for one assertion.</p>
      */
     private static void awaitSessionRow(ActivityScenario<StatsActivity> scenario) {
         long deadline = SystemClock.uptimeMillis() + ROW_BIND_TIMEOUT_MILLIS;
         AtomicBoolean bound = new AtomicBoolean();
+        AtomicInteger items = new AtomicInteger(-1);
+        AtomicInteger children = new AtomicInteger(-1);
         while (SystemClock.uptimeMillis() < deadline) {
-            scenario.onActivity(activity ->
-                    bound.set(activity.findViewById(R.id.stats_session_date) != null)
-            );
+            scenario.onActivity(activity -> {
+                RecyclerView list = activity.findViewById(R.id.stats_recycler);
+                if (list != null) {
+                    RecyclerView.Adapter<?> adapter = list.getAdapter();
+                    items.set(adapter == null ? -1 : adapter.getItemCount());
+                    children.set(list.getChildCount());
+                    if (adapter != null && adapter.getItemCount() > 1) {
+                        list.scrollToPosition(1);
+                    }
+                }
+                bound.set(activity.findViewById(R.id.stats_session_date) != null);
+            });
             if (bound.get()) {
                 return;
             }
@@ -147,6 +157,8 @@ public class StatsActivityTest {
         }
         throw new AssertionError(
                 "no session row was bound within " + ROW_BIND_TIMEOUT_MILLIS + " ms"
+                        + " (adapter items=" + items.get()
+                        + ", laid-out children=" + children.get() + ")"
         );
     }
 
