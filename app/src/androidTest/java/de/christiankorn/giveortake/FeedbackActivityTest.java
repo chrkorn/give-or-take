@@ -139,6 +139,8 @@ public class FeedbackActivityTest {
         onView(withId(R.id.feedback_guess)).check(matches(withText("600 units")));
         onView(withId(R.id.feedback_true_value)).check(matches(withText("100 units")));
         onView(withText(R.string.feedback_band_wrong)).check(matches(isDisplayed()));
+        onView(withId(R.id.feedback_band_shape))
+                .check(matches(withText(R.string.feedback_wrong_shape)));
         onView(withText(R.string.feedback_band_wrong_description)).check(matches(isDisplayed()));
         onView(withText("Your estimate was about 6× too high."))
                 .check(matches(isDisplayed()));
@@ -150,6 +152,8 @@ public class FeedbackActivityTest {
         onView(withText(R.string.feedback_interval_label)).check(matches(isDisplayed()));
         onView(withId(R.id.feedback_guess)).check(matches(withText("200–300 units")));
         onView(withText(R.string.feedback_interval_missed)).check(matches(isDisplayed()));
+        onView(withId(R.id.feedback_band_shape))
+                .check(matches(withText(R.string.feedback_wrong_shape)));
         onView(withText(R.string.feedback_interval_missed_description))
                 .check(matches(isDisplayed()));
         onView(withText(R.string.feedback_interval_above_truth_comparison))

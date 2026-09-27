@@ -4,18 +4,18 @@
     android:id="@+id/settings_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/theme_background"
     android:orientation="vertical">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/settings_toolbar"
+        style="@style/Widget.GiveOrTake.Toolbar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/settings_toolbar_height"
-        android:background="@color/theme_background"
-        android:navigationContentDescription="@string/settings_back"
-        android:title="@string/settings_title"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/actionBarSize"
         app:navigationIcon="?attr/homeAsUpIndicator"
-        app:titleTextColor="@color/theme_on_background" />
+        app:navigationContentDescription="@string/settings_back"
+        app:title="@string/settings_title"
+        app:titleTextColor="?attr/colorOnBackground" />
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/settings_scroll"
@@ -28,52 +28,55 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="@dimen/settings_horizontal_margin"
-            android:paddingTop="@dimen/settings_content_padding"
-            android:paddingEnd="@dimen/settings_horizontal_margin"
-            android:paddingBottom="@dimen/settings_bottom_margin">
+            android:paddingStart="@dimen/space_5"
+            android:paddingTop="@dimen/space_5"
+            android:paddingEnd="@dimen/space_5"
+            android:paddingBottom="@dimen/space_5">
 
             <TextView
-                style="@style/TextAppearance.Material3.LabelLarge"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
                 android:text="@string/settings_session_length_label"
                 android:textAllCaps="true"
-                android:textColor="@color/home_secondary_text"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textStyle="bold" />
 
             <com.google.android.material.button.MaterialButtonToggleGroup
                 android:id="@+id/settings_session_length_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/settings_control_spacing"
+                android:layout_marginTop="@dimen/space_2"
                 app:checkedButton="@id/settings_length_10"
                 app:selectionRequired="true"
                 app:singleSelection="true">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/settings_length_5"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.GiveOrTake.Button.Secondary"
                     android:layout_width="0dp"
-                    android:layout_height="@dimen/settings_segment_height"
+                    android:layout_height="wrap_content"
+            android:minHeight="@dimen/size_button"
                     android:layout_weight="1"
                     android:checkable="true"
                     android:text="@string/settings_length_5" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/settings_length_10"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.GiveOrTake.Button.Secondary"
                     android:layout_width="0dp"
-                    android:layout_height="@dimen/settings_segment_height"
+                    android:layout_height="wrap_content"
+            android:minHeight="@dimen/size_button"
                     android:layout_weight="1"
                     android:checkable="true"
                     android:text="@string/settings_length_10" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/settings_length_20"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    style="@style/Widget.GiveOrTake.Button.Secondary"
                     android:layout_width="0dp"
-                    android:layout_height="@dimen/settings_segment_height"
+                    android:layout_height="wrap_content"
+            android:minHeight="@dimen/size_button"
                     android:layout_weight="1"
                     android:checkable="true"
                     android:text="@string/settings_length_20" />
@@ -82,108 +85,110 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/settings_explanation_spacing"
+                android:layout_marginTop="@dimen/space_2"
                 android:text="@string/settings_session_length_explanation"
-                android:textColor="@color/home_secondary_text"
-                android:textSize="@dimen/settings_body_text_size" />
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textAppearance="?attr/textAppearanceTitleMedium" />
 
             <TextView
-                style="@style/TextAppearance.Material3.LabelLarge"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/settings_section_spacing"
+                android:layout_marginTop="@dimen/space_6"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
                 android:text="@string/settings_answer_mode_label"
                 android:textAllCaps="true"
-                android:textColor="@color/home_secondary_text"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textStyle="bold" />
 
             <RadioGroup
                 android:id="@+id/settings_answer_mode_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/settings_control_spacing"
+                android:layout_marginTop="@dimen/space_2"
                 android:background="@drawable/settings_group_background"
                 android:orientation="vertical">
 
                 <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/settings_mode_point"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/settings_row_height"
-                    android:paddingStart="@dimen/settings_row_padding"
-                    android:paddingEnd="@dimen/settings_row_padding"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/size_button_prominent"
+                    android:paddingStart="@dimen/space_3"
+                    android:paddingEnd="@dimen/space_3"
                     android:text="@string/settings_mode_point"
-                    android:textSize="@dimen/settings_body_text_size" />
+                    android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                 <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/settings_mode_interval"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/settings_row_height"
-                    android:paddingStart="@dimen/settings_row_padding"
-                    android:paddingEnd="@dimen/settings_row_padding"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/size_button_prominent"
+                    android:paddingStart="@dimen/space_3"
+                    android:paddingEnd="@dimen/space_3"
                     android:text="@string/settings_mode_interval"
-                    android:textSize="@dimen/settings_body_text_size" />
+                    android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                 <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/settings_mode_follow_level"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/settings_row_height"
-                    android:paddingStart="@dimen/settings_row_padding"
-                    android:paddingEnd="@dimen/settings_row_padding"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/size_button_prominent"
+                    android:paddingStart="@dimen/space_3"
+                    android:paddingEnd="@dimen/space_3"
                     android:text="@string/settings_mode_follow_level"
-                    android:textSize="@dimen/settings_body_text_size" />
+                    android:textAppearance="?attr/textAppearanceTitleMedium" />
             </RadioGroup>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/settings_explanation_spacing"
+                android:layout_marginTop="@dimen/space_2"
                 android:text="@string/settings_next_session_explanation"
-                android:textColor="@color/home_secondary_text"
-                android:textSize="@dimen/settings_body_text_size" />
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textAppearance="?attr/textAppearanceTitleMedium" />
 
             <TextView
-                style="@style/TextAppearance.Material3.LabelLarge"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/settings_section_spacing"
+                android:layout_marginTop="@dimen/space_6"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
                 android:text="@string/settings_categories_label"
                 android:textAllCaps="true"
-                android:textColor="@color/home_secondary_text"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textStyle="bold" />
 
             <LinearLayout
                 android:id="@+id/settings_categories_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/settings_control_spacing"
+                android:layout_marginTop="@dimen/space_2"
                 android:background="@drawable/settings_group_background"
                 android:orientation="vertical"
-                android:paddingTop="@dimen/settings_group_vertical_padding"
-                android:paddingBottom="@dimen/settings_group_vertical_padding" />
+                android:paddingTop="@dimen/space_1"
+                android:paddingBottom="@dimen/space_1" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/settings_explanation_spacing"
+                android:layout_marginTop="@dimen/space_2"
                 android:text="@string/settings_categories_explanation"
-                android:textColor="@color/home_secondary_text"
-                android:textSize="@dimen/settings_secondary_text_size" />
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textAppearance="?attr/textAppearanceBodyMedium" />
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="@dimen/settings_reset_spacing"
-                android:background="@color/home_card_outline" />
+                android:layout_height="@dimen/divider_thickness"
+                android:layout_marginTop="@dimen/space_7"
+                android:background="?attr/colorOutline" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/settings_reset_button"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.GiveOrTake.Button.Danger"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/settings_reset_height"
-                android:layout_marginTop="@dimen/settings_control_spacing"
-                android:text="@string/settings_reset_action"
-                android:textColor="@color/settings_destructive"
-                app:strokeColor="@color/settings_destructive" />
+                android:layout_height="wrap_content"
+            android:minHeight="@dimen/size_button"
+                android:layout_marginTop="@dimen/space_2"
+                android:text="@string/settings_reset_action" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

@@ -647,3 +647,7 @@
 - The instrumented count went from 34 to 35 — the whole of the increase is that one test. Worth
   noting that the suite took two runs of this project to become useful: the first, three days
   ago, existed only to discover that it could not start.
+
+## 2026-09-28 — Material pass
+- Consistent theme, type scale and spacing system. Largest-font-size setting broke two layouts; fixed.
+- Checked against the Android app quality guidelines; remaining gaps recorded as known limitations rather than quietly ignored.

@@ -48,7 +48,8 @@
     <string name="quiz_default_counter">0 answered · 10 remaining</string>
     <string name="quiz_question_progress">%1$d answered · %2$d remaining</string>
     <string name="quiz_default_prompt">How long is the River Thames?</string>
-    <string name="quiz_default_unit">km</string>
+    <string name="quiz_default_unit_label">Unit: km</string>
+    <string name="quiz_unit_label">Unit: %1$s</string>
     <string name="quiz_answer_hint">Your estimate</string>
     <string name="quiz_submit">Submit</string>
     <string name="quiz_error_empty">Enter an estimate.</string>
@@ -84,6 +85,9 @@
     <string name="feedback_band_close_description">Between 1.5× and 3× from the true value.</string>
     <string name="feedback_band_wrong">WRONG</string>
     <string name="feedback_band_wrong_description">More than 3× from the true value. This question will return later.</string>
+    <string name="feedback_correct_shape">●</string>
+    <string name="feedback_close_shape">▲</string>
+    <string name="feedback_wrong_shape">×</string>
     <string name="feedback_interval_label">Your 90% range</string>
     <string name="feedback_interval_value">%1$s–%2$s %3$s</string>
     <string name="feedback_interval_contained">CONTAINED</string>

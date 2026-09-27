@@ -86,6 +86,7 @@ public class QuizActivity extends AppCompatActivity {
     private TextView questionPrompt;
     private TextInputLayout answerInputLayout;
     private TextInputEditText answerInput;
+    private TextView answerUnit;
     private MaterialButton submitButton;
     private View pointAnswerGroup;
     private View rangeAnswerGroup;
@@ -93,10 +94,12 @@ public class QuizActivity extends AppCompatActivity {
     private View directBoundsGroup;
     private TextInputLayout bestGuessInputLayout;
     private TextInputEditText bestGuessInput;
+    private TextView bestGuessUnit;
     private TextInputLayout lowerBoundInputLayout;
     private TextInputEditText lowerBoundInput;
     private TextInputLayout upperBoundInputLayout;
     private TextInputEditText upperBoundInput;
+    private TextView directBoundsUnit;
     private UncertaintyDial uncertaintyDial;
     private TextView rangeReadout;
     private TextView rangeExplanation;
@@ -223,6 +226,7 @@ public class QuizActivity extends AppCompatActivity {
         questionPrompt = findViewById(R.id.question_prompt);
         answerInputLayout = findViewById(R.id.answer_input_layout);
         answerInput = findViewById(R.id.answer_input);
+        answerUnit = findViewById(R.id.answer_unit);
         submitButton = findViewById(R.id.submit_button);
         pointAnswerGroup = findViewById(R.id.point_answer_group);
         rangeAnswerGroup = findViewById(R.id.range_answer_group);
@@ -230,10 +234,12 @@ public class QuizActivity extends AppCompatActivity {
         directBoundsGroup = findViewById(R.id.direct_bounds_group);
         bestGuessInputLayout = findViewById(R.id.best_guess_input_layout);
         bestGuessInput = findViewById(R.id.best_guess_input);
+        bestGuessUnit = findViewById(R.id.best_guess_unit);
         lowerBoundInputLayout = findViewById(R.id.lower_bound_input_layout);
         lowerBoundInput = findViewById(R.id.lower_bound_input);
         upperBoundInputLayout = findViewById(R.id.upper_bound_input_layout);
         upperBoundInput = findViewById(R.id.upper_bound_input);
+        directBoundsUnit = findViewById(R.id.direct_bounds_unit);
         uncertaintyDial = findViewById(R.id.uncertainty_dial);
         rangeReadout = findViewById(R.id.range_readout);
         rangeExplanation = findViewById(R.id.range_explanation);
@@ -670,10 +676,10 @@ public class QuizActivity extends AppCompatActivity {
                 quizSession.getRemainingQuestionCount()
         ));
         questionPrompt.setText(question.getPrompt());
-        answerInputLayout.setSuffixText(question.getUnit());
-        bestGuessInputLayout.setSuffixText(question.getUnit());
-        lowerBoundInputLayout.setSuffixText(question.getUnit());
-        upperBoundInputLayout.setSuffixText(question.getUnit());
+        String unitLabel = getString(R.string.quiz_unit_label, question.getUnit());
+        answerUnit.setText(unitLabel);
+        bestGuessUnit.setText(unitLabel);
+        directBoundsUnit.setText(unitLabel);
     }
 
     private boolean updateValidation(boolean showError) {

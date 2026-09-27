@@ -220,6 +220,7 @@ public class FeedbackActivity extends AppCompatActivity {
         int descriptionResource;
         int backgroundResource;
         int contentResource;
+        int shapeResource;
         if (level == Level.CONFIDENCE_INTERVALS) {
             if (correctness == Correctness.CLOSE) {
                 throw new IllegalStateException("Interval feedback cannot have a close outcome");
@@ -237,11 +238,15 @@ public class FeedbackActivity extends AppCompatActivity {
             contentResource = contained
                     ? R.color.feedback_correct_content
                     : R.color.feedback_wrong_content;
+            shapeResource = contained
+                    ? R.string.feedback_correct_shape
+                    : R.string.feedback_wrong_shape;
             applyBandStyle(
                     labelResource,
                     descriptionResource,
                     backgroundResource,
-                    contentResource
+                    contentResource,
+                    shapeResource
             );
             return;
         }
@@ -251,37 +256,50 @@ public class FeedbackActivity extends AppCompatActivity {
                 descriptionResource = R.string.feedback_band_correct_description;
                 backgroundResource = R.color.feedback_correct_background;
                 contentResource = R.color.feedback_correct_content;
+                shapeResource = R.string.feedback_correct_shape;
                 break;
             case CLOSE:
                 labelResource = R.string.feedback_band_close;
                 descriptionResource = R.string.feedback_band_close_description;
                 backgroundResource = R.color.feedback_close_background;
                 contentResource = R.color.feedback_close_content;
+                shapeResource = R.string.feedback_close_shape;
                 break;
             case WRONG:
                 labelResource = R.string.feedback_band_wrong;
                 descriptionResource = R.string.feedback_band_wrong_description;
                 backgroundResource = R.color.feedback_wrong_background;
                 contentResource = R.color.feedback_wrong_content;
+                shapeResource = R.string.feedback_wrong_shape;
                 break;
             default:
                 throw new IllegalStateException("Unsupported correctness band: " + correctness);
         }
 
-        applyBandStyle(labelResource, descriptionResource, backgroundResource, contentResource);
+        applyBandStyle(
+                labelResource,
+                descriptionResource,
+                backgroundResource,
+                contentResource,
+                shapeResource
+        );
     }
 
     private void applyBandStyle(
             int labelResource,
             int descriptionResource,
             int backgroundResource,
-            int contentResource
+            int contentResource,
+            int shapeResource
     ) {
         int contentColor = ContextCompat.getColor(this, contentResource);
         MaterialCardView bandCard = findViewById(R.id.feedback_band_card);
         bandCard.setCardBackgroundColor(ContextCompat.getColor(this, backgroundResource));
         bandCard.setStrokeColor(contentColor);
 
+        TextView shape = findViewById(R.id.feedback_band_shape);
+        shape.setText(shapeResource);
+        shape.setTextColor(contentColor);
         TextView label = findViewById(R.id.feedback_band_label);
         label.setText(labelResource);
         label.setTextColor(contentColor);

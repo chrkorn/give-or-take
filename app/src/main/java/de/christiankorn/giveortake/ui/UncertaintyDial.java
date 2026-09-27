@@ -214,7 +214,7 @@ public class UncertaintyDial extends View {
         labelSpacing = getResources().getDimension(R.dimen.uncertainty_dial_label_spacing);
         defaultWidth = getResources().getDimension(R.dimen.uncertainty_dial_default_width);
         float minimumTouchTarget = getResources().getDimension(
-                R.dimen.uncertainty_dial_minimum_touch_target
+                R.dimen.size_touch_target
         );
         float systemTouchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
         touchHitRadius = Math.max(minimumTouchTarget / 2.0f, thumbRadius + systemTouchSlop);
@@ -398,8 +398,8 @@ public class UncertaintyDial extends View {
                     trackY + tickLength / 2.0f,
                     trackPaint
             );
-            canvas.drawText(tickLabels[index], tickX, labelBaseline, labelPaint);
         }
+        drawNonOverlappingLabels(canvas, trackStartX, trackEndX, labelBaseline);
 
         float thumbX = positionToX(
                 UncertaintyScale.factorToPositionFraction(
@@ -411,6 +411,53 @@ public class UncertaintyDial extends View {
                 trackEndX
         );
         canvas.drawCircle(thumbX, trackY, thumbRadius, thumbPaint);
+    }
+
+    private void drawNonOverlappingLabels(
+            Canvas canvas,
+            float trackStartX,
+            float trackEndX,
+            float labelBaseline
+    ) {
+        boolean rightToLeft = getLayoutDirection() == LAYOUT_DIRECTION_RTL;
+        int firstIndex = rightToLeft ? tickLabels.length - 1 : 0;
+        int lastIndex = rightToLeft ? 0 : tickLabels.length - 1;
+        int direction = rightToLeft ? -1 : 1;
+
+        float firstX = tickX(firstIndex, trackStartX, trackEndX);
+        canvas.drawText(tickLabels[firstIndex], firstX, labelBaseline, labelPaint);
+        float previousRight = firstX + labelPaint.measureText(tickLabels[firstIndex]) / 2.0f;
+
+        float lastX = tickX(lastIndex, trackStartX, trackEndX);
+        float lastLeft = lastX - labelPaint.measureText(tickLabels[lastIndex]) / 2.0f;
+        for (int index = firstIndex + direction;
+                index != lastIndex;
+                index += direction) {
+            float tickX = tickX(index, trackStartX, trackEndX);
+            float halfLabelWidth = labelPaint.measureText(tickLabels[index]) / 2.0f;
+            float labelLeft = tickX - halfLabelWidth;
+            float labelRight = tickX + halfLabelWidth;
+            // Large system fonts cannot fit every reference label. Keeping the endpoints and only
+            // non-overlapping interior labels preserves a readable scale without shrinking text.
+            if (labelLeft >= previousRight + labelSpacing
+                    && labelRight + labelSpacing <= lastLeft) {
+                canvas.drawText(tickLabels[index], tickX, labelBaseline, labelPaint);
+                previousRight = labelRight;
+            }
+        }
+        canvas.drawText(tickLabels[lastIndex], lastX, labelBaseline, labelPaint);
+    }
+
+    private float tickX(int index, float trackStartX, float trackEndX) {
+        return positionToX(
+                UncertaintyScale.factorToPositionFraction(
+                        tickFactors[index],
+                        minimumFactor,
+                        maximumFactor
+                ),
+                trackStartX,
+                trackEndX
+        );
     }
 
     private float getHorizontalInset() {

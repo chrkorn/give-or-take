@@ -208,7 +208,7 @@ public class ResultActivity extends AppCompatActivity {
 
         if (newHighScore) {
             card.setStrokeWidth(getResources().getDimensionPixelSize(
-                    R.dimen.result_high_score_new_stroke_width
+                    R.dimen.stroke_emphasis
             ));
             card.setStrokeColor(ContextCompat.getColor(this, R.color.home_primary_button));
             icon.setVisibility(View.VISIBLE);
@@ -228,7 +228,7 @@ public class ResultActivity extends AppCompatActivity {
             }
         } else {
             card.setStrokeWidth(getResources().getDimensionPixelSize(
-                    R.dimen.home_card_stroke_width
+                    R.dimen.stroke_thin
             ));
             icon.setVisibility(View.GONE);
             label.setText(R.string.result_personal_best);

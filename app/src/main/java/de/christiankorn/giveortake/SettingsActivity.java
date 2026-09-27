@@ -153,14 +153,16 @@ public class SettingsActivity extends AppCompatActivity {
     private void configureCategories(List<String> categories, Set<String> selectedCategories) {
         LinearLayout container = findViewById(R.id.settings_categories_container);
         int horizontalPadding = getResources().getDimensionPixelSize(
-                R.dimen.settings_row_padding
+                R.dimen.space_3
         );
-        int minimumHeight = getResources().getDimensionPixelSize(R.dimen.settings_row_height);
+        int minimumHeight = getResources().getDimensionPixelSize(R.dimen.size_button_prominent);
         for (String category : categories) {
             MaterialCheckBox checkBox = new MaterialCheckBox(this);
             checkBox.setId(View.generateViewId());
             checkBox.setText(category);
-            checkBox.setTextSize(18.0f);
+            checkBox.setTextAppearance(
+                    com.google.android.material.R.style.TextAppearance_Material3_TitleMedium
+            );
             checkBox.setMinHeight(minimumHeight);
             checkBox.setPadding(horizontalPadding, 0, horizontalPadding, 0);
             checkBox.setChecked(selectedCategories.contains(category));

@@ -114,10 +114,10 @@ public final class CalibrationChartView extends View {
                 R.dimen.calibration_chart_marker_radius
         );
         smallGap = getResources().getDimension(
-                R.dimen.calibration_chart_small_gap
+                R.dimen.space_1
         );
         mediumGap = getResources().getDimension(
-                R.dimen.calibration_chart_medium_gap
+                R.dimen.space_3
         );
         legendSwatchWidth = getResources().getDimension(
                 R.dimen.calibration_chart_legend_swatch_width

@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="@dimen/quiz_horizontal_margin"
+    android:padding="@dimen/space_5"
     app:maximumFactor="100"
     app:minimumFactor="1.2"
     app:thumbColor="@color/uncertainty_dial_thumb"

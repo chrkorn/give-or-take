@@ -83,10 +83,10 @@ public class QuizActivityTest {
                 dial.setFactor(3.0);
 
                 NumberFormat numberFormat = NumberFormat.getNumberInstance();
-                String unit = ((com.google.android.material.textfield.TextInputLayout)
-                        activity.findViewById(R.id.best_guess_input_layout))
-                        .getSuffixText()
-                        .toString();
+                String unit = findByPrompt(
+                        new AssetQuestionBankLoader(activity.getAssets()).load(),
+                        ((TextView) activity.findViewById(R.id.question_prompt)).getText().toString()
+                ).getUnit();
                 String expectedRange = activity.getString(
                         R.string.range_readout,
                         numberFormat.format(167),

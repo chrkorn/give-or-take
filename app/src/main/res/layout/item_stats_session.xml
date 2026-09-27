@@ -4,22 +4,22 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="@dimen/stats_horizontal_margin"
-    android:layout_marginEnd="@dimen/stats_horizontal_margin"
-    android:layout_marginBottom="@dimen/stats_session_list_spacing"
-    android:minHeight="@dimen/stats_session_row_min_height"
-    app:cardBackgroundColor="@color/home_card_background"
-    app:cardCornerRadius="@dimen/stats_card_corner_radius"
+    android:layout_marginStart="@dimen/space_5"
+    android:layout_marginEnd="@dimen/space_5"
+    android:layout_marginBottom="@dimen/space_2"
+    android:minHeight="@dimen/size_result_band_min_height"
+    app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+    app:cardCornerRadius="@dimen/shape_corner_medium"
     app:cardElevation="@dimen/elevation_none"
-    app:strokeColor="@color/home_card_outline"
-    app:strokeWidth="@dimen/home_card_stroke_width">
+    app:strokeColor="?attr/colorOutline"
+    app:strokeWidth="@dimen/stroke_thin">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="@dimen/stats_session_row_padding">
+        android:padding="@dimen/space_4">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -31,8 +31,8 @@
                 android:id="@+id/stats_session_date"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/home_card_content"
-                android:textSize="@dimen/stats_body_text_size"
+                android:textColor="?attr/colorOnSurface"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
                 android:textStyle="bold"
                 tools:text="9 Sep 2026" />
 
@@ -40,9 +40,9 @@
                 android:id="@+id/stats_session_bands"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/home_text_spacing_small"
-                android:textColor="@color/home_secondary_text"
-                android:textSize="@dimen/stats_secondary_text_size"
+                android:layout_marginTop="@dimen/space_1"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
                 tools:text="4 correct · 3 close · 3 wrong" />
         </LinearLayout>
 
@@ -50,9 +50,9 @@
             android:id="@+id/stats_session_score"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/stats_card_spacing"
-            android:textColor="@color/home_card_content"
-            android:textSize="@dimen/stats_session_score_text_size"
+            android:layout_marginStart="@dimen/space_3"
+            android:textColor="?attr/colorOnSurface"
+            android:textAppearance="?attr/textAppearanceTitleLarge"
             android:textStyle="bold"
             tools:text="74 / 100" />
     </LinearLayout>
