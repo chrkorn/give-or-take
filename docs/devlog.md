@@ -708,3 +708,20 @@
   is used. This test makes no persistence-durability claim. Use a dedicated AVD because real
   history writes may retain synthetic sessions. Instrumented execution remains outside CI under
   the existing no-emulator policy; that is a project constraint, not a universal Espresso rule.
+
+## 2026-09-28 — Exercise wrong-answer repetition through the real UI
+
+- Added `wrongAnswer_isPresentedAgainLaterInSession` to the deterministic Espresso journey. It
+  enters 20,000 for a true value of 20, verifies that the real scoring path labels the answer
+  `WRONG`, answers the next two seeded questions correctly, and asserts that the original prompt
+  is then presented again. A test comment identifies the examination criterion it covers.
+- Kept the scenario on the five-question fixture and `Random(42L)` construction boundary from
+  ADR 0025. The test therefore exercises the real `Activity`/explicit-`Intent` flow, scorer and
+  training strategy without adding a test-only scheduling implementation or dependency.
+- Updated the complete-session test notes to distinguish the fixed-length all-`CLOSE` journey
+  from this deliberately extended remedial-repeat journey. The JVM scheduling tests remain the
+  cheaper coverage for queue boundary cases.
+- Verification used Android Studio's bundled OpenJDK 25.0.3. A forced
+  fresh run passed all **195 JVM tests**. `tools/run_instrumented_tests.sh Pixel_9` passed its
+  runner canary and all **37 instrumented tests** on the Pixel_9 AVD, Android 15/API 35, with no
+  failures, errors or skips. The new test took **5.648 seconds**.

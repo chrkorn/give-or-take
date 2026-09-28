@@ -1,8 +1,10 @@
 # Deterministic complete-session Espresso test
 
-`CompleteSessionTest` launches the real home screen with `ActivityScenarioRule`, presses Start,
-answers five questions, checks feedback after every answer and checks the result summary. The
-fixture supplies a small bank and a fresh `Random(42L)`; see ADR 0025 for the decision.
+`CompleteSessionTest` launches the real home screen with `ActivityScenarioRule`. One test presses
+Start, answers five questions, checks feedback after every answer and checks the result summary.
+A second test submits a deliberately wrong estimate and verifies that the same question returns
+after two intervening questions. The fixture supplies a small bank and a fresh `Random(42L)`; see
+ADR 0025 for the decision.
 
 The readable journey is in
 `app/src/androidTest/java/de/christiankorn/giveortake/CompleteSessionTest.java`. Fixture setup and
@@ -17,11 +19,14 @@ unit, CLOSE label, 50-point score and factor-of-two explanation. The five distin
 units make stale feedback or incorrect Intent contents observable. It finally checks 50 / 100,
 zero correct, five close and zero wrong, then returns Home.
 
-The estimates are twice the truths, so confusing the guess and truth cannot pass unnoticed.
-CLOSE answers do not extend the schedule; a fixed number of arbitrary wrong answers would not
-be a valid way to guarantee session completion. Tests in `TrainingStrategyTest` cover repeats.
-This test covers point mode, not interval calibration, persistence durability or production bank
-content. Those claims belong to their respective tests.
+In the complete-session test, the estimates are twice the truths, so confusing the guess and truth
+cannot pass unnoticed. CLOSE answers do not extend that schedule; a fixed number of arbitrary
+wrong answers would not be a valid way to guarantee session completion. The remedial-repeat test
+instead enters 20,000 for a true value of 20, verifies the `WRONG` band, answers the next two known
+questions correctly, and then checks that the first prompt returns. `TrainingStrategyTest` still
+covers the queue's boundary cases more cheaply on the JVM. These UI tests cover point mode, not
+interval calibration, persistence durability or production bank content. Those claims belong to
+their respective tests.
 
 `RuleChain.outerRule(fixture).around(home)` matters: ActivityScenarioRule launches before JUnit
 `@Before` methods. The outer rule controls preferences and number-formatting locale, installs

@@ -56,6 +56,32 @@ public class CompleteSessionTest {
         onView(withId(R.id.start_session_button)).check(matches(isDisplayed()));
     }
 
+    /** Checks that the real UI journey applies the delayed remedial-repeat policy. */
+    @Test
+    public void wrongAnswer_isPresentedAgainLaterInSession() {
+        // Covers the examination acceptance criterion that wrong answers are presented again.
+        onView(withId(R.id.start_session_button)).perform(scrollTo(), click());
+
+        String repeatedPrompt = "What is the recorded value for the test walk?";
+        onView(withId(R.id.question_prompt)).check(matches(withText(repeatedPrompt)));
+        onView(withId(R.id.answer_input))
+                .perform(scrollTo(), click(), typeText("20000"), closeSoftKeyboard());
+        onView(withId(R.id.submit_button)).perform(scrollTo(), click());
+        onView(withId(R.id.feedback_band_label)).check(matches(withText("WRONG")));
+        onView(withId(R.id.feedback_next_button)).perform(click());
+
+        answerCorrectlyAndContinue(
+                "What is the recorded value for the test route?",
+                "30"
+        );
+        answerCorrectlyAndContinue(
+                "What is the recorded value for the test parcel?",
+                "40"
+        );
+
+        onView(withId(R.id.question_prompt)).check(matches(withText(repeatedPrompt)));
+    }
+
     private void answerClose(
             int answerNumber, String prompt, String estimate, String truth, String unit
     ) {
@@ -78,6 +104,15 @@ public class CompleteSessionTest {
         onView(withId(R.id.feedback_score)).check(matches(withText("50 points out of 100")));
         onView(withId(R.id.feedback_comparison))
                 .check(matches(withText("Your estimate was about 2× too high.")));
+        onView(withId(R.id.feedback_next_button)).perform(click());
+    }
+
+    private void answerCorrectlyAndContinue(String prompt, String truth) {
+        onView(withId(R.id.question_prompt)).check(matches(withText(prompt)));
+        onView(withId(R.id.answer_input))
+                .perform(scrollTo(), click(), typeText(truth), closeSoftKeyboard());
+        onView(withId(R.id.submit_button)).perform(scrollTo(), click());
+        onView(withId(R.id.feedback_band_label)).check(matches(withText("CORRECT")));
         onView(withId(R.id.feedback_next_button)).perform(click());
     }
 }
