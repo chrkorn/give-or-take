@@ -668,3 +668,43 @@
   uncoached first-time-user task trial and preserves the known Android quality-audit gaps rather
   than turning a Material review into an unsupported claim of complete usability or compliance.
   One uncoached tester is n = 1, and the record says so.
+
+
+## 2026-09-28 — Make the complete UI journey deterministic
+
+- Recorded ADR 0025 for test dataset decisions.
+  The core already accepted Random; the missing seam was in QuizActivity, which constructed it
+  and loaded the bank itself. GiveOrTakeApplication now supplies those two inputs through a
+  package-private provider. Production still loads the bundled bank and uses unseeded Random.
+- Added CompleteSessionTest with ActivityScenarioRule<MainActivity>, wrapped by a fixture rule
+  that installs inputs before launch and restores the provider, preferences and numeric locale
+  after shutdown, including assertion failures. The five synthetic questions live in androidTest
+  assets. No new dependencies or changes to the Android-free core were needed.
+- The journey presses Start, types five estimates with closeSoftKeyboard, verifies each prompt,
+  progress count, estimate, independent true value and feedback, then checks the final summary
+  and returns Home. Every estimate is twice the truth: CLOSE and 50 points, without requeues.
+  This detects confusing the submitted estimate with the truth and ends at 50 / 100, zero
+  correct, five close and zero wrong. Expectations are explicit, not derived with the scorer.
+- Verification was performed on the working tree based on
+  `bc508deef00804053ed3f3a2eadc783101c18ed5`, with this change uncommitted. Host launcher was
+  Android Studio's bundled OpenJDK 25.0.3. The existing JVM suite passed all 195 tests, with no
+  failures, errors or skips. An initial instrumentation compilation error used `fromReader`
+  instead of the existing `QuestionBank.fromJson(Reader)` overload; corrected before device runs.
+- First device suite: 36 tests, one failure in the new test. It expected `minutes` where the UI
+  displays `Unit: minutes`. The other 35 tests passed. Corrected that assertion and strengthened
+  the initial exact guesses into different estimate/truth pairs.
+- Second device suite: 36 tests, one failure in the new test. All first-question feedback content
+  checks passed, but scrollTo on the fixed Next footer violated Espresso's scroll-container
+  constraint. Removed scrolling for fixed footer actions (Next and Result's Home).
+- Final device suite: **36 instrumented tests passed**, no failures, errors or skips, using
+  `tools/run_instrumented_tests.sh Pixel_9`. The runner canary passed separately. Actual device:
+  Pixel_9 AVD, Android 15/API 35, animations disabled by the helper; the new fixture uses Locale.US
+  for number formatting and restores the prior locale afterward. Final suite Gradle invocation
+  completed in 33 seconds; the new test took **9.262 seconds**. JUnit XML timestamp:
+  `2026-09-28T07:14:44` (UTC; 09:14:44 Europe/Berlin).
+- Added `docs/complete-session-test.md` with local execution/evidence instructions and the
+  synchronisation explanation. Main-queue idleness does not imply the history executor is done;
+  these feedback/result assertions do not depend on it, so no IdlingResource or Thread.sleep
+  is used. This test makes no persistence-durability claim. Use a dedicated AVD because real
+  history writes may retain synthetic sessions. Instrumented execution remains outside CI under
+  the existing no-emulator policy; that is a project constraint, not a universal Espresso rule.

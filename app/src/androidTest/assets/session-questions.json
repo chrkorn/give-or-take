@@ -1,0 +1,69 @@
+{
+  "version": 4,
+  "metadata": {
+    "generationDate": "2026-09-28",
+    "generationTimestamp": "2026-09-28T00:00:00Z",
+    "sourceDatasets": [
+      "Synthetic test fixtures"
+    ],
+    "licence": "CC0",
+    "scriptVersion": "test-1"
+  },
+  "questions": [
+    {
+      "id": "session-test-a",
+      "prompt": "What is the recorded value for the test rope?",
+      "trueValue": 10,
+      "unit": "metres",
+      "measurementBasis": "Synthetic UI test fixture",
+      "timeVarying": false,
+      "category": "Session test",
+      "sourceUrl": "https://example.org/quiz-fixtures/a",
+      "sourceLabel": "Synthetic test fixture"
+    },
+    {
+      "id": "session-test-b",
+      "prompt": "What is the recorded value for the test walk?",
+      "trueValue": 20,
+      "unit": "minutes",
+      "measurementBasis": "Synthetic UI test fixture",
+      "timeVarying": false,
+      "category": "Session test",
+      "sourceUrl": "https://example.org/quiz-fixtures/b",
+      "sourceLabel": "Synthetic test fixture"
+    },
+    {
+      "id": "session-test-c",
+      "prompt": "What is the recorded value for the test route?",
+      "trueValue": 30,
+      "unit": "kilometres",
+      "measurementBasis": "Synthetic UI test fixture",
+      "timeVarying": false,
+      "category": "Session test",
+      "sourceUrl": "https://example.org/quiz-fixtures/c",
+      "sourceLabel": "Synthetic test fixture"
+    },
+    {
+      "id": "session-test-d",
+      "prompt": "What is the recorded value for the test parcel?",
+      "trueValue": 40,
+      "unit": "grams",
+      "measurementBasis": "Synthetic UI test fixture",
+      "timeVarying": false,
+      "category": "Session test",
+      "sourceUrl": "https://example.org/quiz-fixtures/d",
+      "sourceLabel": "Synthetic test fixture"
+    },
+    {
+      "id": "session-test-e",
+      "prompt": "What is the recorded value for the test tank?",
+      "trueValue": 50,
+      "unit": "litres",
+      "measurementBasis": "Synthetic UI test fixture",
+      "timeVarying": false,
+      "category": "Session test",
+      "sourceUrl": "https://example.org/quiz-fixtures/e",
+      "sourceLabel": "Synthetic test fixture"
+    }
+  ]
+}

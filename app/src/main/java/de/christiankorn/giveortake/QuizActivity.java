@@ -35,7 +35,6 @@ import de.christiankorn.giveortake.core.QuizSessionSnapshot;
 import de.christiankorn.giveortake.core.QuizSubmission;
 import de.christiankorn.giveortake.core.ScoringPolicy;
 import de.christiankorn.giveortake.core.SessionResult;
-import de.christiankorn.giveortake.data.AssetQuestionBankLoader;
 import de.christiankorn.giveortake.data.AnswerDraft;
 import de.christiankorn.giveortake.data.HighScorePreferences;
 import de.christiankorn.giveortake.data.QuizHistorySession;
@@ -49,7 +48,6 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -199,7 +197,8 @@ public class QuizActivity extends AppCompatActivity {
         if (currentLevel == null) {
             throw new IllegalArgumentException("currentLevel must not be null");
         }
-        QuestionBank questionBank = new AssetQuestionBankLoader(context.getAssets()).load();
+        QuestionBank questionBank = ((GiveOrTakeApplication) context.getApplicationContext())
+                .getQuizDependencies().loadQuestionBank();
         Set<String> categories = new LinkedHashSet<>(questionBank.getCategories());
         QuizSettings.Snapshot settings = new QuizSettings(context).load(categories);
         return createIntent(
@@ -250,7 +249,8 @@ public class QuizActivity extends AppCompatActivity {
         selectedCategories = readSelectedCategories();
         restoreRangeEntryState(savedInstanceState);
 
-        QuestionBank questionBank = new AssetQuestionBankLoader(getAssets()).load();
+        QuestionBank questionBank = ((GiveOrTakeApplication) getApplication())
+                .getQuizDependencies().loadQuestionBank();
         quizSession = createOrRestoreSession(
                 filterQuestions(questionBank.getQuestions()),
                 savedInstanceState
@@ -644,7 +644,8 @@ public class QuizActivity extends AppCompatActivity {
             return new QuizSession(
                     questionPool,
                     sessionLength,
-                    new Random(),
+                    ((GiveOrTakeApplication) getApplication())
+                            .getQuizDependencies().newSessionRandom(),
                     level,
                     scoringPolicy
             );
