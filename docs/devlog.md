@@ -651,3 +651,20 @@
 ## 2026-09-28 — Material pass
 - Consistent theme, type scale and spacing system. Largest-font-size setting broke two layouts; fixed.
 - Checked against the Android app quality guidelines; remaining gaps recorded as known limitations rather than quietly ignored.
+
+## 2026-09-28 — Prepare the feature-complete release evidence
+
+- Added the `v0.9-feature-complete` changelog entry covering the seven user-facing screens, both
+  answer modes, uncertainty dial, persistence, statistics, settings, implicit-Intent actions, and
+  Material day/night presentation.
+- Wrote a verification procedure translating every acceptance criterion into a reproducible
+  action, an observable pass condition and evidence to retain — then kept it out of this
+  repository. Only its executed results will be recorded here and in the report.
+- The reason is that it is a plan, not a record. Every item is unperformed. Committing an
+  empty checklist would publish an inventory of what has not been done, which is the opposite of
+  what the rest of `docs/` is for. It gets executed during self-testing, and the outcome —
+  failures included, recorded before they are fixed — is what earns a place here.
+- Kept subjective usability separate from implementation evidence: the procedure asks for an
+  uncoached first-time-user task trial and preserves the known Android quality-audit gaps rather
+  than turning a Material review into an unsupported claim of complete usability or compliance.
+  One uncoached tester is n = 1, and the record says so.
