@@ -2,7 +2,12 @@ package de.christiankorn.giveortake.data;
 
 import de.christiankorn.giveortake.core.Level;
 
-/** Identifies the completed session that established one mode-specific personal best. */
+/**
+ * Identifies the completed session that established one mode-specific personal best.
+ *
+ * <p>{@link QuizStatisticsDao} derives the record with the core comparison policy under ADR 0021
+ * ({@code docs/adr/0021-derive-statistics-with-core-policies.md}).</p>
+ */
 public final class PersonalBestStatistics {
     private final Level level;
     private final long sessionId;

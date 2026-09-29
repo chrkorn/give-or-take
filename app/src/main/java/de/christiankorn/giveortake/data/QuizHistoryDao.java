@@ -19,7 +19,9 @@ import de.christiankorn.giveortake.core.PointGuess;
  * Stores and retrieves quiz history without exposing SQL or cursor handling to Activities.
  *
  * <p>The database owns raw scoring inputs, not derived scores. Callers can therefore apply the
- * current framework-independent scoring policies when presenting historical statistics.</p>
+ * current framework-independent scoring policies when presenting historical statistics. This
+ * DAO implements the raw-history boundary in ADR 0019
+ * ({@code docs/adr/0019-persist-raw-answer-history-in-sqlite.md}).</p>
  */
 public final class QuizHistoryDao implements AutoCloseable {
     private static final String[] SESSION_PROJECTION = {

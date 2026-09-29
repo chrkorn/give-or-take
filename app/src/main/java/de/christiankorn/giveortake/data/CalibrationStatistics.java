@@ -4,7 +4,13 @@ import java.util.OptionalDouble;
 
 import de.christiankorn.giveortake.core.CalibrationTracker;
 
-/** Represents overall empirical coverage and interval width across stored answers. */
+/**
+ * Represents overall empirical coverage and interval width derived from stored raw answers.
+ *
+ * <p>{@link QuizStatisticsDao} builds this immutable data-layer projection with the core
+ * {@link CalibrationTracker}, as required by ADR 0021
+ * ({@code docs/adr/0021-derive-statistics-with-core-policies.md}).</p>
+ */
 public final class CalibrationStatistics {
     private final long sampleSize;
     private final long hitCount;

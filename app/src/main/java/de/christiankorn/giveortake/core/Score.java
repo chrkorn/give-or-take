@@ -1,13 +1,14 @@
 package de.christiankorn.giveortake.core;
 
 /**
- * Contains the numerical result produced by a {@link ScoringPolicy}.
+ * Contains the immutable numerical result produced by a core-layer {@link ScoringPolicy}.
  *
  * <p>The raw value preserves the precision and orientation defined by its policy. A policy may
  * additionally provide whole-number points suitable for display and session totals. Keeping
  * that mapping optional allows proper losses to remain raw until a separate display mapping is
- * explicitly selected. Direction and correctness are deliberately absent because they require
- * separate product decisions.</p>
+ * explicitly selected. Direction and correctness are deliberately absent because ADR 0004 and
+ * ADR 0006 assign those concerns to {@link EstimateComparison} and
+ * {@link CorrectnessClassifier}, respectively.</p>
  */
 public final class Score {
     private static final int NO_POINTS = -1;

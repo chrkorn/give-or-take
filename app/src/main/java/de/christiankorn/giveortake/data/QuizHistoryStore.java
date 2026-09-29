@@ -19,7 +19,8 @@ import de.christiankorn.giveortake.core.Level;
  *
  * <p>A single worker preserves the order in which a session is started, answered, and completed.
  * The store owns only an application-context DAO and immutable session inputs, so queued work can
- * finish after an Activity is destroyed without retaining that Activity.</p>
+ * finish after an Activity is destroyed without retaining that Activity. This implements ADR 0020
+ * ({@code docs/adr/0020-serialize-database-io-on-application-executor.md}).</p>
  */
 public final class QuizHistoryStore {
     private static final long TEST_TIMEOUT_SECONDS = 5L;
@@ -62,7 +63,8 @@ public final class QuizHistoryStore {
      * @param initialQuestionCount planned distinct-question count before repeats
      * @param startedAtEpochMillis non-negative UTC Unix epoch millisecond
      * @return handle that accepts ordered answer and completion writes immediately
-     * @throws IllegalArgumentException if an argument is invalid or the token is already reused
+     * @throws IllegalArgumentException if an argument is invalid or the token is already attached
+     *                                  to a session with different identifying inputs
      */
     public synchronized QuizHistorySession startSession(
             String token,
@@ -104,7 +106,8 @@ public final class QuizHistoryStore {
      * @param savedSessionId positive stored identifier, or zero while creation was pending
      * @param expectedComplete whether the restored core session is already complete
      * @return lifecycle-independent handle for the restored session
-     * @throws IllegalArgumentException if an argument is invalid or the token is reused
+     * @throws IllegalArgumentException if an argument is invalid or the token is already attached
+     *                                  to a session with different identifying inputs
      */
     public synchronized QuizHistorySession restoreSession(
             String token,

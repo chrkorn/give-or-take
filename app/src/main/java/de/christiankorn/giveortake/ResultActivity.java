@@ -29,7 +29,8 @@ import de.christiankorn.giveortake.core.SessionResult;
  *
  * <p>The Intent contract contains only primitives and a level name. This keeps Android out of the
  * core model, avoids Java object-serialisation overhead, and gives each field an explicit key that
- * can be evolved independently in a later contract version.</p>
+ * can be evolved independently in a later contract version. The mapping implements ADR 0017
+ * ({@code docs/adr/0017-pass-completed-results-as-primitive-intent-extras.md}).</p>
  */
 public class ResultActivity extends AppCompatActivity {
     private static final int EXTRA_FORMAT_VERSION = 1;

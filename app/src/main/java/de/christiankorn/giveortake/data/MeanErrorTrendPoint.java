@@ -1,6 +1,10 @@
 package de.christiankorn.giveortake.data;
 
-/** Represents one point-estimate session in the mean log-relative-error trend. */
+/**
+ * Represents one point-estimate session in the mean log-relative-error trend returned by
+ * {@link QuizStatisticsDao} under ADR 0021
+ * ({@code docs/adr/0021-derive-statistics-with-core-policies.md}).
+ */
 public final class MeanErrorTrendPoint {
     private final long sessionId;
     private final long endedAtEpochMillis;

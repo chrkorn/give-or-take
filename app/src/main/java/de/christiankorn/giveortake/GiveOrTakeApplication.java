@@ -10,7 +10,14 @@ import de.christiankorn.giveortake.core.QuestionBank;
 import de.christiankorn.giveortake.data.AssetQuestionBankLoader;
 import de.christiankorn.giveortake.data.QuizHistoryStore;
 
-/** Owns process-scoped services and debug diagnostics shared by the application's Activities. */
+/**
+ * Owns process-scoped services and debug diagnostics shared by the application's Activities.
+ *
+ * <p>The process-scoped history writer follows ADR 0020
+ * ({@code docs/adr/0020-serialize-database-io-on-application-executor.md}). The replaceable
+ * {@link QuizDependencies} boundary supports deterministic UI tests under ADR 0025
+ * ({@code docs/adr/0025-inject-session-inputs-for-deterministic-ui-tests.md}).</p>
+ */
 public final class GiveOrTakeApplication extends Application {
     private QuizHistoryStore quizHistoryStore;
     private QuizDependencies quizDependencies;

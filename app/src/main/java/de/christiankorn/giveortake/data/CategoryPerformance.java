@@ -2,7 +2,12 @@ package de.christiankorn.giveortake.data;
 
 import java.util.OptionalDouble;
 
-/** Represents mode-specific historical performance within one snapshotted question category. */
+/**
+ * Represents mode-specific historical performance within one snapshotted question category.
+ *
+ * <p>This immutable data-layer projection is derived by {@link QuizStatisticsDao} under ADR 0021
+ * ({@code docs/adr/0021-derive-statistics-with-core-policies.md}).</p>
+ */
 public final class CategoryPerformance {
     private final String category;
     private final int pointSampleSize;

@@ -37,7 +37,9 @@ import de.christiankorn.giveortake.data.QuizSettings;
  *
  * <p>Each ordinary control writes immediately to {@link android.content.SharedPreferences}. A
  * running quiz is unaffected because {@link QuizActivity} copies a complete settings snapshot
- * into its launch Intent instead of reading these preferences while the session is active.</p>
+ * into its launch Intent instead of reading these preferences while the session is active. This
+ * screen implements ADR 0022
+ * ({@code docs/adr/0022-build-settings-with-ordinary-activity-controls.md}).</p>
  */
 public class SettingsActivity extends AppCompatActivity {
     private static final String STATE_RESET_PHASE = "reset_phase";

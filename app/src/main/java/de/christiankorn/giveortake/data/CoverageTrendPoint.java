@@ -1,6 +1,12 @@
 package de.christiankorn.giveortake.data;
 
-/** Represents one rolling window in the interval-coverage trend. */
+/**
+ * Represents one rolling ten-answer window in the interval-coverage trend returned by
+ * {@link QuizStatisticsDao}.
+ *
+ * <p>The fixed window is the statistics policy selected in ADR 0021
+ * ({@code docs/adr/0021-derive-statistics-with-core-policies.md}).</p>
+ */
 public final class CoverageTrendPoint {
     private final long endingAnswerEpochMillis;
     private final long endingSessionId;

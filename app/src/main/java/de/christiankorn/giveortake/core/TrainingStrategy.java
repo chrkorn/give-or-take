@@ -18,7 +18,9 @@ import java.util.Set;
  * would violate the no-immediate-repeat rule.</p>
  *
  * <p>The caller supplies the source of randomness. This keeps ordering reproducible in tests and
- * prevents the domain layer from hiding a second random-number generator.</p>
+ * prevents the domain layer from hiding a second random-number generator. The delay and tail
+ * behavior implement ADR 0008
+ * ({@code docs/adr/0008-delay-wrong-question-repeats-within-session.md}).</p>
  */
 public final class TrainingStrategy {
     /** Number of other questions placed before a question answered incorrectly. */
@@ -109,9 +111,9 @@ public final class TrainingStrategy {
     /**
      * Records the correctness band for the current question and updates the repeat schedule.
      *
-     * <p>Only {@link Correctness#WRONG} schedules a repeat, as required by ADR 0006. A repeat is
-     * never added to an otherwise empty schedule because it would be the same question twice in
-     * immediate succession.</p>
+     * <p>Only {@link Correctness#WRONG} schedules a repeat, as required by ADR 0006 and ADR 0008.
+     * A repeat is never added to an otherwise empty schedule because it would be the same question
+     * twice in immediate succession.</p>
      *
      * @param correctness classification of the answer to the current question
      * @throws IllegalArgumentException if correctness is null

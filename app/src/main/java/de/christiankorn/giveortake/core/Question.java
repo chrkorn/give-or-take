@@ -3,12 +3,15 @@ package de.christiankorn.giveortake.core;
 import java.time.LocalDate;
 
 /**
- * Describes a numerical estimation question and the authoritative value against
- * which guesses are scored.
+ * Describes an immutable numerical estimation question in the pure-Java core layer and the
+ * authoritative value against which guesses are scored.
  *
  * <p>A question is immutable. Its identifier defines its identity, while the
- * remaining fields describe content that may be corrected without creating a
- * different question.</p>
+ * remaining fields describe content that may be corrected without creating a different question.
+ * Identity and the positive numeric domain implement ADR 0002
+ * ({@code docs/adr/0002-question-value-domain-and-identity.md}); the composed prompt and temporal
+ * metadata implement ADR 0012
+ * ({@code docs/adr/0012-store-composed-question-prompts.md}).</p>
  */
 public final class Question {
     private final String id;
@@ -188,7 +191,8 @@ public final class Question {
 
     /**
      * Collects the values needed to construct an immutable {@link Question} without relying on
-     * an error-prone sequence of similarly typed constructor arguments.
+     * an error-prone sequence of similarly typed constructor arguments. Setters defer validation
+     * until {@link #build()} so fields may be supplied in any order.
      */
     public static final class Builder {
         private String id;

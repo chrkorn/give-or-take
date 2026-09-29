@@ -7,7 +7,9 @@ import java.util.OptionalDouble;
  *
  * <p>A point-estimate session unlocks confidence intervals when it contains at least ten answers
  * and awards at least 70 mean points. Both boundaries are inclusive. Unlocking is permanent:
- * evaluating later weak or empty sessions can never reduce the highest unlocked level.</p>
+ * evaluating later weak or empty sessions can never reduce the highest unlocked level. These
+ * progression rules implement ADR 0009
+ * ({@code docs/adr/0009-use-curriculum-levels-and-mean-session-scores.md}).</p>
  */
 public final class LevelState {
     /** Minimum number of answers needed for an advancement decision. */

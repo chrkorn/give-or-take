@@ -13,7 +13,9 @@ import java.util.OptionalDouble;
  *
  * <p>Point-estimate sessions expose both mean raw error and mean points. Confidence-interval
  * sessions expose mean raw loss only because ADR 0007 deliberately deferred a points mapping.
- * Empty sessions expose neither mean, avoiding a fabricated score and division by zero.</p>
+ * Empty sessions expose neither mean, avoiding a fabricated score and division by zero. Using
+ * level-specific means implements ADR 0009
+ * ({@code docs/adr/0009-use-curriculum-levels-and-mean-session-scores.md}).</p>
  */
 public final class SessionResult {
     private final Level level;
@@ -43,6 +45,7 @@ public final class SessionResult {
         this.level = level;
         answeredQuestionCount = scores.size();
 
+        // Incremental means avoid overflowing a total even when every individual score is finite.
         double runningRawMean = 0.0;
         double runningPointsMean = 0.0;
         int runningCorrectCount = 0;

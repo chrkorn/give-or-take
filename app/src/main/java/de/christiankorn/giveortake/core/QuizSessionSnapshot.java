@@ -9,7 +9,10 @@ import java.util.List;
  *
  * <p>The snapshot stores stable question identifiers instead of serialising question content or
  * the mutable strategy implementation. The Android layer can therefore save its primitive values
- * in an instance-state {@code Bundle} without introducing Android types into the core package.</p>
+ * in an instance-state {@code Bundle} without introducing Android types into the core package.
+ * This boundary implements ADR 0016
+ * ({@code docs/adr/0016-save-active-session-in-instance-state.md}) and is restored by
+ * {@link QuizSession#restore(List, QuizSessionSnapshot, ScoringPolicy)}.</p>
  */
 public final class QuizSessionSnapshot {
     private final Level level;

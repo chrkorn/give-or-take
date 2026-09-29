@@ -3,10 +3,14 @@ package de.christiankorn.giveortake.core;
 /**
  * Maps a non-negative log-relative error to a user-facing {@link Correctness} band.
  *
- * <p>The default thresholds implement ADR 0006. They can be supplied through the constructor so
- * later empirical tuning does not require changes to the classification algorithm. Injection also
- * lets unit tests use deliberately simple boundaries and test the comparison rules in isolation
- * from the calculation of the default logarithmic values.</p>
+ * <p>The default thresholds implement ADR 0006
+ * ({@code docs/adr/0006-classify-estimates-with-correctness-bands.md}). They can be supplied
+ * through the constructor so later empirical tuning does not require changes to the
+ * classification algorithm. Injection also lets unit tests exercise boundary behavior without
+ * depending on the default logarithmic values.</p>
+ *
+ * <p>This pure-Java core policy classifies the raw error returned by {@link LogRelativeScore}; it
+ * does not calculate that error or alter the points stored in {@link Score}.</p>
  */
 public final class CorrectnessClassifier {
     /** Default inclusive upper boundary for estimates within a factor of 1.5. */
@@ -51,7 +55,7 @@ public final class CorrectnessClassifier {
      *
      * @param rawError the finite, non-negative log-relative error to classify
      * @return the matching correctness band
-     * @throws IllegalArgumentException if {@code rawError} is not finite and non-negative
+     * @throws IllegalArgumentException if {@code rawError} is non-finite or negative
      */
     public Correctness classify(double rawError) {
         if (!Double.isFinite(rawError) || rawError < 0.0) {

@@ -5,16 +5,20 @@ import java.util.OptionalDouble;
 /**
  * Accumulates the empirical calibration of 90 percent confidence intervals.
  *
- * <p>This tracker deliberately keeps two ideas separate. {@link IntervalScore} produces a
- * per-answer loss using the proper scoring rule selected in ADR 0007. That loss rewards both
- * coverage and narrow, informative intervals. This class instead calculates an across-answers
- * calibration statistic: the fraction of intervals that contained the truth, compared with the
- * nominal 90 percent coverage. Coverage alone is not a per-answer score and must not be used as
+ * <p>This pure-Java core service deliberately keeps two ideas separate. {@link IntervalScore}
+ * produces a per-answer loss using the proper scoring rule selected in ADR 0007
+ * ({@code docs/adr/0007-score-confidence-intervals-with-log-interval-score.md}). That loss
+ * rewards both coverage and narrow, informative intervals. This class instead calculates an
+ * across-answers calibration statistic: the fraction of intervals that contained the truth,
+ * compared with the nominal 90 percent coverage. Coverage alone is not a per-answer score and
+ * must not be used as
  * one, because a user could improve it merely by making every interval extremely wide. The mean
  * logarithmic width is therefore retained alongside coverage to make that behaviour visible.</p>
  *
  * <p>Statistics are absent until at least one outcome has been recorded. {@link OptionalDouble}
- * makes that absence explicit instead of manufacturing a value or dividing by zero.</p>
+ * makes that absence explicit instead of manufacturing a value or dividing by zero. Historical
+ * statistics reuse this policy as required by ADR 0021
+ * ({@code docs/adr/0021-derive-statistics-with-core-policies.md}).</p>
  */
 public final class CalibrationTracker {
     /** The requested long-run coverage of every interval recorded by this tracker. */
@@ -39,7 +43,6 @@ public final class CalibrationTracker {
      * Creates an empty tracker for 90 percent confidence-interval outcomes.
      */
     public CalibrationTracker() {
-        // Explicit constructor keeps the public API and its initial state visible in Javadoc.
     }
 
     /**

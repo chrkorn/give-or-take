@@ -725,3 +725,24 @@
   fresh run passed all **195 JVM tests**. `tools/run_instrumented_tests.sh Pixel_9` passed its
   runner canary and all **37 instrumented tests** on the Pixel_9 AVD, Android 15/API 35, with no
   failures, errors or skips. The new test took **5.648 seconds**.
+
+## 2026-09-29 — Audit production Javadoc for examination submission
+
+- Reviewed every production Java file across the core, data, Activity, and custom-view layers.
+  Added concise architectural roles, cross-links between related types, and source paths for the
+  ADRs each implementation realises. Public API documentation remains intentionally brief for
+  self-explanatory getters and inherited Android lifecycle methods.
+- Corrected stale contracts: `IntervalGuess` is not inherently tied to a 90 percent confidence
+  level, `QuizSession.submit` accepts both supported guess forms, `QuizSession.getResult` returns
+  either level's result, and a matching history-session token is reused rather than rejected.
+- Retained explanatory comments where they record numerical stability, scoring-policy separation,
+  transaction ordering, lifecycle recovery, accessibility, or drawing-performance reasons.
+  Removed comments that merely narrated empty text-watcher callbacks or a private utility-class
+  constructor.
+- Added the missing documentation for the locale-aware numeric-input validator. Left two
+  presentation tolerances explicitly un-rationalised rather than inventing evidence: the five
+  percentage-point calibration verdict band and the two-point chart trend-stability band need a
+  product or report justification if they are to be defended as more than provisional display
+  rules.
+- Strict Javadoc validation passed for the complete Android-free `core` package with no warnings.
+  The full `testDebugUnitTest` task also passed after recompiling the production sources.

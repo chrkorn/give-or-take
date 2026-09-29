@@ -41,6 +41,11 @@ import java.util.regex.Pattern;
  * a duplicate identifier, or an unknown field rejects the entire bank. Bundled data is controlled
  * by the application build, so silently omitting a defective entry would conceal a data-generation
  * error and could ship an unexpectedly incomplete quiz.</p>
+ *
+ * <p>The loading boundary and Gson choice implement ADR 0010
+ * ({@code docs/adr/0010-load-versioned-question-banks-with-gson.md}). Version 4's prompt and
+ * per-question temporal fields incorporate the amendments recorded in ADR 0012
+ * ({@code docs/adr/0012-store-composed-question-prompts.md}).</p>
  */
 public final class QuestionBank {
     /** The only question-bank format version understood by this loader. */

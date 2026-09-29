@@ -56,7 +56,10 @@ import java.util.UUID;
  *
  * <p>Both answer modes produce a core {@code Guess} and delegate scoring, calibration, and
  * scheduling to the current session. Visibility swaps keep the two XML input groups explicit
- * while sharing the question, progress, and submission controls.</p>
+ * while sharing the question, progress, and submission controls. The Activity uses the XML and
+ * {@code findViewById} approach recorded in ADR 0015
+ * ({@code docs/adr/0015-use-findviewbyid-for-view-access.md}); active-session restoration follows
+ * ADR 0016 ({@code docs/adr/0016-save-active-session-in-instance-state.md}).</p>
  */
 public class QuizActivity extends AppCompatActivity {
     private static final String EXTRA_LEVEL = "quiz.level";
@@ -125,6 +128,7 @@ public class QuizActivity extends AppCompatActivity {
      * @param context context used to identify this Activity
      * @param level answer mode to display
      * @return an explicit Intent carrying the selected level
+     * @throws IllegalArgumentException if either argument is {@code null}
      */
     public static Intent createIntent(Context context, Level level) {
         if (context == null) {
@@ -189,6 +193,7 @@ public class QuizActivity extends AppCompatActivity {
      * @param currentLevel player's current curriculum level for "follow level" mode
      * @return explicit Intent carrying a stable session snapshot
      * @throws IllegalArgumentException if an argument is {@code null}
+     * @throws IllegalStateException if the bundled question bank cannot be loaded
      */
     public static Intent createConfiguredIntent(Context context, Level currentLevel) {
         if (context == null) {
@@ -355,12 +360,10 @@ public class QuizActivity extends AppCompatActivity {
         answerInput.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence text, int start, int count, int after) {
-                // No work is needed until the edit has completed.
             }
 
             @Override
             public void onTextChanged(CharSequence text, int start, int before, int count) {
-                // No work is needed until the edit has completed.
             }
 
             @Override
@@ -383,12 +386,10 @@ public class QuizActivity extends AppCompatActivity {
         TextWatcher rangeTextWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence text, int start, int count, int after) {
-                // No work is needed until the edit has completed.
             }
 
             @Override
             public void onTextChanged(CharSequence text, int start, int before, int count) {
-                // No work is needed until the edit has completed.
             }
 
             @Override

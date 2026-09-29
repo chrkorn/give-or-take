@@ -6,12 +6,12 @@ package de.christiankorn.giveortake.core;
  * <p>The returned position is a fraction rather than a pixel coordinate, so this class remains
  * independent of Android and screen geometry. A logarithmic scale gives equal visual distances
  * to equal multiplicative changes: for example, the intervals from ×2 to ×4 and from ×4 to
- * ×8 occupy the same width.</p>
+ * ×8 occupy the same width. It supports the range-input decision in ADR 0014
+ * ({@code docs/adr/0014-use-best-guess-and-uncertainty-factor-for-range-input.md}).</p>
  */
 public final class UncertaintyScale {
 
     private UncertaintyScale() {
-        // This class contains only pure conversion functions and must not be instantiated.
     }
 
     /**

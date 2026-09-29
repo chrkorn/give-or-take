@@ -5,7 +5,13 @@ import java.util.OptionalDouble;
 import de.christiankorn.giveortake.core.Level;
 import de.christiankorn.giveortake.core.SessionResult;
 
-/** Represents one ended session in the paged recent-history list. */
+/**
+ * Represents one ended session in the paged recent-history list returned by
+ * {@link QuizStatisticsDao}.
+ *
+ * <p>Its values are derived from raw history with core policies under ADR 0021
+ * ({@code docs/adr/0021-derive-statistics-with-core-policies.md}).</p>
+ */
 public final class RecentSessionStatistics {
     private final long sessionId;
     private final Level level;

@@ -46,7 +46,9 @@ import de.christiankorn.giveortake.ui.CalibrationChartView;
  *
  * <p>Database reads run on an Activity-owned worker. The resulting statistics are immutable and
  * are posted to the main thread only for rendering. A single {@link RecyclerView} owns both the
- * summary header and session rows, which lets the complete statistics screen scroll as one unit.</p>
+ * summary header and session rows, which lets the complete statistics screen scroll as one unit.
+ * The screen consumes the core-derived projections selected in ADR 0021
+ * ({@code docs/adr/0021-derive-statistics-with-core-policies.md}).</p>
  */
 public final class StatsActivity extends AppCompatActivity {
     private static final int SESSION_PAGE_SIZE = Integer.MAX_VALUE;

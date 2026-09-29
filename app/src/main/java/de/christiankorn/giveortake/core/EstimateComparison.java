@@ -5,7 +5,9 @@ package de.christiankorn.giveortake.core;
  *
  * <p>The scoring metric deliberately discards direction by taking an absolute logarithm. Feedback
  * needs the original values as well so that an equal error can be explained as either too high or
- * too low without losing the metric's multiplicative symmetry.</p>
+ * too low without losing the metric's multiplicative symmetry. This pure-Java value object keeps
+ * that presentation-independent comparison beside {@link LogRelativeScore}, as required by ADR
+ * 0004 ({@code docs/adr/0004-use-log-relative-error-for-point-estimates.md}).</p>
  */
 public final class EstimateComparison {
     private final Direction direction;

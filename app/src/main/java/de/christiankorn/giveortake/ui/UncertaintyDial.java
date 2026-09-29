@@ -31,7 +31,9 @@ import de.christiankorn.giveortake.core.UncertaintyScale;
  *
  * <p>The dial's factor is independent of the user's best guess; another component combines both
  * values to derive the interval {@code [guess / factor, guess * factor]}. Pointer input remains
- * continuous, while keyboard and accessibility actions move between labelled reference factors.</p>
+ * continuous, while keyboard and accessibility actions move between labelled reference factors.
+ * This custom view implements the input model selected in ADR 0014
+ * ({@code docs/adr/0014-use-best-guess-and-uncertainty-factor-for-range-input.md}).</p>
  */
 public class UncertaintyDial extends View {
     private static final float DEFAULT_MINIMUM_FACTOR = 1.2f;

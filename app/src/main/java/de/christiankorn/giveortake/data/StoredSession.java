@@ -2,7 +2,12 @@ package de.christiankorn.giveortake.data;
 
 import de.christiankorn.giveortake.core.Level;
 
-/** Represents one session row read from persistent quiz history. */
+/**
+ * Represents one session row reconstructed by {@link QuizHistoryDao} from persistent history.
+ *
+ * <p>The immutable data-layer value is part of the raw-history model selected in ADR 0019
+ * ({@code docs/adr/0019-persist-raw-answer-history-in-sqlite.md}).</p>
+ */
 public final class StoredSession {
     /** Describes whether a persisted session is active or how it ended. */
     public enum State {

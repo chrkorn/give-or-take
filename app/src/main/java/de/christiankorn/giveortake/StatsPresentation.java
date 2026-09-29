@@ -1,6 +1,9 @@
 package de.christiankorn.giveortake;
 
-/** Keeps small, testable interpretation rules out of {@link StatsActivity}. */
+/**
+ * Keeps small, framework-independent interpretation rules out of {@link StatsActivity} so they
+ * can be covered by local JVM tests.
+ */
 final class StatsPresentation {
     static final double WELL_CALIBRATED_TOLERANCE = 0.05;
 
@@ -11,7 +14,6 @@ final class StatsPresentation {
     }
 
     private StatsPresentation() {
-        // This class groups pure presentation calculations and is not stateful.
     }
 
     static CalibrationVerdict assessCalibration(double nominalMinusEmpiricalGap) {

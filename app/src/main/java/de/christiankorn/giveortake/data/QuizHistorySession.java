@@ -9,7 +9,10 @@ import de.christiankorn.giveortake.core.Level;
  *
  * <p>Methods enqueue work and return immediately. The parent {@link QuizHistoryStore} executes the
  * commands serially, so callers may submit an answer even while the session insert is still
- * pending.</p>
+ * pending. This lifecycle-independent handle implements the asynchronous ownership decision in
+ * ADR 0020 ({@code docs/adr/0020-serialize-database-io-on-application-executor.md}) and the
+ * accepted durability limits in ADR 0024
+ * ({@code docs/adr/0024-accept-two-history-durability-gaps.md}).</p>
  */
 public final class QuizHistorySession {
     private static final String LOG_TAG = "QuizHistory";

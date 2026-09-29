@@ -9,7 +9,13 @@ import java.util.Set;
 
 import de.christiankorn.giveortake.core.Level;
 
-/** Persists the choices that are copied into each newly started quiz session. */
+/**
+ * Persists the choices copied into each newly started quiz session with
+ * {@link SharedPreferences}.
+ *
+ * <p>The ordinary preference-backed controls implement ADR 0022
+ * ({@code docs/adr/0022-build-settings-with-ordinary-activity-controls.md}).</p>
+ */
 public final class QuizSettings {
     /** Default number of distinct questions requested for a session. */
     public static final int DEFAULT_SESSION_LENGTH = 10;
@@ -131,7 +137,12 @@ public final class QuizSettings {
                 .apply();
     }
 
-    /** Reports whether a value is one of the three session-length choices. */
+    /**
+     * Reports whether a value is one of the three supported session-length choices.
+     *
+     * @param sessionLength proposed number of initial questions
+     * @return {@code true} for 5, 10, or 20
+     */
     public static boolean isSupportedSessionLength(int sessionLength) {
         return sessionLength == 5 || sessionLength == 10 || sessionLength == 20;
     }
@@ -175,7 +186,7 @@ public final class QuizSettings {
         );
     }
 
-    /** Immutable settings copied into a newly created quiz Intent. */
+    /** Immutable settings snapshot copied into a newly created quiz Intent. */
     public static final class Snapshot {
         private final int sessionLength;
         private final AnswerMode answerMode;

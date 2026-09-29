@@ -11,7 +11,10 @@ import java.util.Random;
  *
  * <p>This class is the domain boundary used by the Android screen. Keeping the complete submission
  * sequence here prevents an Activity from duplicating arithmetic or partially updating the
- * training schedule.</p>
+ * training schedule. Delayed repeats follow ADR 0008
+ * ({@code docs/adr/0008-delay-wrong-question-repeats-within-session.md}); interval misses use the
+ * scheduling signal defined by ADR 0018
+ * ({@code docs/adr/0018-repeat-missed-confidence-intervals.md}).</p>
  */
 public final class QuizSession {
     private final TrainingStrategy trainingStrategy;
@@ -272,7 +275,7 @@ public final class QuizSession {
     /**
      * Scores a guess and atomically advances the training schedule.
      *
-     * @param guess point estimate to submit for the current question
+     * @param guess answer form supported by this session's scoring policy and level
      * @return the score, correctness, and selected next question
      * @throws IllegalArgumentException if the guess is null or unsupported by the scoring policy
      * @throws IllegalStateException if the session is already complete
@@ -304,7 +307,7 @@ public final class QuizSession {
     /**
      * Produces the aggregate result after the session has completed.
      *
-     * @return the completed point-estimate result
+     * @return the completed result for this session's level
      * @throws IllegalStateException if a question still awaits an answer
      */
     public SessionResult getResult() {

@@ -4,7 +4,15 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-/** Creates, configures, and incrementally upgrades the private quiz-history database. */
+/**
+ * Creates, configures, and incrementally upgrades the private SQLite quiz-history database.
+ *
+ * <p>The schema stores the raw history selected in ADR 0019
+ * ({@code docs/adr/0019-persist-raw-answer-history-in-sqlite.md}). Version 2 adds the answer-time
+ * category required by ADR 0021
+ * ({@code docs/adr/0021-derive-statistics-with-core-policies.md}) without discarding version-1
+ * history.</p>
+ */
 public final class QuizDatabaseHelper extends SQLiteOpenHelper {
     /** Current on-device schema version. */
     public static final int DATABASE_VERSION = 2;

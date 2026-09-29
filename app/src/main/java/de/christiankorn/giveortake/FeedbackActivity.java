@@ -35,7 +35,9 @@ import de.christiankorn.giveortake.core.QuizSubmission;
  *
  * <p>The Activity receives immutable display values through Intent extras. Android can retain
  * those values when recreating the Activity, whereas a static field could lose data after process
- * death and could accidentally retain stale screen state.</p>
+ * death and could accidentally retain stale screen state. Interval feedback preserves the
+ * containment-versus-loss distinction from ADR 0018
+ * ({@code docs/adr/0018-repeat-missed-confidence-intervals.md}).</p>
  */
 public class FeedbackActivity extends AppCompatActivity {
     private static final String EXTRA_ANSWER_NUMBER = "feedback.answerNumber";

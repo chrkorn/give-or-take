@@ -3,7 +3,14 @@ package de.christiankorn.giveortake.data;
 import java.util.List;
 import java.util.OptionalDouble;
 
-/** Collects the statistics-screen aggregates calculated from one consistent history snapshot. */
+/**
+ * Collects statistics-screen aggregates calculated from one consistent history snapshot by
+ * {@link QuizStatisticsDao}.
+ *
+ * <p>The immutable projection keeps cursors and SQL out of the UI and implements the result
+ * boundary selected in ADR 0021
+ * ({@code docs/adr/0021-derive-statistics-with-core-policies.md}).</p>
+ */
 public final class StatisticsOverview {
     private final int endedSessionCount;
     private final int answerCount;

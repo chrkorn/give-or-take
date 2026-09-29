@@ -1,7 +1,7 @@
 package de.christiankorn.giveortake.core;
 
 /**
- * Scores confidence intervals with the negatively oriented log interval score from ADR 0007.
+ * Scores {@link IntervalGuess} answers with a negatively oriented log interval score.
  *
  * <p>For lower bound {@code l}, upper bound {@code u}, true value {@code y}, and
  * {@code alpha = 1 - nominalConfidenceLevel}, the raw interval loss is:</p>
@@ -17,6 +17,9 @@ package de.christiankorn.giveortake.core;
  * better. The result intentionally has no user-facing points mapping because ADR 0007 defers
  * that separate decision. All values are finite and strictly positive through the invariants of
  * {@link Question} and {@link IntervalGuess}.</p>
+ *
+ * <p>This pure-Java policy implements ADR 0007
+ * ({@code docs/adr/0007-score-confidence-intervals-with-log-interval-score.md}).</p>
  */
 public final class IntervalScore implements ScoringPolicy {
     /** The nominal confidence level used by the no-argument constructor. */

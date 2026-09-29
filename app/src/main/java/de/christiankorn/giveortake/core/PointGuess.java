@@ -1,7 +1,11 @@
 package de.christiankorn.giveortake.core;
 
 /**
- * Represents an immutable answer containing one numerical estimate.
+ * Represents an immutable point-estimate answer in the pure-Java core layer.
+ *
+ * <p>The strictly positive domain makes the guess valid input to {@link LogRelativeScore}; zero
+ * and signed estimates need a different scoring policy. The separate point and interval answer
+ * types implement ADR 0003 ({@code docs/adr/0003-represent-guesses-as-separate-types.md}).</p>
  */
 public final class PointGuess implements Guess {
     private final double value;

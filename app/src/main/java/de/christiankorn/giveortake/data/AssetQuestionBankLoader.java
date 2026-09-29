@@ -16,7 +16,9 @@ import java.nio.charset.StandardCharsets;
  *
  * <p>A missing, unreadable, malformed, or empty bundled bank is an application defect. The loader
  * therefore fails fast with an unchecked exception instead of presenting a retry action that
- * cannot repair the installed APK.</p>
+ * cannot repair the installed APK. It is the Android half of the loading boundary established by
+ * ADR 0010 ({@code docs/adr/0010-load-versioned-question-banks-with-gson.md}); parsing remains in
+ * the pure-Java {@link QuestionBank}.</p>
  */
 public final class AssetQuestionBankLoader {
     /** Name under which the generated bank is packaged in the APK. */

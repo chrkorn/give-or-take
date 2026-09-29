@@ -6,7 +6,8 @@ import android.provider.BaseColumns;
  * Defines the stable SQLite names used to persist quiz sessions and their raw answers.
  *
  * <p>Keeping these identifiers in one contract prevents callers and migrations from silently
- * disagreeing about the on-device schema.</p>
+ * disagreeing about the on-device schema. The schema implements ADR 0019
+ * ({@code docs/adr/0019-persist-raw-answer-history-in-sqlite.md}).</p>
  */
 public final class QuizHistoryContract {
     private QuizHistoryContract() {

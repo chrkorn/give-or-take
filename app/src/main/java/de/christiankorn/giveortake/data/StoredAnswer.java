@@ -2,7 +2,12 @@ package de.christiankorn.giveortake.data;
 
 import de.christiankorn.giveortake.core.Guess;
 
-/** Represents one raw answer row read from persistent quiz history. */
+/**
+ * Represents one raw answer row reconstructed by {@link QuizHistoryDao}.
+ *
+ * <p>It preserves scoring-time inputs rather than derived scores, implementing ADR 0019
+ * ({@code docs/adr/0019-persist-raw-answer-history-in-sqlite.md}).</p>
+ */
 public final class StoredAnswer {
     private final long id;
     private final long sessionId;

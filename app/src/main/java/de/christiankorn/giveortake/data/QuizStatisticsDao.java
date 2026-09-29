@@ -32,7 +32,8 @@ import de.christiankorn.giveortake.core.SessionResult;
  *
  * <p>SQLite owns selection, ordering, and paging. Scoring, interval containment, logarithmic
  * width, calibration, and personal-best comparisons remain in the framework-independent core
- * package. This prevents a second SQL implementation of the app's numerical policies.</p>
+ * package. This prevents a second SQL implementation of the app's numerical policies and
+ * implements ADR 0021 ({@code docs/adr/0021-derive-statistics-with-core-policies.md}).</p>
  */
 public final class QuizStatisticsDao implements AutoCloseable {
     /** Number of consecutive interval answers represented by each coverage trend point. */

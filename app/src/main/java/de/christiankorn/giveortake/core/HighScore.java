@@ -10,7 +10,10 @@ import java.util.OptionalInt;
  * <p>Point-estimate sessions compete on mean points, where higher is better. Confidence-interval
  * sessions compete on mean raw interval loss, where lower is better. Keeping the level in the
  * value object prevents unlike scoring policies from being compared. Storage and retrieval belong
- * to the data layer, which can reconstruct this object from its exposed values.</p>
+ * to the data layer, which can reconstruct this object from its exposed values. The comparison
+ * rules implement ADR 0009
+ * ({@code docs/adr/0009-use-curriculum-levels-and-mean-session-scores.md}); history statistics
+ * reuse them under ADR 0021 ({@code docs/adr/0021-derive-statistics-with-core-policies.md}).</p>
  */
 public final class HighScore {
     private final Level level;

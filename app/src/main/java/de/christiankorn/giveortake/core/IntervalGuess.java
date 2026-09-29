@@ -1,17 +1,21 @@
 package de.christiankorn.giveortake.core;
 
 /**
- * Represents an immutable 90 percent confidence interval supplied as an answer.
+ * Represents an immutable confidence-interval answer in the pure-Java core layer.
  *
  * <p>Both bounds belong to the positive value domain used by the question model. This permits
- * interval width to be measured as a multiplicative span rather than an absolute difference.</p>
+ * interval width to be measured as a multiplicative span rather than an absolute difference.
+ * The representation implements ADR 0003
+ * ({@code docs/adr/0003-represent-guesses-as-separate-types.md}) and is scored by
+ * {@link IntervalScore}.</p>
  */
 public final class IntervalGuess implements Guess {
     private final double lowerBound;
     private final double upperBound;
 
     /**
-     * Derives a log-symmetric interval around a best guess.
+     * Derives a log-symmetric interval around a best guess as specified by ADR 0014
+     * ({@code docs/adr/0014-use-best-guess-and-uncertainty-factor-for-range-input.md}).
      *
      * <p>A multiplicative factor produces {@code [bestGuess / factor,
      * bestGuess * factor]}. Keeping this calculation beside the interval model gives every UI

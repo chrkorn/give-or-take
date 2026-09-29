@@ -5,7 +5,12 @@ import de.christiankorn.giveortake.core.IntervalGuess;
 import de.christiankorn.giveortake.core.PointGuess;
 import de.christiankorn.giveortake.core.Question;
 
-/** Collects one validated raw answer before it is inserted into quiz history. */
+/**
+ * Collects one validated raw answer before {@link QuizHistoryDao} inserts it into quiz history.
+ *
+ * <p>The draft retains scoring-time inputs rather than a derived score, implementing ADR 0019
+ * ({@code docs/adr/0019-persist-raw-answer-history-in-sqlite.md}).</p>
+ */
 public final class AnswerDraft {
     private final int sequenceNumber;
     private final Question question;

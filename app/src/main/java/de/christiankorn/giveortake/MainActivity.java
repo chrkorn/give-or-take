@@ -20,7 +20,9 @@ import de.christiankorn.giveortake.data.HighScorePreferences;
  * Displays the application's home screen and starts its top-level destinations.
  *
  * <p>The home screen is the launcher entry point. It summarises the current curriculum level and
- * personal best, then uses explicit intents to open a quiz, statistics, or settings screen.</p>
+ * personal best, then uses explicit intents to open a quiz, statistics, or settings screen. Its
+ * separate Activity navigation demonstrates the architecture selected in ADR 0001
+ * ({@code docs/adr/0001-language-and-ui-toolkit.md}).</p>
  */
 public class MainActivity extends AppCompatActivity {
 

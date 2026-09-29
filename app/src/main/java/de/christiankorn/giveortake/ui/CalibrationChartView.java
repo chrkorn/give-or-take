@@ -29,7 +29,9 @@ import de.christiankorn.giveortake.R;
  * duration.</p>
  *
  * <p>The chart is a single accessibility item. TalkBack receives a textual trend summary instead
- * of attempting to focus visual lines and markers that have no useful individual controls.</p>
+ * of attempting to focus visual lines and markers that have no useful individual controls. It
+ * renders the rolling-coverage policy selected in ADR 0021
+ * ({@code docs/adr/0021-derive-statistics-with-core-policies.md}) without a chart dependency.</p>
  */
 public final class CalibrationChartView extends View {
     /** The nominal coverage promised by confidence intervals in this app. */

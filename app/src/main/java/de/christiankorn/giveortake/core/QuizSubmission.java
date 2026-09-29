@@ -1,7 +1,11 @@
 package de.christiankorn.giveortake.core;
 
 /**
- * Reports the domain result of submitting one guess to a quiz session.
+ * Reports the immutable domain result of submitting one {@link Guess} to a {@link QuizSession}.
+ *
+ * <p>It carries both the continuous {@link Score} and the discrete scheduling signal so the
+ * Android UI does not reproduce core policy. Interval containment is mapped to that signal under
+ * ADR 0018 ({@code docs/adr/0018-repeat-missed-confidence-intervals.md}).</p>
  */
 public final class QuizSubmission {
     private final Question answeredQuestion;

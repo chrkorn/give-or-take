@@ -11,6 +11,10 @@ import java.util.List;
 
 /**
  * Translates a framework-independent quiz snapshot to small values supported by {@link Bundle}.
+ *
+ * <p>This Android adapter keeps {@code Bundle} out of the core package while implementing the
+ * recreation strategy selected in ADR 0016
+ * ({@code docs/adr/0016-save-active-session-in-instance-state.md}).</p>
  */
 final class QuizSessionState {
     private static final int FORMAT_VERSION = 2;

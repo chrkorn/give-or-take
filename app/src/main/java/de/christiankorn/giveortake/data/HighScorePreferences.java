@@ -14,7 +14,9 @@ import de.christiankorn.giveortake.core.Level;
  *
  * <p>The domain object remains independent of Android. Keeping value and answer count beside the
  * level preserves the comparison meaning documented by {@link HighScore} without serialising its
- * private implementation.</p>
+ * private implementation. This is the derived convenience cache retained by ADR 0019
+ * ({@code docs/adr/0019-persist-raw-answer-history-in-sqlite.md}), not the authority for raw
+ * answer history.</p>
  */
 public final class HighScorePreferences {
     private static final String PREFERENCES_NAME = "high_scores";
