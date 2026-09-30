@@ -102,6 +102,9 @@
     <string name="feedback_comparison_exact">Your estimate matched the true value.</string>
     <string name="feedback_comparison_high">Your estimate was about %1$s× too high.</string>
     <string name="feedback_comparison_low">Your estimate was about %1$s× too low.</string>
+    <string name="feedback_comparison_high_percent">Your estimate was about %1$s%% too high.</string>
+    <string name="feedback_comparison_low_percent">Your estimate was about %1$s%% too low.</string>
+    <string name="feedback_comparison_negligible" formatted="false">Your estimate was within 0.01% of the true value.</string>
     <string name="feedback_source">Source: %1$s ↗</string>
     <string name="feedback_source_content_description">Open source %1$s in a browser</string>
     <string name="feedback_source_unavailable">No browser is available to open this source.</string>

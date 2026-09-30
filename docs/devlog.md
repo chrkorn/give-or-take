@@ -773,3 +773,10 @@
   with errors shown. Fix: suppress the watchers during the restore, then re-validate once, showing
   errors only for fields that actually contain text. Two instrumented tests: untouched fields stay
   clean across `recreate()`, and a typed invalid `0` keeps its error.
+- **"Your estimate was about 1× too low."** Entering 420 for a true 420.5 (and 4.2 for 4.22,
+  59,000,000 for 58,850,717) produced a sentence that contradicts itself. `EstimateComparison` was
+  right; the display was not: `formatFactor` keeps two fraction digits, so every factor below
+  1.005 printed as `1`. Fix: below a factor of 1.01 the miss is worded as a percentage ("about
+  0.12% too low"), and below 0.005 % as "within 0.01% of the true value"; ordinary misses keep the
+  multiplicative wording the Espresso tests already pin ("about 2× too high"). The thresholds live
+  in a small Android-free `ComparisonText` class with JVM tests, following `StatsPresentation`.

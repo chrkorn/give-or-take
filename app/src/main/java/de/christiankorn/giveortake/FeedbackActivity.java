@@ -20,6 +20,7 @@ import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.text.NumberFormat;
+import java.util.Locale;
 
 import de.christiankorn.giveortake.core.Correctness;
 import de.christiankorn.giveortake.core.EstimateComparison;
@@ -318,15 +319,17 @@ public class FeedbackActivity extends AppCompatActivity {
                 comparisonView.setText(R.string.feedback_comparison_exact);
                 break;
             case HIGH:
-                comparisonView.setText(getString(
+                comparisonView.setText(describeMiss(
+                        comparison.getFactor(),
                         R.string.feedback_comparison_high,
-                        formatFactor(comparison.getFactor())
+                        R.string.feedback_comparison_high_percent
                 ));
                 break;
             case LOW:
-                comparisonView.setText(getString(
+                comparisonView.setText(describeMiss(
+                        comparison.getFactor(),
                         R.string.feedback_comparison_low,
-                        formatFactor(comparison.getFactor())
+                        R.string.feedback_comparison_low_percent
                 ));
                 break;
             default:
@@ -380,6 +383,23 @@ public class FeedbackActivity extends AppCompatActivity {
         NumberFormat numberFormat = NumberFormat.getNumberInstance();
         numberFormat.setMaximumFractionDigits(6);
         return numberFormat.format(value);
+    }
+
+    /**
+     * Words a miss as a multiple, or as a percentage when the factor is too close to one for the
+     * multiple to be meaningful at display precision (see {@link ComparisonText}).
+     */
+    private String describeMiss(double factor, int factorTemplate, int percentTemplate) {
+        if (ComparisonText.isNegligible(factor)) {
+            return getString(R.string.feedback_comparison_negligible);
+        }
+        if (ComparisonText.prefersPercent(factor)) {
+            return getString(
+                    percentTemplate,
+                    ComparisonText.formatPercentDeviation(factor, Locale.getDefault())
+            );
+        }
+        return getString(factorTemplate, formatFactor(factor));
     }
 
     private String formatFactor(double factor) {
