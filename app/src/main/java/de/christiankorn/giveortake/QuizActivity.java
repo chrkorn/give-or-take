@@ -117,6 +117,7 @@ public class QuizActivity extends AppCompatActivity {
     private RangeEntryMode rangeEntryMode = RangeEntryMode.FACTOR_DIAL;
     private boolean directBoundsInitialised;
     private boolean updatingRangeInputs;
+    private boolean restoringInstanceState;
 
     /**
      * Creates an explicit quiz Intent for a selected answer mode.
@@ -368,7 +369,9 @@ public class QuizActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                updateValidation(true);
+                if (!restoringInstanceState) {
+                    updateValidation(true);
+                }
             }
         });
 
@@ -394,7 +397,7 @@ public class QuizActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                if (!updatingRangeInputs) {
+                if (!updatingRangeInputs && !restoringInstanceState) {
                     updateRangePreview(true);
                 }
             }
@@ -620,6 +623,36 @@ public class QuizActivity extends AppCompatActivity {
         return rangeEntryMode == RangeEntryMode.FACTOR_DIAL
                 ? buildDialInterval(showErrors)
                 : buildDirectInterval(showErrors);
+    }
+
+    /**
+     * Restores field text without treating the restore as user input.
+     *
+     * <p>The text watchers are attached in {@link #onCreate}, before the framework puts the saved
+     * field text back, so a restore used to run validation with errors shown. When the Activity
+     * was recreated underneath the feedback screen (rotation, or a dark-mode switch), the next
+     * question then opened with "Enter an estimate." on a field the player had not touched yet.
+     * Errors are re-shown after a restore only for fields that actually contain text.</p>
+     */
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        restoringInstanceState = true;
+        try {
+            super.onRestoreInstanceState(savedInstanceState);
+        } finally {
+            restoringInstanceState = false;
+        }
+        if (level == Level.CONFIDENCE_INTERVALS) {
+            updateRangePreview(hasText(bestGuessInput)
+                    || hasText(lowerBoundInput)
+                    || hasText(upperBoundInput));
+        } else {
+            updateValidation(hasText(answerInput));
+        }
+    }
+
+    private static boolean hasText(TextInputEditText input) {
+        return input.getText() != null && input.getText().toString().trim().length() > 0;
     }
 
     @Override

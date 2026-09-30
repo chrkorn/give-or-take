@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.view.View;
 import android.widget.TextView;
 
+import com.google.android.material.textfield.TextInputLayout;
+
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -39,6 +41,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Verifies the quiz screen's Material validation feedback and long-prompt layout behaviour.
@@ -180,6 +183,44 @@ public class QuizActivityTest {
                     View.VISIBLE,
                     activity.findViewById(R.id.direct_bounds_group).getVisibility()
             ));
+        }
+    }
+
+    /**
+     * Regression: recreating the Activity (rotation, dark-mode switch) replayed the restored empty
+     * text through the watchers and showed "Enter an estimate." on an untouched field.
+     */
+    @Test
+    public void recreate_untouchedFields_showNoValidationErrors() {
+        try (ActivityScenario<QuizActivity> scenario = ActivityScenario.launch(QuizActivity.class)) {
+            scenario.recreate();
+            scenario.onActivity(activity -> assertNull(
+                    ((TextInputLayout) activity.findViewById(R.id.answer_input_layout)).getError()
+            ));
+        }
+
+        Context context = androidx.test.core.app.ApplicationProvider.getApplicationContext();
+        Intent intent = QuizActivity.createIntent(context, Level.CONFIDENCE_INTERVALS);
+        try (ActivityScenario<QuizActivity> scenario = ActivityScenario.launch(intent)) {
+            onView(withId(R.id.range_entry_mode_button)).perform(click());
+            scenario.recreate();
+            scenario.onActivity(activity -> {
+                assertNull(((TextInputLayout) activity.findViewById(R.id.lower_bound_input_layout))
+                        .getError());
+                assertNull(((TextInputLayout) activity.findViewById(R.id.upper_bound_input_layout))
+                        .getError());
+            });
+        }
+    }
+
+    /** Verifies an invalid value the player did type keeps its error across recreation. */
+    @Test
+    public void recreate_invalidTypedValue_keepsValidationError() {
+        try (ActivityScenario<QuizActivity> scenario = ActivityScenario.launch(QuizActivity.class)) {
+            onView(withId(R.id.answer_input)).perform(replaceText("0"));
+            scenario.recreate();
+            onView(withText(R.string.quiz_error_zero)).check(matches(isDisplayed()));
+            onView(withId(R.id.submit_button)).check(matches(not(isEnabled())));
         }
     }
 

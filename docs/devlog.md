@@ -765,3 +765,11 @@
   and it stays in the back stack under the quiz. Fix: reload in `onRestart`, keeping the current
   content visible until the new read lands (no loading flash). New instrumented test stops the
   Activity, stores a session, resumes it and asserts the list replaces the empty state.
+- **Fresh question opened with "Enter an estimate."** After rotating (or switching to dark mode)
+  on the feedback screen, the next question's empty field was already red; in direct-bounds mode
+  both fields were. A control run without a configuration change showed no error. Cause: the
+  `QuizActivity` under the feedback screen is recreated, and the framework restores `EditText`
+  text in `onRestoreInstanceState` — after `onCreate` attached the text watchers, which validate
+  with errors shown. Fix: suppress the watchers during the restore, then re-validate once, showing
+  errors only for fields that actually contain text. Two instrumented tests: untouched fields stay
+  clean across `recreate()`, and a typed invalid `0` keeps its error.
