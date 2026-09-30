@@ -841,3 +841,17 @@
   Rewrote the stale "under development" and "target layout" passages, listed every ADR by topic,
   and brought the question-data section in line with ADR 0011: four categories, the retrieval date,
   the primary-source links for area questions, the CC0 licence and the non-endorsement statement.
+
+## 2026-09-30 — v1.0 submission tag
+
+- Froze the app at the commit tagged `v1.0-submission`; the report cites that commit's hash. After
+  this tag only defects that are actually broken get fixed.
+- Searched the full history of all branches, not just the working tree, for absolute local paths,
+  SDK locations, keystores and credential-shaped strings. The only hit was the placeholder path in
+  the README's SDK instructions; `local.properties` and signing material were never committed.
+- Repository checks before tagging: no debug logging (the two `Log.e` calls report real history
+  write failures), no commented-out code, `versionCode 1` / `versionName "1.0"`, MIT licence
+  present. The one remaining TODO is the Android Studio template comment in
+  `data_extraction_rules.xml`, already recorded as a gap in the core-quality audit.
+- The tagged commit was built and tested from a fresh clone: lint, unit tests, debug APK, release
+  bundle, and the instrumented suite on an API 35 emulator.
