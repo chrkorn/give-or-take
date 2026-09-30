@@ -759,3 +759,9 @@
   1e-15, the log-space mirror of the existing 1e15 ceiling, with its own error message; every
   accepted value is now a normal positive `double`. Regression test builds the underflowing input
   and asserts it is rejected.
+- **Statistics screen stale after playing from it.** Starting a session from the Stats screen's
+  empty state and pressing Back after the result returned to "Nothing to measure yet", while Home
+  already showed the new personal best. Cause: `StatsActivity` read history only in `onCreate`,
+  and it stays in the back stack under the quiz. Fix: reload in `onRestart`, keeping the current
+  content visible until the new read lands (no loading flash). New instrumented test stops the
+  Activity, stores a session, resumes it and asserts the list replaces the empty state.

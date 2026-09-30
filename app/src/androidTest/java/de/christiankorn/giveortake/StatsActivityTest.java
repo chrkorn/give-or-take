@@ -3,6 +3,7 @@ package de.christiankorn.giveortake;
 import android.content.Context;
 import android.os.SystemClock;
 
+import androidx.lifecycle.Lifecycle;
 import androidx.recyclerview.widget.RecyclerView;
 
 import androidx.test.core.app.ActivityScenario;
@@ -66,6 +67,28 @@ public class StatsActivityTest {
             onView(withText(R.string.stats_empty_title)).check(matches(isDisplayed()));
             onView(withId(R.id.stats_start_session_button)).check(matches(isDisplayed()));
             onView(withId(R.id.stats_recycler)).check(matches(not(isDisplayed())));
+        }
+    }
+
+    /**
+     * Regression: returning to the screen after playing a session showed the stale empty state,
+     * because history was read only in {@code onCreate}.
+     */
+    @Test
+    public void returningAfterNewSession_reloadsHistory() {
+        try (ActivityScenario<StatsActivity> scenario = ActivityScenario.launch(
+                StatsActivity.class
+        )) {
+            awaitStatistics(scenario);
+            onView(withText(R.string.stats_empty_title)).check(matches(isDisplayed()));
+
+            scenario.moveToState(Lifecycle.State.CREATED);
+            storeIntervalSession(1, 1);
+            scenario.moveToState(Lifecycle.State.RESUMED);
+            awaitStatistics(scenario);
+
+            onView(withId(R.id.stats_recycler)).check(matches(isDisplayed()));
+            onView(withText(R.string.stats_empty_title)).check(matches(not(isDisplayed())));
         }
     }
 

@@ -85,6 +85,21 @@ public final class StatsActivity extends AppCompatActivity {
         loadStatistics();
     }
 
+    /**
+     * Re-reads history when the screen becomes visible again.
+     *
+     * <p>The Activity stays in the back stack while the player starts a session from its empty
+     * state or its "Start a session" action, so returning with Back would otherwise show the
+     * history as it was before that session. {@code onRestart} runs only on a return from the
+     * stopped state, not on first creation or on a configuration-change recreation, which already
+     * load in {@link #onCreate}. The visible content is kept until the new result replaces it.</p>
+     */
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        loadStatistics(false);
+    }
+
     /** Stops accepting results from the screen's database worker when this Activity is destroyed. */
     @Override
     protected void onDestroy() {
@@ -94,8 +109,14 @@ public final class StatsActivity extends AppCompatActivity {
     }
 
     private void loadStatistics() {
+        loadStatistics(true);
+    }
+
+    private void loadStatistics(boolean showLoadingState) {
         int generation = ++loadGeneration;
-        showOnly(R.id.stats_loading_state);
+        if (showLoadingState) {
+            showOnly(R.id.stats_loading_state);
+        }
         databaseExecutor.execute(() -> {
             try (QuizStatisticsDao statisticsDao = new QuizStatisticsDao(
                     getApplicationContext()
