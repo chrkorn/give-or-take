@@ -746,3 +746,16 @@
   rules.
 - Strict Javadoc validation passed for the complete Android-free `core` package with no warnings.
   The full `testDebugUnitTest` task also passed after recompiling the production sources.
+
+## 2026-09-30 — Self-testing
+
+- Adversarial pass on the Medium_Phone emulator: rotation on every screen, backgrounding
+  mid-answer, boundary input, dark mode, 200 % font, back-stack abuse. Seven defects found; each
+  is fixed in its own commit and logged below with its root cause.
+- **Crash on a tiny positive estimate.** `0.` followed by a few hundred zeros and a `1` passed
+  `GuessInputValidator`, which checks the exact `BigDecimal`, but `doubleValue()` underflowed to
+  `0.0` and the `PointGuess` constructor threw; the quiz Activity died and the session was lost.
+  Cause: validation and construction ran on different number types. Fix: a `MINIMUM_VALUE` of
+  1e-15, the log-space mirror of the existing 1e15 ceiling, with its own error message; every
+  accepted value is now a normal positive `double`. Regression test builds the underflowing input
+  and asserts it is rejected.

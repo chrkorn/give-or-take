@@ -44,6 +44,33 @@ public class GuessInputValidatorTest {
                 GuessInputValidator.validate("-1", '.'));
     }
 
+    /**
+     * Regression: a positive value too small for a {@code double} used to pass validation and
+     * crash the quiz when {@code doubleValue()} returned zero.
+     */
+    @Test
+    public void rejectsPositiveValueThatUnderflowsToZero() {
+        String underflowing = "0." + "0".repeat(400) + "1";
+        assertEquals(0.0, new java.math.BigDecimal(underflowing).doubleValue(), 0.0);
+        assertEquals(GuessInputValidator.Error.TOO_SMALL,
+                GuessInputValidator.validate(underflowing, '.'));
+    }
+
+    /** Verifies the lower product boundary. */
+    @Test
+    public void rejectsValueBelowMinimum() {
+        assertEquals(GuessInputValidator.Error.TOO_SMALL,
+                GuessInputValidator.validate("0.0000000000000009", '.'));
+    }
+
+    /** Verifies that the lower product boundary is inclusive and survives double conversion. */
+    @Test
+    public void acceptsMinimumValue() {
+        assertEquals(GuessInputValidator.Error.NONE,
+                GuessInputValidator.validate("0.000000000000001", '.'));
+        assertEquals(1e-15, GuessInputValidator.MINIMUM_VALUE.doubleValue(), 0.0);
+    }
+
     /** Verifies the upper product boundary. */
     @Test
     public void rejectsValueBeyondMaximum() {

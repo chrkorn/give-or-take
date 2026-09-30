@@ -13,6 +13,16 @@ final class GuessInputValidator {
 
     static final BigDecimal MAXIMUM_VALUE = new BigDecimal("1000000000000000");
 
+    /**
+     * Smallest accepted value, mirroring {@link #MAXIMUM_VALUE} in log space.
+     *
+     * <p>Without a lower bound the check ran on the exact {@link BigDecimal} while the guess was
+     * built from its {@code double}: a long enough run of zeros after the decimal point was
+     * accepted here, underflowed to {@code 0.0}, and made the {@code PointGuess} constructor throw.
+     * Every value in this range is a normal, finite, positive {@code double}.</p>
+     */
+    static final BigDecimal MINIMUM_VALUE = new BigDecimal("0.000000000000001");
+
     private GuessInputValidator() {
     }
 
@@ -46,6 +56,9 @@ final class GuessInputValidator {
         if (sign < 0) {
             return Error.NEGATIVE;
         }
+        if (value.compareTo(MINIMUM_VALUE) < 0) {
+            return Error.TOO_SMALL;
+        }
         if (value.compareTo(MAXIMUM_VALUE) > 0) {
             return Error.TOO_LARGE;
         }
@@ -73,6 +86,7 @@ final class GuessInputValidator {
         UNPARSEABLE,
         ZERO,
         NEGATIVE,
+        TOO_SMALL,
         TOO_LARGE
     }
 }

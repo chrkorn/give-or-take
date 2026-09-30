@@ -705,6 +705,8 @@ public class QuizActivity extends AppCompatActivity {
                 return getString(R.string.quiz_error_zero);
             case NEGATIVE:
                 return getString(R.string.quiz_error_negative);
+            case TOO_SMALL:
+                return getString(R.string.quiz_error_too_small);
             case TOO_LARGE:
                 return getString(R.string.quiz_error_too_large);
             case NONE:
