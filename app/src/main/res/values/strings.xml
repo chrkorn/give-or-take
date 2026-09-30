@@ -244,5 +244,5 @@
     </plurals>
     <string name="stats_interval_loss">%1$s avg loss</string>
     <string name="stats_empty_session_score">No score</string>
-    <string name="stats_abandoned_suffix"> · ended early</string>
+    <string name="stats_abandoned_suffix">\u0020· ended early</string>
 </resources>

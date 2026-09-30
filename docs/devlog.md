@@ -795,3 +795,7 @@
   player was *shown* (500 / 3 becomes 167), not the dial's exact double, so the instrumented test
   that asserted exact equality was rewritten to assert the displayed values and an unchanged
   readout. Switching modes therefore preserves the interval to display precision, not exactly.
+- **"0 wrong· ended early".** The Past sessions row for an abandoned session lost the space before
+  its separator. Cause: `stats_abandoned_suffix` was written as `" · ended early"`, and aapt
+  strips leading whitespace from unquoted string resources. Fix: a `\u0020` escape; a Robolectric
+  test reads the resource back. A grep found no other resource with meaningful edge whitespace.
