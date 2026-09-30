@@ -12,23 +12,50 @@ Interval mode asks for a lower and upper bound intended to contain the true answ
 
 ## Screenshots
 
-Screenshots will be added as the user interface is completed.
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/01-home.png" width="200" alt="Home screen with current level and personal best"><br><sub>Home</sub></td>
+    <td align="center"><img src="docs/screenshots/02-point-estimate.png" width="200" alt="Point-estimate question with a typed answer"><br><sub>Point estimate</sub></td>
+    <td align="center"><img src="docs/screenshots/03-feedback.png" width="200" alt="Feedback rating an estimate as close, 2.13 times too low"><br><sub>Feedback</sub></td>
+    <td align="center"><img src="docs/screenshots/04-interval-estimate.png" width="200" alt="90 percent interval question with best guess, uncertainty dial and derived range"><br><sub>90% interval</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/05-result.png" width="200" alt="Session result with score, new personal best and correctness counts"><br><sub>Session result</sub></td>
+    <td align="center"><img src="docs/screenshots/06-statistics.png" width="200" alt="Statistics with sessions, high score, mean closeness and calibration notice"><br><sub>Statistics</sub></td>
+    <td align="center"><img src="docs/screenshots/07-settings.png" width="200" alt="Settings for session length, answer mode and categories"><br><sub>Settings</sub></td>
+    <td></td>
+  </tr>
+</table>
 
-<!-- Add labelled screenshots here. -->
+Captured on an Android emulator (1080 × 2400) and scaled to a third of their size.
 
 ## Building and running
 
-The project is under development. To build the current version you need:
+To build and run the app you need:
 
 - Android Studio Quail 4 (2026.1.4) or later
 - Android SDK Platform 37, with the SDK location made available to Gradle (see below)
 - An emulator or Android device running API level 26 or later
 
-You do not need to install a JDK yourself. The build pins its own toolchain
-(Adoptium 17, declared in `gradle/gradle-daemon-jvm.properties`) and Gradle
-downloads it on first run. The application source is compiled against Java 11.
-The Gradle wrapper is committed, so no separate Gradle installation is needed
-either.
+You do not need to install a JDK separately, but the Gradle wrapper needs a Java runtime to
+start. Android Studio ships one, and Android Studio's own builds use it automatically. For the
+command-line builds below, point `JAVA_HOME` at it first:
+
+```shell
+# macOS
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+# Linux (adjust to where Android Studio is installed)
+export JAVA_HOME="/opt/android-studio/jbr"
+```
+
+On Windows, set `JAVA_HOME` to `C:\Program Files\Android\Android Studio\jbr`. Without a Java
+runtime, `./gradlew` stops immediately with "Unable to locate a Java Runtime" (macOS) or
+"JAVA_HOME is not set" (Linux, Windows). Any existing JDK 17 or newer works as well.
+
+Once started, the build pins its own toolchain for the Gradle daemon (Adoptium 17, declared in
+`gradle/gradle-daemon-jvm.properties`) and downloads it on first run if it is missing. The
+application source is compiled against Java 11. The Gradle wrapper is committed, so no separate
+Gradle installation is needed.
 
 Clone the repository and enter its directory:
 
@@ -74,49 +101,112 @@ To run the app in Android Studio, open the cloned `give-or-take` directory and w
 
 ## Running the tests
 
-Local unit tests use JUnit 4 and cover plain Java logic without starting Android. Run all of them from the repository root:
+Local unit tests use JUnit 4 and run on the JVM without a device. Most cover the plain Java `core`
+package; Activities, views and the SQLite layer are exercised with Robolectric
+([ADR 0023](docs/adr/0023-test-android-components-on-the-jvm-with-robolectric.md)). Run all of them from the
+repository root:
 
 ```shell
 ./gradlew test
 ```
 
-Instrumented tests use Espresso and run inside Android. Start an emulator or connect a device, confirm that it appears in Android Studio, then run:
+Instrumented tests use Espresso and run inside Android. **They need a device or emulator running
+API level 35 or lower.** The pinned Espresso 3.5.1 relies on a hidden platform method that API 36
+and later no longer provide, so every Espresso interaction fails there; the app itself runs on any
+API level from 26 upwards. In Device Manager, create a virtual device with an API 35 system image,
+start it, confirm that it appears in Android Studio, then run:
 
 ```shell
 ./gradlew connectedDebugAndroidTest
+```
+
+Alternatively, `tools/run_instrumented_tests.sh` locates the SDK, checks that a suitable emulator is
+running (starting one if needed), refuses devices above API 35, and runs the suite:
+
+```shell
+tools/run_instrumented_tests.sh
 ```
 
 In Android Studio, individual tests can also be run from the gutter beside a test class or method. Unit tests live under `app/src/test/`; instrumented tests live under `app/src/androidTest/`.
 
 ## Project structure
 
-Application code lives below the package root in `app/src/main/java/`. The
-packages below are the target layout; the repository currently holds the
-project skeleton, and they are created as the implementation proceeds.
+Application code lives below `app/src/main/java/de/christiankorn/giveortake/`:
 
 ```text
 de/christiankorn/giveortake/
-├── core/   scoring, calibration, questions, and training rules
-├── ui/     activities, adapters, and custom views
-└── data/   SQLite access, data-access objects, and preferences
+├── (root)  Activities (home, quiz, feedback, result, statistics, settings), input validation,
+│           and small presentation helpers
+├── core/   scoring, correctness bands, calibration, questions, sessions and training rules
+├── data/   question-bank loading, SQLite history, statistics queries and preferences
+└── ui/     custom views: the uncertainty dial and the calibration chart
 ```
 
-The `core` package is plain Java and must not import `android.*`. Keeping the main rules independent of the Android framework makes them fast to run and straightforward to test with ordinary JUnit tests. Android-specific screen and persistence code stays in `ui` and `data`.
+The `core` package is plain Java and must not import `android.*`. Keeping the rules independent of
+the Android framework makes them fast to run and straightforward to test with ordinary JUnit tests.
+Android-specific screen and persistence code stays in the other packages.
+
+Other directories:
+
+- `app/src/main/assets/questions.json`: the bundled question bank
+- `app/src/test/` and `app/src/androidTest/`: JVM and instrumented tests
+- `docs/adr/`: architecture decision records; `docs/devlog.md`: dated development log
+- `tools/`: question-bank generator, magnitude-coverage check and the instrumented-test runner
 
 ## Design decisions
 
-- [ADR 0001: Use Java with XML layouts](docs/adr/0001-language-and-ui-toolkit.md) records the choice of Java, XML layouts, multiple activities, and a framework-independent core.
-- [ADR 0002: Define question value domain and identity](docs/adr/0002-question-value-domain-and-identity.md) records why questions require positive true values and use stable IDs for equality.
+Each significant decision is recorded as an ADR in [`docs/adr/`](docs/adr/):
 
-Further decisions are recorded in [`docs/adr/`](docs/adr/) as the implementation develops.
+- **Platform and structure:**
+  [0001 Java with XML layouts](docs/adr/0001-language-and-ui-toolkit.md),
+  [0015 `findViewById`](docs/adr/0015-use-findviewbyid-for-view-access.md),
+  [0022 settings with ordinary controls](docs/adr/0022-build-settings-with-ordinary-activity-controls.md)
+- **Questions:**
+  [0002 value domain and identity](docs/adr/0002-question-value-domain-and-identity.md),
+  [0010 versioned banks with Gson](docs/adr/0010-load-versioned-question-banks-with-gson.md),
+  [0011 Wikidata as source](docs/adr/0011-source-question-data-from-wikidata.md),
+  [0012 composed prompts](docs/adr/0012-store-composed-question-prompts.md),
+  [0013 magnitude coverage](docs/adr/0013-require-overlapping-magnitude-coverage.md)
+- **Scoring:**
+  [0003 point and interval guesses](docs/adr/0003-represent-guesses-as-separate-types.md),
+  [0004 log-relative error](docs/adr/0004-use-log-relative-error-for-point-estimates.md),
+  [0005 exponential points](docs/adr/0005-map-log-relative-error-to-points.md),
+  [0006 correctness bands](docs/adr/0006-classify-estimates-with-correctness-bands.md),
+  [0007 interval score](docs/adr/0007-score-confidence-intervals-with-log-interval-score.md)
+- **Training:**
+  [0008 delayed repeats](docs/adr/0008-delay-wrong-question-repeats-within-session.md),
+  [0009 levels and session scores](docs/adr/0009-use-curriculum-levels-and-mean-session-scores.md),
+  [0014 best guess and uncertainty factor](docs/adr/0014-use-best-guess-and-uncertainty-factor-for-range-input.md),
+  [0018 repeating missed intervals](docs/adr/0018-repeat-missed-confidence-intervals.md)
+- **State and persistence:**
+  [0016 session in instance state](docs/adr/0016-save-active-session-in-instance-state.md),
+  [0017 results as Intent extras](docs/adr/0017-pass-completed-results-as-primitive-intent-extras.md),
+  [0019 SQLite sessions](docs/adr/0019-persist-raw-answer-history-in-sqlite.md),
+  [0020 serial database executor](docs/adr/0020-serialize-database-io-on-application-executor.md),
+  [0021 statistics from core policies](docs/adr/0021-derive-statistics-with-core-policies.md),
+  [0024 known durability gaps](docs/adr/0024-accept-two-history-durability-gaps.md)
+- **Testing:**
+  [0023 Robolectric](docs/adr/0023-test-android-components-on-the-jvm-with-robolectric.md),
+  [0025 deterministic session inputs](docs/adr/0025-inject-session-inputs-for-deterministic-ui-tests.md)
 
 ## Question data
 
-The generated candidate bank uses structured data from Wikidata. Its exact retrieval timestamp,
-source dataset identifier, generator version, and CC0 1.0 licence are recorded in
-[`questions.json`](app/src/main/assets/questions.json); every question links to the immutable Wikidata item revision
-used for that generation. [`tools/README.md`](tools/README.md) documents extraction, filtering,
-prompt overrides, and the required manual-curation step.
+The bundled bank holds 80 questions in four categories: 30 national populations, 30 areas,
+10 mountain elevations and 10 building heights. It was generated on 12 September 2026 from
+[Wikidata](https://www.wikidata.org/) and then curated by hand. The generation date, source dataset,
+generator version and licence are recorded in the metadata of
+[`questions.json`](app/src/main/assets/questions.json).
+
+- Population, elevation and building questions cite Wikidata. Each question links to the immutable
+  revision of the Wikidata item it was generated from.
+- Area questions cite the publication that the Wikidata statement itself references, for example
+  a national statistics office or mapping agency. Wikidata served to find the value, and the
+  question links to that primary source. The app uses only the number and the link; no text from
+  these publications is reproduced.
+
+[`tools/README.md`](tools/README.md) documents extraction, the admission rules, prompt overrides and
+the manual-curation step. [ADR 0011](docs/adr/0011-source-question-data-from-wikidata.md) records
+why Wikidata was chosen and how the sourcing policy was tightened after an external review.
 
 Wikidata's structured data are made available under the
 [CC0 1.0 Universal public-domain dedication](https://creativecommons.org/publicdomain/zero/1.0/).

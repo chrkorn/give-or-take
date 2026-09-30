@@ -822,3 +822,22 @@
   7,333 – 10,560. Fix: widen the configured factors through their shortest decimal form, so the
   default minimum is exactly `1.2`, and keep them as `double` throughout the view. Robolectric test
   pins the default factor and the resulting bounds.
+- Verified the build instructions from a genuinely fresh clone of the pushed repository rather than
+  my working copy: cloned into a new temporary directory and followed the README literally, with
+  `JAVA_HOME` unset and only the system `PATH`, as on a machine that has Android Studio and nothing
+  else. Every file the build needs was present, `local.properties` was absent as intended, and
+  README option 2 (`ANDROID_HOME`) was sufficient for the SDK.
+- **Found: the README's "you do not need a JDK" was wrong.** `./gradlew` stopped immediately with
+  "Unable to locate a Java Runtime": the Gradle wrapper needs a Java runtime just to start, before
+  the pinned daemon toolchain can take over. This went unnoticed because Android Studio's own builds
+  use its bundled runtime and my terminal already had one. With `JAVA_HOME` pointed at Android
+  Studio's bundled JBR, `assembleDebug` produced the APK at the documented path and `test` ran
+  213 unit tests with no failures. The README now says so, with the JBR path per platform.
+- **Instrumented tests needed a constraint the README did not state.** The Espresso stack only works
+  up to API 35, so an examiner creating an emulator with the newest system image would have seen
+  every UI test fail. The README now says so and points to `tools/run_instrumented_tests.sh`.
+- Added seven screenshots (home, point estimate, feedback, interval estimate, result, statistics,
+  settings) at a third of the emulator's resolution, 22–40 KB each, taken on the current build.
+  Rewrote the stale "under development" and "target layout" passages, listed every ADR by topic,
+  and brought the question-data section in line with ADR 0011: four categories, the retrieval date,
+  the primary-source links for area questions, the CC0 licence and the non-endorsement statement.
