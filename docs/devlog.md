@@ -785,3 +785,13 @@
   the factor with its shared one-fraction-digit format. Fix: format it with the result screen's
   two digits via `StatsPresentation.formatClosenessFactor`, with a JVM test pinning both screens to
   the same precision. Kept as a separate commit because it is a separate code path.
+- **Raw doubles in the interval UI.** Switching from the dial to "Set the two bounds myself"
+  pre-filled `2224.2888379530405` and `34815.622269303014` while the readout above said
+  2,224 – 34,816, and the feedback screen showed a dial answer as `101.104038–1,582.528285`.
+  Cause: `formatEditableValue` wrote the full `double`, and feedback used the six-digit format it
+  applies to authored true values. Fix: one Android-free `RangeFormatting` rule (three significant
+  digits, never fewer than the whole number) now drives the readout, the pre-filled fields and
+  the feedback bounds. Consequence worth recording: direct entry now starts from the interval the
+  player was *shown* (500 / 3 becomes 167), not the dial's exact double, so the instrumented test
+  that asserted exact equality was rewritten to assert the displayed values and an unchanged
+  readout. Switching modes therefore preserves the interval to display precision, not exactly.

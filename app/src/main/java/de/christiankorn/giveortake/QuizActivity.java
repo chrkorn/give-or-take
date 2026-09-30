@@ -48,6 +48,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -565,20 +566,7 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private String formatRangeValue(double value) {
-        NumberFormat numberFormat = NumberFormat.getNumberInstance();
-        numberFormat.setGroupingUsed(true);
-        numberFormat.setMaximumFractionDigits(significantFractionDigits(value));
-        return numberFormat.format(value);
-    }
-
-    private int significantFractionDigits(double value) {
-        int integerDigits = value >= 1.0
-                ? (int) Math.floor(Math.log10(value)) + 1
-                : 0;
-        if (integerDigits > 0) {
-            return Math.max(0, 3 - integerDigits);
-        }
-        return Math.min(340, 2 - (int) Math.floor(Math.log10(value)));
+        return RangeFormatting.formatForDisplay(value, Locale.getDefault());
     }
 
     private String formatFactor(double factor) {
@@ -588,8 +576,7 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private String formatEditableValue(double value) {
-        String plainValue = BigDecimal.valueOf(value).stripTrailingZeros().toPlainString();
-        return decimalSeparator == '.' ? plainValue : plainValue.replace('.', decimalSeparator);
+        return RangeFormatting.formatForEditing(value, decimalSeparator);
     }
 
     private void submitIntervalAnswer() {

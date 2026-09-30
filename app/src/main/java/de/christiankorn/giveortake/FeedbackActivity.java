@@ -197,8 +197,8 @@ public class FeedbackActivity extends AppCompatActivity {
         ((TextView) findViewById(R.id.feedback_guess)).setText(
                 getString(
                         R.string.feedback_interval_value,
-                        formatNumber(lowerBound),
-                        formatNumber(upperBound),
+                        RangeFormatting.formatForDisplay(lowerBound, Locale.getDefault()),
+                        RangeFormatting.formatForDisplay(upperBound, Locale.getDefault()),
                         unit
                 )
         );

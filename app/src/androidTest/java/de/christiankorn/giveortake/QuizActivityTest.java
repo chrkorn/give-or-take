@@ -112,33 +112,42 @@ public class QuizActivityTest {
         }
     }
 
-    /** Verifies both range-entry representations produce the same core interval type and bounds. */
+    /**
+     * Verifies that switching to direct entry pre-fills the interval the player was shown.
+     *
+     * <p>The fields receive the bounds as displayed in the readout (500 / 3 becomes 167), not the
+     * raw doubles, so the readout reads the same after the switch and the core interval differs
+     * from the dial's only below display precision.</p>
+     */
     @Test
-    public void switchingToDirectBounds_prefillsTheSameIntervalGuess() {
+    public void switchingToDirectBounds_prefillsTheDisplayedInterval() {
         Context context = androidx.test.core.app.ApplicationProvider.getApplicationContext();
         Intent intent = QuizActivity.createIntent(context, Level.CONFIDENCE_INTERVALS);
         try (ActivityScenario<QuizActivity> scenario = ActivityScenario.launch(intent)) {
             onView(withId(R.id.best_guess_input)).perform(replaceText("500"));
             AtomicReference<IntervalGuess> dialGuess = new AtomicReference<>();
+            AtomicReference<String> dialReadout = new AtomicReference<>();
             scenario.onActivity(activity -> {
                 ((UncertaintyDial) activity.findViewById(R.id.uncertainty_dial)).setFactor(3.0);
                 dialGuess.set(activity.getCurrentIntervalGuess(false));
+                dialReadout.set(((TextView) activity.findViewById(R.id.range_readout))
+                        .getText().toString());
             });
 
             onView(withId(R.id.range_entry_mode_button)).perform(click());
             scenario.onActivity(activity -> {
                 IntervalGuess directGuess = activity.getCurrentIntervalGuess(false);
+                assertEquals(167.0, directGuess.getLowerBound(), 0.0);
+                assertEquals(1500.0, directGuess.getUpperBound(), 0.0);
+                assertEquals(dialGuess.get().getLowerBound(), directGuess.getLowerBound(), 0.5);
+                assertEquals(dialGuess.get().getUpperBound(), directGuess.getUpperBound(), 0.5);
                 assertEquals(
-                        dialGuess.get().getLowerBound(),
-                        directGuess.getLowerBound(),
-                        0.0
-                );
-                assertEquals(
-                        dialGuess.get().getUpperBound(),
-                        directGuess.getUpperBound(),
-                        0.0
+                        dialReadout.get(),
+                        ((TextView) activity.findViewById(R.id.range_readout)).getText().toString()
                 );
             });
+            onView(withId(R.id.lower_bound_input)).check(matches(withText("167")));
+            onView(withId(R.id.upper_bound_input)).check(matches(withText("1500")));
         }
     }
 
