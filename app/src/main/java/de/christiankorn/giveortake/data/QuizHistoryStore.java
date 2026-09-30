@@ -1,9 +1,12 @@
 package de.christiankorn.giveortake.data;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,6 +27,7 @@ import de.christiankorn.giveortake.core.Level;
  */
 public final class QuizHistoryStore {
     private static final long TEST_TIMEOUT_SECONDS = 5L;
+    private static final String LOG_TAG = "QuizHistoryStore";
 
     private final QuizHistoryDao dao;
     private final ExecutorService executor;
@@ -89,7 +93,10 @@ public final class QuizHistoryStore {
                 false
         );
         sessions.put(token, session);
-        execute(session::start);
+        execute(() -> {
+            abandonOrphanedSessions(session);
+            session.start();
+        });
         return session;
     }
 
@@ -186,6 +193,30 @@ public final class QuizHistoryStore {
                 onFailure.accept(exception);
             }
         });
+    }
+
+    /**
+     * Closes sessions left in progress by an earlier process before a new one begins.
+     *
+     * <p>Runs on the serial worker, so every earlier start or restore has already assigned its
+     * identifier; sessions still attached in this process — for example a quiz restored after
+     * process death — are left open. A failure is logged and does not prevent the new session
+     * from starting.</p>
+     */
+    private void abandonOrphanedSessions(QuizHistorySession starting) {
+        Set<Long> liveSessionIds = new HashSet<>();
+        synchronized (this) {
+            for (QuizHistorySession attached : sessions.values()) {
+                if (attached != starting && attached.getSessionId() > 0L) {
+                    liveSessionIds.add(attached.getSessionId());
+                }
+            }
+        }
+        try {
+            dao.abandonUnfinishedSessionsExcept(liveSessionIds);
+        } catch (RuntimeException exception) {
+            Log.e(LOG_TAG, "Could not close orphaned sessions", exception);
+        }
     }
 
     void execute(Runnable operation) {

@@ -4,11 +4,13 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import de.christiankorn.giveortake.core.Guess;
 import de.christiankorn.giveortake.core.IntervalGuess;
@@ -300,6 +302,67 @@ public final class QuizHistoryDao implements AutoCloseable {
                 QuizHistoryContract.Sessions.STATE_ABANDONED,
                 endedAtEpochMillis
         );
+    }
+
+    /**
+     * Closes every in-progress session except the given ones as abandoned.
+     *
+     * <p>A session stays {@code in_progress} for ever when its Activity never gets to end it: the
+     * process crashed, or it was killed while the quiz was in the background and the saved state
+     * was never restored. Such rows were hidden from the statistics but still counted by the reset
+     * dialog, so the two screens disagreed. They are closed when the next session starts; the end
+     * time is the last recorded answer, or the start time when there is none, because the moment
+     * play actually stopped is unknowable.</p>
+     *
+     * @param liveSessionIds identifiers of sessions still attached in this process, which must stay
+     *                       open; must not be {@code null}
+     * @return number of sessions that were closed
+     * @throws IllegalArgumentException if {@code liveSessionIds} is {@code null}
+     */
+    public int abandonUnfinishedSessionsExcept(Set<Long> liveSessionIds) {
+        if (liveSessionIds == null) {
+            throw new IllegalArgumentException("liveSessionIds must not be null");
+        }
+        StringBuilder sql = new StringBuilder()
+                .append("UPDATE ").append(QuizHistoryContract.Sessions.TABLE_NAME)
+                .append(" SET ").append(QuizHistoryContract.Sessions.COLUMN_STATE).append(" = ?, ")
+                .append(QuizHistoryContract.Sessions.COLUMN_ENDED_AT_EPOCH_MS)
+                .append(" = COALESCE((SELECT MAX(")
+                .append(QuizHistoryContract.Answers.COLUMN_ANSWERED_AT_EPOCH_MS)
+                .append(") FROM ").append(QuizHistoryContract.Answers.TABLE_NAME)
+                .append(" WHERE ").append(QuizHistoryContract.Answers.COLUMN_SESSION_ID)
+                .append(" = ").append(QuizHistoryContract.Sessions.TABLE_NAME).append('.')
+                .append(QuizHistoryContract.Sessions._ID).append("), ")
+                .append(QuizHistoryContract.Sessions.COLUMN_STARTED_AT_EPOCH_MS).append(")")
+                .append(" WHERE ").append(QuizHistoryContract.Sessions.COLUMN_STATE).append(" = ?");
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(QuizHistoryContract.Sessions.STATE_ABANDONED);
+        arguments.add(QuizHistoryContract.Sessions.STATE_IN_PROGRESS);
+        if (!liveSessionIds.isEmpty()) {
+            sql.append(" AND ").append(QuizHistoryContract.Sessions._ID).append(" NOT IN (");
+            int index = 0;
+            for (Long sessionId : liveSessionIds) {
+                sql.append(index++ == 0 ? "?" : ", ?");
+                arguments.add(sessionId);
+            }
+            sql.append(')');
+        }
+
+        SQLiteStatement statement = databaseHelper.getWritableDatabase()
+                .compileStatement(sql.toString());
+        try {
+            for (int i = 0; i < arguments.size(); i++) {
+                Object argument = arguments.get(i);
+                if (argument instanceof Long) {
+                    statement.bindLong(i + 1, (Long) argument);
+                } else {
+                    statement.bindString(i + 1, (String) argument);
+                }
+            }
+            return statement.executeUpdateDelete();
+        } finally {
+            statement.close();
+        }
     }
 
     /**

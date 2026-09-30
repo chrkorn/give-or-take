@@ -799,3 +799,14 @@
   its separator. Cause: `stats_abandoned_suffix` was written as `" · ended early"`, and aapt
   strips leading whitespace from unquoted string resources. Fix: a `\u0020` escape; a Robolectric
   test reads the resource back. A grep found no other resource with meaningful edge whitespace.
+- **Statistics and the reset dialog disagreed about how much history exists.** Stats showed 3
+  sessions and 8 questions; "Reset statistics" offered to delete 4 sessions and 10 answers. The
+  difference was exactly the session that crashed above after two answers. Cause: a session is
+  only ever closed by its own Activity, so one whose process died without its state being restored
+  stays `in_progress` for ever — hidden by `QuizStatisticsDao`, counted by the reset. Crashes and
+  swiping the app away mid-session both produce it. This is not one of the two gaps accepted in
+  ADR 0024, which cover lost queued writes and the non-atomic reset. Fix: when a new session starts,
+  the history worker first closes every other in-progress row as abandoned, dated by its last
+  answer (or its start when it has none), except sessions still attached in this process — a quiz
+  restored after process death must stay open, so the sweep cannot simply run at app start.
+  Three Robolectric tests: orphan with an answer, orphan without one, and a live session left open.

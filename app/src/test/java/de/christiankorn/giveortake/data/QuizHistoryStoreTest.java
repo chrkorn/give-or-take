@@ -86,6 +86,72 @@ public class QuizHistoryStoreTest {
         assertEquals(2, answers.get(1).getSequenceNumber());
     }
 
+    /**
+     * Regression: a session whose process crashed stayed in progress for ever, hidden from the
+     * statistics but still counted by the reset dialog. Starting a new session now closes it,
+     * dated by its last recorded answer.
+     */
+    @Test
+    public void startSession_closesSessionOrphanedByAnEarlierProcess() {
+        long orphanId = dao.startSession(Level.POINT_ESTIMATES, 5, 3_000L);
+        dao.recordAnswer(orphanId, new AnswerDraft(
+                1,
+                question("orphaned", 10.0),
+                new PointGuess(9.0),
+                3_500L
+        ));
+
+        QuizHistorySession next = store.startSession(
+                "next-session",
+                Level.POINT_ESTIMATES,
+                5,
+                9_000L
+        );
+        store.awaitIdle();
+
+        assertNull(next.getFailure());
+        StoredSession orphan = dao.findSession(orphanId).orElseThrow(AssertionError::new);
+        assertEquals(StoredSession.State.ABANDONED, orphan.getState());
+        assertEquals(Long.valueOf(3_500L), orphan.getEndedAtEpochMillis());
+        assertEquals(
+                StoredSession.State.IN_PROGRESS,
+                dao.findSession(next.getSessionId()).orElseThrow(AssertionError::new).getState()
+        );
+    }
+
+    /** Verifies an orphan without answers is closed at its own start time. */
+    @Test
+    public void startSession_closesUnansweredOrphanAtItsStartTime() {
+        long orphanId = dao.startSession(Level.CONFIDENCE_INTERVALS, 5, 4_000L);
+
+        store.startSession("after-empty-orphan", Level.POINT_ESTIMATES, 5, 9_000L);
+        store.awaitIdle();
+
+        StoredSession orphan = dao.findSession(orphanId).orElseThrow(AssertionError::new);
+        assertEquals(StoredSession.State.ABANDONED, orphan.getState());
+        assertEquals(Long.valueOf(4_000L), orphan.getEndedAtEpochMillis());
+    }
+
+    /** Verifies a session still attached in this process is never closed by another start. */
+    @Test
+    public void startSession_leavesSessionsAttachedInThisProcessOpen() {
+        QuizHistorySession live = store.startSession(
+                "live-session",
+                Level.POINT_ESTIMATES,
+                5,
+                5_000L
+        );
+        store.awaitIdle();
+
+        store.startSession("second-session", Level.POINT_ESTIMATES, 5, 6_000L);
+        store.awaitIdle();
+
+        assertEquals(
+                StoredSession.State.IN_PROGRESS,
+                dao.findSession(live.getSessionId()).orElseThrow(AssertionError::new).getState()
+        );
+    }
+
     /** Verifies recreation in one process reattaches instead of creating a second writer. */
     @Test
     public void restoreSession_whileStartIsQueued_reattachesByToken() {
