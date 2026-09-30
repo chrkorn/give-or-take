@@ -810,3 +810,15 @@
   answer (or its start when it has none), except sessions still attached in this process — a quiz
   restored after process death must stay open, so the sweep cannot simply run at app start.
   Three Robolectric tests: orphan with an answer, orphan without one, and a live session left open.
+
+## 2026-09-30 — Final README
+
+- **Screenshots exposed a float artefact in the range readout.** Capturing the interval screen with
+  a best guess of 27,000,000 at the dial's starting factor showed "22,499,999 people – 32,400,001
+  people" instead of 22,500,000 – 32,400,000. Cause: `UncertaintyDial` reads its minimum and maximum
+  factors from XML as `float`, and widening `1.2f` gives `1.2000000476837158`; the whole-number
+  readout then faithfully rounded the resulting 22,499,999.1 down. It only shows when a bound lands
+  just below a whole number, which is why the self-test's 8,800 at the same factor read a plausible
+  7,333 – 10,560. Fix: widen the configured factors through their shortest decimal form, so the
+  default minimum is exactly `1.2`, and keep them as `double` throughout the view. Robolectric test
+  pins the default factor and the resulting bounds.

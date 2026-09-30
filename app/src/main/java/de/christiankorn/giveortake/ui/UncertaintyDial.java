@@ -43,8 +43,8 @@ public class UncertaintyDial extends View {
             1.2f, 2.0f, 4.0f, 10.0f, 20.0f, 50.0f, 100.0f
     };
 
-    private float minimumFactor;
-    private float maximumFactor;
+    private double minimumFactor;
+    private double maximumFactor;
     private double factor;
     private float thumbRadius;
     private float trackThickness;
@@ -60,7 +60,7 @@ public class UncertaintyDial extends View {
     private Paint trackPaint;
     private Paint thumbPaint;
     private Paint labelPaint;
-    private float[] tickFactors;
+    private double[] tickFactors;
     private String[] tickLabels;
     private DecimalFormat factorFormat;
     private CharSequence derivedRangeText;
@@ -177,14 +177,14 @@ public class UncertaintyDial extends View {
         int thumbColor;
         float labelTextSize;
         try {
-            minimumFactor = styledAttributes.getFloat(
+            minimumFactor = decimalValueOf(styledAttributes.getFloat(
                     R.styleable.UncertaintyDial_minimumFactor,
                     DEFAULT_MINIMUM_FACTOR
-            );
-            maximumFactor = styledAttributes.getFloat(
+            ));
+            maximumFactor = decimalValueOf(styledAttributes.getFloat(
                     R.styleable.UncertaintyDial_maximumFactor,
                     DEFAULT_MAXIMUM_FACTOR
-            );
+            ));
             trackColor = styledAttributes.getColor(
                     R.styleable.UncertaintyDial_trackColor,
                     defaultTrackColor
@@ -237,10 +237,22 @@ public class UncertaintyDial extends View {
         updateContentDescription();
     }
 
+    /**
+     * Widens a float attribute to the double it was written as, not to its binary neighbour.
+     *
+     * <p>XML attributes arrive as {@code float}. A plain widening turns the default minimum
+     * {@code 1.2f} into {@code 1.2000000476837158}; dividing a best guess of 27,000,000 by that
+     * produced a lower bound of 22,499,999.1, which the whole-number readout showed as
+     * "22,499,999". Going through the shortest decimal representation yields exactly {@code 1.2}.</p>
+     */
+    static double decimalValueOf(float value) {
+        return Double.parseDouble(Float.toString(value));
+    }
+
     private void validateConfiguration(float labelTextSize) {
-        if (!Float.isFinite(minimumFactor)
-                || !Float.isFinite(maximumFactor)
-                || minimumFactor <= 0.0f
+        if (!Double.isFinite(minimumFactor)
+                || !Double.isFinite(maximumFactor)
+                || minimumFactor <= 0.0
                 || maximumFactor <= minimumFactor) {
             throw new IllegalArgumentException(
                     "minimumFactor and maximumFactor must define an increasing positive range"
@@ -286,7 +298,7 @@ public class UncertaintyDial extends View {
             }
         }
 
-        tickFactors = new float[referenceTickCount + 2];
+        tickFactors = new double[referenceTickCount + 2];
         tickLabels = new String[referenceTickCount + 2];
         factorFormat = new DecimalFormat(
                 "0.##",
@@ -647,7 +659,7 @@ public class UncertaintyDial extends View {
 
     private boolean stepToAdjacentReference(int direction) {
         if (direction > 0) {
-            for (float tickFactor : tickFactors) {
+            for (double tickFactor : tickFactors) {
                 if (tickFactor > factor) {
                     setFactorInternal(tickFactor, true);
                     sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_SELECTED);
@@ -678,8 +690,8 @@ public class UncertaintyDial extends View {
         info.setClassName(SeekBar.class.getName());
         info.setRangeInfo(AccessibilityNodeInfo.RangeInfo.obtain(
                 AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_FLOAT,
-                minimumFactor,
-                maximumFactor,
+                (float) minimumFactor,
+                (float) maximumFactor,
                 (float) factor
         ));
         if (isEnabled()) {
