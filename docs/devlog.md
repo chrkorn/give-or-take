@@ -780,3 +780,8 @@
   0.12% too low"), and below 0.005 % as "within 0.01% of the true value"; ordinary misses keep the
   multiplicative wording the Espresso tests already pin ("about 2× too high"). The thresholds live
   in a small Android-free `ComparisonText` class with JVM tests, following `StatsPresentation`.
+- **Statistics said "Mean closeness ×1" for a session the result screen summarised as 1.02.**
+  Same class of defect as the feedback wording, on a different screen: `StatsActivity` formatted
+  the factor with its shared one-fraction-digit format. Fix: format it with the result screen's
+  two digits via `StatsPresentation.formatClosenessFactor`, with a JVM test pinning both screens to
+  the same precision. Kept as a separate commit because it is a separate code path.

@@ -2,6 +2,8 @@ package de.christiankorn.giveortake;
 
 import org.junit.Test;
 
+import java.util.Locale;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
@@ -48,5 +50,15 @@ public class StatsPresentationTest {
                 IllegalArgumentException.class,
                 () -> StatsPresentation.factorFromLogScale(-0.01)
         );
+    }
+
+    /**
+     * Regression: a mean closeness of 1.02 was shown as "×1" because the statistics list used a
+     * one-digit format, disagreeing with the result screen.
+     */
+    @Test
+    public void formatClosenessFactor_matchesResultScreenPrecision() {
+        assertEquals("1.02", StatsPresentation.formatClosenessFactor(1.0204, Locale.US));
+        assertEquals("7.9", StatsPresentation.formatClosenessFactor(7.9, Locale.US));
     }
 }

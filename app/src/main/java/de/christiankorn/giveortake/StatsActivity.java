@@ -22,6 +22,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.OptionalDouble;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -361,9 +362,10 @@ public final class StatsActivity extends AppCompatActivity {
                 if (meanError.isPresent()) {
                     meanClosenessValue.setText(getString(
                             R.string.stats_factor,
-                            decimalFormat.format(StatsPresentation.factorFromLogScale(
-                                    meanError.getAsDouble()
-                            ))
+                            StatsPresentation.formatClosenessFactor(
+                                    StatsPresentation.factorFromLogScale(meanError.getAsDouble()),
+                                    Locale.getDefault()
+                            )
                     ));
                 } else {
                     meanClosenessValue.setText(R.string.stats_unavailable);
